@@ -250,6 +250,7 @@ class Product {
   final String storeName;
   final String country;
   final double currentPrice;
+  final bool hasCoupon;
   final double? oldPrice;
   final String currency;
   final int? discountPercent;
@@ -270,6 +271,7 @@ class Product {
     required this.oldPrice,
     required this.currency,
     required this.discountPercent,
+    required this.hasCoupon,
     required this.storesCount,
     required this.savingsAmount,
   });
@@ -289,6 +291,7 @@ class Product {
       oldPrice: (json['old_price'] as num?)?.toDouble(),
       currency: json['currency']?.toString() ?? 'EUR',
       discountPercent: (json['discount_percent'] as num?)?.toInt(),
+      hasCoupon: (json['has_coupon'] as num?)?.toInt() == 1,
       storesCount: (json['stores_count'] as num?)?.toInt() ?? 1,
       savingsAmount:
           (json['savings_amount'] as num?)?.toDouble() ?? 0,
@@ -329,6 +332,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
   String selectedCategory = 'all';
   String selectedBrand = 'all';
+  String selectedStore = 'all';
   int selectedMinDiscount = 0;
   SortMode selectedSort = SortMode.discountHigh;
   bool multiStoreOnly = false;
@@ -430,7 +434,9 @@ class _ProductsPageState extends State<ProductsPage> {
       if (selectedBrand != 'all') {
         queryParameters['brand'] = selectedBrand;
       }
-
+if (selectedStore != 'all') {
+  queryParameters['store'] = selectedStore;
+}
       final minPrice =
           double.tryParse(minPriceController.text.trim());
       final maxPrice =
@@ -647,6 +653,7 @@ class _ProductsPageState extends State<ProductsPage> {
       maxPriceController.clear();
       selectedCategory = 'all';
       selectedBrand = 'all';
+      selectedStore = 'all';
       selectedMinDiscount = 0;
       selectedSort = SortMode.discountHigh;
       multiStoreOnly = false;
@@ -821,6 +828,7 @@ class _ProductsPageState extends State<ProductsPage> {
                       maxPriceController: maxPriceController,
                       selectedCategory: selectedCategory,
                       selectedBrand: selectedBrand,
+                      selectedStore: selectedStore,
                       availableBrands: availableBrands,
                       selectedMinDiscount:
                           selectedMinDiscount,
@@ -843,14 +851,23 @@ class _ProductsPageState extends State<ProductsPage> {
                         loadProducts(reset: true);
                       },
                       onBrandChanged: (value) {
-                        if (value == null) return;
+  if (value == null) return;
 
-                        setState(() {
-                          selectedBrand = value;
-                        });
+  setState(() {
+    selectedBrand = value;
+  });
 
-                        loadProducts(reset: true);
-                      },
+  loadProducts(reset: true);
+},
+onStoreChanged: (value) {
+  if (value == null) return;
+
+  setState(() {
+    selectedStore = value;
+  });
+
+  loadProducts(reset: true);
+},
                       onMinPriceChanged: onPriceChanged,
                       onMaxPriceChanged: onPriceChanged,
                       onDiscountChanged: (value) {
@@ -1014,6 +1031,7 @@ class FiltersBar extends StatefulWidget {
   final TextEditingController maxPriceController;
   final String selectedCategory;
   final String selectedBrand;
+  final String selectedStore;
   final List<String> availableBrands;
   final int selectedMinDiscount;
   final SortMode selectedSort;
@@ -1022,6 +1040,7 @@ class FiltersBar extends StatefulWidget {
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String?> onCategoryChanged;
   final ValueChanged<String?> onBrandChanged;
+  final ValueChanged<String?> onStoreChanged;
   final ValueChanged<String> onMinPriceChanged;
   final ValueChanged<String> onMaxPriceChanged;
   final ValueChanged<int?> onDiscountChanged;
@@ -1037,6 +1056,7 @@ class FiltersBar extends StatefulWidget {
     required this.maxPriceController,
     required this.selectedCategory,
     required this.selectedBrand,
+    required this.selectedStore,
     required this.availableBrands,
     required this.selectedMinDiscount,
     required this.selectedSort,
@@ -1045,6 +1065,7 @@ class FiltersBar extends StatefulWidget {
     required this.onSearchChanged,
     required this.onCategoryChanged,
     required this.onBrandChanged,
+    required this.onStoreChanged,
     required this.onMinPriceChanged,
     required this.onMaxPriceChanged,
     required this.onDiscountChanged,
@@ -1132,6 +1153,34 @@ class _FiltersBarState extends State<FiltersBar> {
       onChanged: widget.onBrandChanged,
     );
 
+final storeField = DropdownButtonFormField<String>(
+  initialValue: widget.selectedStore,
+  isExpanded: true,
+  decoration: _fieldDecoration('Магазин'),
+  items: const [
+    DropdownMenuItem(
+      value: 'all',
+      child: Text('Все магазины'),
+    ),
+    DropdownMenuItem(
+      value: 'Sportland Estonia',
+      child: Text('Sportland Estonia'),
+    ),
+    DropdownMenuItem(
+      value: 'Weekend Estonia',
+      child: Text('Weekend Estonia'),
+    ),
+    DropdownMenuItem(
+      value: 'Rademar Estonia',
+      child: Text('Rademar Estonia'),
+    ),
+    DropdownMenuItem(
+      value: 'ABOUT YOU Estonia',
+      child: Text('ABOUT YOU Estonia'),
+    ),
+  ],
+  onChanged: widget.onStoreChanged,
+);
     final minPriceField = TextField(
       controller: widget.minPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -1259,6 +1308,8 @@ class _FiltersBarState extends State<FiltersBar> {
                       const SizedBox(height: 12),
                       brandField,
                       const SizedBox(height: 12),
+                      storeField,
+const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(child: minPriceField),
@@ -1302,6 +1353,7 @@ class _FiltersBarState extends State<FiltersBar> {
           SizedBox(width: 280, child: searchField),
           SizedBox(width: 150, child: categoryField),
           SizedBox(width: 180, child: brandField),
+          SizedBox(width: 190, child: storeField),
           SizedBox(width: 120, child: minPriceField),
           SizedBox(width: 120, child: maxPriceField),
           SizedBox(width: 145, child: discountField),
@@ -1652,6 +1704,30 @@ class ProductCard extends StatelessWidget {
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
+                    if (product.hasCoupon) ...[
+  const SizedBox(width: 8),
+  Container(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 8,
+      vertical: 4,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.blue.shade50,
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(
+        color: Colors.blue.shade300,
+      ),
+    ),
+    child: Text(
+      'КУПОН',
+      style: TextStyle(
+        color: Colors.blue.shade800,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+      ),
+    ),
+  ),
+],
                               if (hasOldPrice) ...[
                                 const SizedBox(width: 8),
                                 Padding(
@@ -1878,6 +1954,7 @@ class StoreOffer {
   final String currency;
   final String? availability;
   final int? discountPercent;
+  final bool hasCoupon;
 
   const StoreOffer({
     required this.storeProductId,
@@ -1889,6 +1966,7 @@ class StoreOffer {
     required this.currency,
     required this.availability,
     required this.discountPercent,
+    required this.hasCoupon,
   });
 
   factory StoreOffer.fromJson(
@@ -1913,6 +1991,8 @@ class StoreOffer {
           json['availability']?.toString(),
       discountPercent:
           (json['discount_percent'] as num?)?.toInt(),
+          hasCoupon:
+    (json['has_coupon'] as num?)?.toInt() == 1,
     );
   }
 }
@@ -3539,6 +3619,12 @@ class _OfferCard extends StatelessWidget {
                           fontSize: 18,
                         ),
                       ),
+                      if (offer.hasCoupon)
+  _CardBadge(
+    label: 'КУПОН',
+    backgroundColor: Colors.blue.shade50,
+    foregroundColor: Colors.blue.shade800,
+  ),
                       if (hasOldPrice)
                         Text(
                           '${priceFormatter(offer.oldPrice!)} €',
