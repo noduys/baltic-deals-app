@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 
 import 'firebase_options.dart';
+import 'l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -98,14 +99,68 @@ Future<void> main() async {
   await _setupFirebaseMessaging();
 }
 
-class BalticDealsApp extends StatelessWidget {
+class BalticDealsApp extends StatefulWidget {
   const BalticDealsApp({super.key});
+
+  static _BalticDealsAppState? _maybeOf(BuildContext context) {
+    return context.findAncestorStateOfType<_BalticDealsAppState>();
+  }
+
+  @override
+  State<BalticDealsApp> createState() => _BalticDealsAppState();
+}
+
+class _BalticDealsAppState extends State<BalticDealsApp> {
+  Locale? _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocale();
+  }
+
+  Future<void> _loadLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString('app_locale');
+
+    if (!mounted || code == null || code.isEmpty) return;
+
+    setState(() {
+      _locale = Locale(code);
+    });
+  }
+
+  Future<void> setLocale(String? code) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (code == null || code.isEmpty) {
+      await prefs.remove('app_locale');
+
+      if (!mounted) return;
+
+      setState(() {
+        _locale = null;
+      });
+      return;
+    }
+
+    await prefs.setString('app_locale', code);
+
+    if (!mounted) return;
+
+    setState(() {
+      _locale = Locale(code);
+    });
+  }
+
+  String? get localeCode => _locale?.languageCode;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Baltic Deals',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      locale: _locale,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -113,8 +168,32 @@ class BalticDealsApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF5F6F7),
       ),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const ProductsPage(),
     );
+  }
+}
+
+String _localizedFieldLabel(
+  BuildContext context, {
+  required String ru,
+  required String en,
+  required String et,
+  required String lv,
+  required String lt,
+}) {
+  switch (Localizations.localeOf(context).languageCode) {
+    case 'et':
+      return et;
+    case 'lv':
+      return lv;
+    case 'lt':
+      return lt;
+    case 'ru':
+      return ru;
+    default:
+      return en;
   }
 }
 
@@ -165,9 +244,9 @@ class AppErrorView extends StatelessWidget {
               size: 54,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Не удалось загрузить товары',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.loadingError,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
@@ -940,14 +1019,17 @@ if (selectedStore != 'all') {
         initialValue: 'all',
         isExpanded: true,
         decoration: InputDecoration(
-          labelText: 'Открыть магазин',
+          labelText: AppLocalizations.of(context)!.stores,
           prefixIcon: const Icon(Icons.storefront_outlined),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        items: const [
-          DropdownMenuItem(value: 'all', child: Text('Все магазины')),
+        items: [
+          DropdownMenuItem(
+            value: 'all',
+            child: Text(AppLocalizations.of(context)!.allStores),
+          ),
           DropdownMenuItem(value: 'Sportland Estonia', child: Text('Sportland')),
           DropdownMenuItem(value: 'Rademar Estonia', child: Text('Rademar')),
           DropdownMenuItem(value: 'Weekend Estonia', child: Text('Weekend')),
@@ -986,8 +1068,8 @@ if (selectedStore != 'all') {
         actions: [
           IconButton(
             tooltip: showFavoritesOnly
-                ? 'Показать все товары'
-                : 'Показать избранное',
+                ? AppLocalizations.of(context)!.showAll
+                : AppLocalizations.of(context)!.favorites,
             onPressed: () {
               setState(() {
                 showFavoritesOnly = !showFavoritesOnly;
@@ -1000,9 +1082,69 @@ if (selectedStore != 'all') {
             ),
           ),
           IconButton(
-            tooltip: 'Обновить',
+            tooltip: AppLocalizations.of(context)!.refresh,
             onPressed: refreshProducts,
             icon: const Icon(Icons.refresh),
+          ),
+          PopupMenuButton<String>(
+            tooltip: AppLocalizations.of(context)!.language,
+            icon: const Icon(Icons.language),
+            onSelected: (value) {
+              BalticDealsApp._maybeOf(context)?.setLocale(
+                value == 'system' ? null : value,
+              );
+            },
+            itemBuilder: (context) {
+              final current =
+                  BalticDealsApp._maybeOf(context)?.localeCode;
+
+              Widget languageLabel(
+                String? code,
+                String label,
+              ) {
+                return Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      child: current == code
+                          ? const Icon(Icons.check, size: 18)
+                          : null,
+                    ),
+                    Text(label),
+                  ],
+                );
+              }
+
+              return [
+                PopupMenuItem(
+                  value: 'system',
+                  child: languageLabel(
+                    null,
+                    AppLocalizations.of(context)!.systemLanguage,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'et',
+                  child: languageLabel('et', 'Eesti'),
+                ),
+                PopupMenuItem(
+                  value: 'en',
+                  child: languageLabel('en', 'English'),
+                ),
+                PopupMenuItem(
+                  value: 'ru',
+                  child: languageLabel('ru', 'Русский'),
+                ),
+                PopupMenuItem(
+                  value: 'lv',
+                  child: languageLabel('lv', 'Latviešu'),
+                ),
+                PopupMenuItem(
+                  value: 'lt',
+                  child: languageLabel('lt', 'Lietuvių'),
+                ),
+              ];
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -1047,7 +1189,7 @@ if (selectedStore != 'all') {
                             const Icon(Icons.favorite),
                             const SizedBox(width: 8),
                             Text(
-                              'Избранное: ${favoriteIds.length}',
+                              '${AppLocalizations.of(context)!.favorites}: ${favoriteIds.length}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -1059,7 +1201,7 @@ if (selectedStore != 'all') {
                                   showFavoritesOnly = false;
                                 });
                               },
-                              child: const Text('Показать все'),
+                              child: Text(AppLocalizations.of(context)!.showAll),
                             ),
                           ],
                         ),
@@ -1191,16 +1333,19 @@ onStoreChanged: (value) {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                const Text(
-                                                  'Самые большие скидки сейчас',
-                                                  style: TextStyle(
+                                                Text(
+                                                  AppLocalizations.of(context)!.topDeals,
+                                                  style: const TextStyle(
                                                     fontSize: 22,
                                                     fontWeight: FontWeight.w800,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  'Топ скидок на красоту, одежду, обувь и технику',
+                                                  '${AppLocalizations.of(context)!.beauty}, '
+                                                  '${AppLocalizations.of(context)!.clothing}, '
+                                                  '${AppLocalizations.of(context)!.shoes}, '
+                                                  '${AppLocalizations.of(context)!.technology}',
                                                   style: TextStyle(
                                                     fontSize: 13,
                                                     color: Colors.grey.shade700,
@@ -1210,24 +1355,24 @@ onStoreChanged: (value) {
                                                 const SizedBox(height: 18),
                                                 _buildHomeSection(
                                                   section: 'beauty',
-                                                  title: 'Красота',
+                                                  title: AppLocalizations.of(context)!.beauty,
                                                   icon: Icons.spa_outlined,
                                                 ),
                                                 _buildHomeSection(
                                                   section: 'fashion',
-                                                  title: 'Одежда',
+                                                  title: AppLocalizations.of(context)!.clothing,
                                                   icon:
                                                       Icons.checkroom_outlined,
                                                 ),
                                                 _buildHomeSection(
                                                   section: 'shoes',
-                                                  title: 'Обувь',
+                                                  title: AppLocalizations.of(context)!.shoes,
                                                   icon:
                                                       Icons.shopping_bag_outlined,
                                                 ),
                                                 _buildHomeSection(
                                                   section: 'tech',
-                                                  title: 'Техника',
+                                                  title: AppLocalizations.of(context)!.technology,
                                                   icon:
                                                       Icons.devices_outlined,
                                                 ),
@@ -1418,7 +1563,7 @@ class _FiltersBarState extends State<FiltersBar> {
       controller: widget.searchController,
       onChanged: widget.onSearchChanged,
       decoration: InputDecoration(
-        hintText: 'Поиск по товару или бренду',
+        hintText: AppLocalizations.of(context)!.searchHint,
         prefixIcon: const Icon(Icons.search),
         filled: true,
         fillColor: Colors.white,
@@ -1442,17 +1587,53 @@ class _FiltersBarState extends State<FiltersBar> {
       initialValue: widget.selectedCategory,
       isExpanded: true,
       isDense: true,
-      decoration: _fieldDecoration('Категория'),
-      items: const [
-        DropdownMenuItem(value: 'all', child: Text('Все')),
-        DropdownMenuItem(value: 'clothing', child: Text('Одежда')),
-        DropdownMenuItem(value: 'shoes', child: Text('Обувь')),
-        DropdownMenuItem(value: 'accessories', child: Text('Аксессуары')),
-        DropdownMenuItem(value: 'beauty', child: Text('Красота')),
-        DropdownMenuItem(value: 'perfume', child: Text('Парфюмерия')),
-        DropdownMenuItem(value: 'electronics', child: Text('Техника')),
-        DropdownMenuItem(value: 'home', child: Text('Дом')),
-        DropdownMenuItem(value: 'sports', child: Text('Спорт')),
+      decoration: _fieldDecoration(
+        _localizedFieldLabel(
+          context,
+          ru: 'Категория',
+          en: 'Category',
+          et: 'Kategooria',
+          lv: 'Kategorija',
+          lt: 'Kategorija',
+        ),
+      ),
+      items: [
+        DropdownMenuItem(
+          value: 'all',
+          child: Text(AppLocalizations.of(context)!.all),
+        ),
+        DropdownMenuItem(
+          value: 'clothing',
+          child: Text(AppLocalizations.of(context)!.clothing),
+        ),
+        DropdownMenuItem(
+          value: 'shoes',
+          child: Text(AppLocalizations.of(context)!.shoes),
+        ),
+        DropdownMenuItem(
+          value: 'accessories',
+          child: Text(AppLocalizations.of(context)!.accessories),
+        ),
+        DropdownMenuItem(
+          value: 'beauty',
+          child: Text(AppLocalizations.of(context)!.beauty),
+        ),
+        DropdownMenuItem(
+          value: 'perfume',
+          child: Text(AppLocalizations.of(context)!.perfume),
+        ),
+        DropdownMenuItem(
+          value: 'electronics',
+          child: Text(AppLocalizations.of(context)!.technology),
+        ),
+        DropdownMenuItem(
+          value: 'home',
+          child: Text(AppLocalizations.of(context)!.homeCategory),
+        ),
+        DropdownMenuItem(
+          value: 'sports',
+          child: Text(AppLocalizations.of(context)!.sport),
+        ),
       ],
       onChanged: widget.onCategoryChanged,
     );
@@ -1463,11 +1644,20 @@ class _FiltersBarState extends State<FiltersBar> {
           : 'all',
       isExpanded: true,
       isDense: true,
-      decoration: _fieldDecoration('Бренд'),
+      decoration: _fieldDecoration(
+        _localizedFieldLabel(
+          context,
+          ru: 'Бренд',
+          en: 'Brand',
+          et: 'Bränd',
+          lv: 'Zīmols',
+          lt: 'Prekės ženklas',
+        ),
+      ),
       items: [
-        const DropdownMenuItem(
+        DropdownMenuItem(
           value: 'all',
-          child: Text('Все бренды'),
+          child: Text(AppLocalizations.of(context)!.allBrands),
         ),
         ...widget.availableBrands.map(
           (brand) => DropdownMenuItem(
@@ -1486,9 +1676,12 @@ final storeField = DropdownButtonFormField<String>(
   initialValue: widget.selectedStore,
   isExpanded: true,
   isDense: true,
-  decoration: _fieldDecoration('Магазин'),
-  items: const [
-    DropdownMenuItem(value: 'all', child: Text('Все магазины')),
+  decoration: _fieldDecoration(AppLocalizations.of(context)!.stores),
+  items: [
+    DropdownMenuItem(
+      value: 'all',
+      child: Text(AppLocalizations.of(context)!.allStores),
+    ),
     DropdownMenuItem(value: 'Sportland Estonia', child: Text('Sportland')),
     DropdownMenuItem(value: 'Rademar Estonia', child: Text('Rademar')),
     DropdownMenuItem(value: 'Weekend Estonia', child: Text('Weekend')),
@@ -1510,22 +1703,25 @@ final storeField = DropdownButtonFormField<String>(
       controller: widget.minPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: widget.onMinPriceChanged,
-      decoration: _fieldDecoration('Цена от').copyWith(suffixText: '€'),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.minPrice).copyWith(suffixText: '€'),
     );
 
     final maxPriceField = TextField(
       controller: widget.maxPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: widget.onMaxPriceChanged,
-      decoration: _fieldDecoration('Цена до').copyWith(suffixText: '€'),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.maxPrice).copyWith(suffixText: '€'),
     );
 
     final discountField = DropdownButtonFormField<int>(
       initialValue: widget.selectedMinDiscount,
       isDense: true,
-      decoration: _fieldDecoration('Скидка от'),
-      items: const [
-        DropdownMenuItem(value: 0, child: Text('Любая')),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.minDiscount),
+      items: [
+        DropdownMenuItem(
+          value: 0,
+          child: Text(AppLocalizations.of(context)!.any),
+        ),
         DropdownMenuItem(value: 20, child: Text('20%')),
         DropdownMenuItem(value: 30, child: Text('30%')),
         DropdownMenuItem(value: 40, child: Text('40%')),
@@ -1540,27 +1736,27 @@ final storeField = DropdownButtonFormField<String>(
       initialValue: widget.selectedSort,
       isExpanded: true,
       isDense: true,
-      decoration: _fieldDecoration('Сортировка'),
-      items: const [
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.sort),
+      items: [
         DropdownMenuItem(
           value: SortMode.discountHigh,
-          child: Text('Самая большая скидка', overflow: TextOverflow.ellipsis),
+          child: Text(AppLocalizations.of(context)!.biggestDiscount, overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.savingsHigh,
-          child: Text('Максимальная экономия', overflow: TextOverflow.ellipsis),
+          child: Text(AppLocalizations.of(context)!.maximumSavings, overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.priceLow,
-          child: Text('Сначала дешевле', overflow: TextOverflow.ellipsis),
+          child: Text(AppLocalizations.of(context)!.priceLow, overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.priceHigh,
-          child: Text('Сначала дороже', overflow: TextOverflow.ellipsis),
+          child: Text(AppLocalizations.of(context)!.priceHigh, overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.brand,
-          child: Text('По бренду', overflow: TextOverflow.ellipsis),
+          child: Text(AppLocalizations.of(context)!.byBrand, overflow: TextOverflow.ellipsis),
         ),
       ],
       onChanged: widget.onSortChanged,
@@ -1572,7 +1768,7 @@ final storeField = DropdownButtonFormField<String>(
         selected: widget.multiStoreOnly,
         onSelected: widget.onMultiStoreOnlyChanged,
         avatar: const Icon(Icons.compare_arrows, size: 18),
-        label: const Text('Есть в нескольких магазинах'),
+        label: Text(AppLocalizations.of(context)!.multiStoreOnly),
       ),
     );
 
@@ -1581,12 +1777,12 @@ final storeField = DropdownButtonFormField<String>(
       child: OutlinedButton.icon(
         onPressed: widget.onReset,
         icon: const Icon(Icons.filter_alt_off),
-        label: const Text('Сбросить'),
+        label: Text(AppLocalizations.of(context)!.reset),
       ),
     );
 
     final countText = Text(
-      '${widget.resultCount} товаров',
+      AppLocalizations.of(context)!.foundProducts(widget.resultCount),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
@@ -1736,7 +1932,7 @@ class PaginationFooter extends StatelessWidget {
         padding: const EdgeInsets.all(28),
         child: Center(
           child: Text(
-            'Все загруженные товары показаны',
+            AppLocalizations.of(context)!.loadedProducts(loadedCount),
             style: TextStyle(
               color: Colors.grey.shade600,
               fontWeight: FontWeight.w600,
@@ -1760,7 +1956,7 @@ class PaginationFooter extends StatelessWidget {
             Icons.expand_more,
           ),
           label: Text(
-            'Загрузить ещё $pageLabel',
+            AppLocalizations.of(context)!.loadMore,
           ),
         ),
       ),
@@ -1795,8 +1991,8 @@ class EmptyView extends StatelessWidget {
               size: 54,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Ничего не найдено',
+            Text(
+              AppLocalizations.of(context)!.noProducts,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
@@ -1819,7 +2015,7 @@ class EmptyView extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onLoadMore,
                   icon: const Icon(Icons.expand_more),
-                  label: const Text('Загрузить ещё'),
+                  label: Text(AppLocalizations.of(context)!.loadMore),
                 ),
             ],
           ],
@@ -1932,8 +2128,8 @@ class ProductCard extends StatelessWidget {
                       child: IconButton(
                         visualDensity: VisualDensity.compact,
                         tooltip: isFavorite
-                            ? 'Убрать из избранного'
-                            : 'Добавить в избранное',
+                            ? AppLocalizations.of(context)!.removeFavorite
+                            : AppLocalizations.of(context)!.addFavorite,
                         onPressed: onFavorite,
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -1989,7 +2185,7 @@ class ProductCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             isMultiStore
-                                ? 'Лучшая цена · ${product.storeName}'
+                                ? '${AppLocalizations.of(context)!.bestPrice} · ${product.storeName}'
                                 : product.storeName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -2030,7 +2226,9 @@ class ProductCard extends StatelessWidget {
                             const SizedBox(width: 5),
                             Flexible(
                               child: Text(
-                                'Экономия ${priceFormatter(product.savingsAmount)} €',
+                                AppLocalizations.of(context)!.savingsUpTo(
+                                  priceFormatter(product.savingsAmount),
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -2082,7 +2280,7 @@ class ProductCard extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              'КУПОН',
+                              AppLocalizations.of(context)!.coupon,
                               style: TextStyle(
                                 color: Colors.blue.shade800,
                                 fontSize: 10,
@@ -2105,7 +2303,7 @@ class ProductCard extends StatelessWidget {
                           size: 18,
                         ),
                         label: Text(
-                          isMultiStore ? 'Сравнить цены' : 'Подробнее',
+                          isMultiStore ? AppLocalizations.of(context)!.compareStores : AppLocalizations.of(context)!.details,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -4254,9 +4452,8 @@ class ErrorView extends StatelessWidget {
                   const Icon(
                 Icons.refresh,
               ),
-              label:
-                  const Text(
-                'Повторить',
+               label: Text(
+                AppLocalizations.of(context)!.retry,
               ),
             ),
           ],
@@ -4264,5 +4461,4 @@ class ErrorView extends StatelessWidget {
       ),
     );
   }
-
 }
