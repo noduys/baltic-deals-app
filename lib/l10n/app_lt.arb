@@ -1,4 +1,4 @@
-﻿{
+{
   "appTitle": "Baltic Deals",
   "home": "Pradžia",
   "stores": "Parduotuvės",
@@ -56,13 +56,177 @@
   "loadingError": "Nepavyko įkelti prekių",
   "noProducts": "Prekių nerasta",
   "foundProducts": "Rasta: {count}",
-  "@foundProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@foundProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "loadedProducts": "Įkelta: {count}",
-  "@loadedProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@loadedProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "discountBadge": "-{percent}%",
-  "@discountBadge": {"placeholders": {"percent": {"type": "int"}}},
+  "@discountBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "storesCount": "{count, plural, =1{1 parduotuvė} other{{count} parduotuvės}}",
-  "@storesCount": {"placeholders": {"count": {"type": "int"}}},
+  "@storesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "savingsUpTo": "Sutaupyk iki {amount} €",
-  "@savingsUpTo": {"placeholders": {"amount": {"type": "String"}}}
+  "@savingsUpTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "availableCount": "Prieinama: {count}",
+  "@availableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bestPriceValue": "Geriausia kaina: {price}",
+  "@bestPriceValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "category": "Kategorija",
+  "changeTarget": "Keisti",
+  "chooseSize": "Pasirink dydį, kad palygintum parduotuves",
+  "country": "Šalis",
+  "currentPriceLabel": "Dabartinė kaina: {price}",
+  "@currentPriceLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "filters": "Filtrai",
+  "gender": "Lytis",
+  "goToStore": "Eiti į parduotuvę",
+  "hideFilters": "Slėpti filtrus",
+  "historyPoints": "Istorijos taškų: {count}",
+  "@historyPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyStarted": "Kainos istorija tik pradėta kaupti. Nauji taškai atsiras pasikeitus kainai.",
+  "inStock": "Yra sandėlyje",
+  "invalidPrice": "Įvesk teisingą kainą",
+  "invalidProductLink": "Neteisinga prekės nuoroda",
+  "loadOffersFailed": "Nepavyko įkelti pasiūlymų",
+  "loadPriceHistoryFailed": "Nepavyko įkelti kainos istorijos",
+  "loadSizesFailed": "Nepavyko įkelti dydžių",
+  "loadingSizes": "Įkeliami galimi dydžiai…",
+  "maximum": "Maksimumas",
+  "minimum": "Minimumas",
+  "noOffers": "Pasiūlymų kol kas nėra",
+  "noSizeData": "Šios prekės dydžių duomenys dar neįkelti.",
+  "notSpecified": "Nenurodyta",
+  "now": "Dabar",
+  "openStoreFailed": "Nepavyko atidaryti parduotuvės",
+  "priceAboveTarget": "Dabartinė kaina yra {amount} didesnė už tikslą",
+  "@priceAboveTarget": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "priceAlertInfo": "Tikslinė kaina išsaugoma Baltic Deals serveryje. Kai kaina pasieks tikslą, programa išsiųs push pranešimą.",
+  "priceAlertPrompt": "Išsaugok norimą šios prekės kainą",
+  "priceAlreadyReached": "Kaina jau pasiekė nustatytą lygį",
+  "priceHistory": "Kainos istorija",
+  "priceTrackingDisableFailed": "Nepavyko išjungti tikslo serveryje. Bandyk dar kartą.",
+  "priceTrackingDisabled": "Kainos stebėjimas serveryje išjungtas",
+  "product": "Prekė",
+  "productLinkMissing": "Prekės nuorodos nėra",
+  "selectedSize": "Pasirinktas dydis: {size}",
+  "@selectedSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "selectedSizeUnavailable": "Pasirinkto dydžio šiuo metu nėra",
+  "serverUnavailableSavedLocally": "Serveris laikinai nepasiekiamas. Tikslas išsaugotas tik šiame įrenginyje.",
+  "setTarget": "Nustatyti",
+  "sizeStoreCount": "Dydis {size} · parduotuvių: {count}",
+  "@sizeStoreCount": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sizes": "Dydžiai",
+  "sizesLabel": "Dydžiai: {sizes}",
+  "@sizesLabel": {
+    "placeholders": {
+      "sizes": {
+        "type": "String"
+      }
+    }
+  },
+  "store": "Parduotuvė",
+  "storePrices": "Kainos parduotuvėse",
+  "targetReached": "Tikslinė kaina pasiekta!",
+  "targetSavedServer": "Tikslas išsaugotas serveryje: {price}",
+  "@targetSavedServer": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "targetValue": "Tikslas: {price}",
+  "@targetValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "triggeredAtTarget": "Suveikė ties {triggeredPrice} • tikslas {targetPrice}",
+  "@triggeredAtTarget": {
+    "placeholders": {
+      "triggeredPrice": {
+        "type": "String"
+      },
+      "targetPrice": {
+        "type": "String"
+      }
+    }
+  },
+  "tryDifferentSearch": "Pabandyk pakeisti paiešką arba filtrus.",
+  "unavailableSizesGray": "Šiuo metu neprieinami dydžiai rodomi pilkai."
 }

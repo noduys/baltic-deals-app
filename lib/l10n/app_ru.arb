@@ -54,13 +54,177 @@
   "loadingError": "Не удалось загрузить товары",
   "noProducts": "Товары не найдены",
   "foundProducts": "Найдено: {count}",
-  "@foundProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@foundProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "loadedProducts": "Загружено: {count}",
-  "@loadedProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@loadedProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "discountBadge": "-{percent}%",
-  "@discountBadge": {"placeholders": {"percent": {"type": "int"}}},
+  "@discountBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "storesCount": "{count, plural, =1{1 магазин} few{{count} магазина} many{{count} магазинов} other{{count} магазина}}",
-  "@storesCount": {"placeholders": {"count": {"type": "int"}}},
+  "@storesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "savingsUpTo": "Экономия до {amount} €",
-  "@savingsUpTo": {"placeholders": {"amount": {"type": "String"}}}
+  "@savingsUpTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "availableCount": "Доступно: {count}",
+  "@availableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bestPriceValue": "Лучшая цена: {price}",
+  "@bestPriceValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "category": "Категория",
+  "changeTarget": "Изменить",
+  "chooseSize": "Выбери размер, чтобы сравнить магазины",
+  "country": "Страна",
+  "currentPriceLabel": "Текущая цена: {price}",
+  "@currentPriceLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "filters": "Фильтры",
+  "gender": "Пол",
+  "goToStore": "Перейти в магазин",
+  "hideFilters": "Скрыть фильтры",
+  "historyPoints": "Точек истории: {count}",
+  "@historyPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyStarted": "История только начала собираться. Новые точки появятся при изменении цены.",
+  "inStock": "В наличии",
+  "invalidPrice": "Введите корректную цену",
+  "invalidProductLink": "Некорректная ссылка на товар",
+  "loadOffersFailed": "Не удалось загрузить предложения",
+  "loadPriceHistoryFailed": "Не удалось загрузить историю цены",
+  "loadSizesFailed": "Не удалось загрузить размеры",
+  "loadingSizes": "Загружаем доступные размеры…",
+  "maximum": "Максимум",
+  "minimum": "Минимум",
+  "noOffers": "Предложений пока нет",
+  "noSizeData": "Данные о размерах для этого товара пока не загружены.",
+  "notSpecified": "Не указано",
+  "now": "Сейчас",
+  "openStoreFailed": "Не удалось открыть магазин",
+  "priceAboveTarget": "Текущая цена выше цели на {amount}",
+  "@priceAboveTarget": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "priceAlertInfo": "Цель сохраняется на сервере Baltic Deals. Когда цена достигнет цели, приложение отправит push-уведомление.",
+  "priceAlertPrompt": "Сохраним желаемую цену для этого товара",
+  "priceAlreadyReached": "Цена уже достигла заданного уровня",
+  "priceHistory": "История цены",
+  "priceTrackingDisableFailed": "Не удалось отключить цель на сервере. Попробуйте ещё раз.",
+  "priceTrackingDisabled": "Отслеживание цены отключено на сервере",
+  "product": "Товар",
+  "productLinkMissing": "Ссылка на товар отсутствует",
+  "selectedSize": "Выбран размер: {size}",
+  "@selectedSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "selectedSizeUnavailable": "Выбранный размер сейчас недоступен",
+  "serverUnavailableSavedLocally": "Сервер временно недоступен. Цель сохранена только на этом устройстве.",
+  "setTarget": "Задать",
+  "sizeStoreCount": "Размер {size} · магазинов: {count}",
+  "@sizeStoreCount": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sizes": "Размеры",
+  "sizesLabel": "Размеры: {sizes}",
+  "@sizesLabel": {
+    "placeholders": {
+      "sizes": {
+        "type": "String"
+      }
+    }
+  },
+  "store": "Магазин",
+  "storePrices": "Цены в магазинах",
+  "targetReached": "Цена достигнута!",
+  "targetSavedServer": "Цель сохранена на сервере: {price}",
+  "@targetSavedServer": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "targetValue": "Цель: {price}",
+  "@targetValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "triggeredAtTarget": "Сработало при {triggeredPrice} • цель {targetPrice}",
+  "@triggeredAtTarget": {
+    "placeholders": {
+      "triggeredPrice": {
+        "type": "String"
+      },
+      "targetPrice": {
+        "type": "String"
+      }
+    }
+  },
+  "tryDifferentSearch": "Попробуй изменить поиск или фильтры.",
+  "unavailableSizesGray": "Недоступные сейчас размеры показаны серым."
 }

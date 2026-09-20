@@ -1,4 +1,4 @@
-﻿{
+{
   "appTitle": "Baltic Deals",
   "home": "Sākums",
   "stores": "Veikali",
@@ -56,13 +56,177 @@
   "loadingError": "Neizdevās ielādēt preces",
   "noProducts": "Preces netika atrastas",
   "foundProducts": "Atrasts: {count}",
-  "@foundProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@foundProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "loadedProducts": "Ielādēts: {count}",
-  "@loadedProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@loadedProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "discountBadge": "-{percent}%",
-  "@discountBadge": {"placeholders": {"percent": {"type": "int"}}},
+  "@discountBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "storesCount": "{count, plural, =1{1 veikals} other{{count} veikali}}",
-  "@storesCount": {"placeholders": {"count": {"type": "int"}}},
+  "@storesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "savingsUpTo": "Ietaupi līdz {amount} €",
-  "@savingsUpTo": {"placeholders": {"amount": {"type": "String"}}}
+  "@savingsUpTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "availableCount": "Pieejami: {count}",
+  "@availableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bestPriceValue": "Labākā cena: {price}",
+  "@bestPriceValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "category": "Kategorija",
+  "changeTarget": "Mainīt",
+  "chooseSize": "Izvēlies izmēru, lai salīdzinātu veikalus",
+  "country": "Valsts",
+  "currentPriceLabel": "Pašreizējā cena: {price}",
+  "@currentPriceLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "filters": "Filtri",
+  "gender": "Dzimums",
+  "goToStore": "Doties uz veikalu",
+  "hideFilters": "Paslēpt filtrus",
+  "historyPoints": "Vēstures punkti: {count}",
+  "@historyPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyStarted": "Cenu vēsture tikko sākta. Jauni punkti parādīsies, kad cena mainīsies.",
+  "inStock": "Ir noliktavā",
+  "invalidPrice": "Ievadi derīgu cenu",
+  "invalidProductLink": "Nederīga preces saite",
+  "loadOffersFailed": "Neizdevās ielādēt piedāvājumus",
+  "loadPriceHistoryFailed": "Neizdevās ielādēt cenu vēsturi",
+  "loadSizesFailed": "Neizdevās ielādēt izmērus",
+  "loadingSizes": "Ielādē pieejamos izmērus…",
+  "maximum": "Maksimums",
+  "minimum": "Minimums",
+  "noOffers": "Piedāvājumu vēl nav",
+  "noSizeData": "Šai precei izmēru dati vēl nav ielādēti.",
+  "notSpecified": "Nav norādīts",
+  "now": "Tagad",
+  "openStoreFailed": "Neizdevās atvērt veikalu",
+  "priceAboveTarget": "Pašreizējā cena ir par {amount} augstāka par mērķi",
+  "@priceAboveTarget": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "priceAlertInfo": "Mērķa cena tiek saglabāta Baltic Deals serverī. Kad cena sasniegs mērķi, lietotne nosūtīs push paziņojumu.",
+  "priceAlertPrompt": "Saglabā vēlamo cenu šai precei",
+  "priceAlreadyReached": "Cena jau ir sasniegusi mērķa līmeni",
+  "priceHistory": "Cenu vēsture",
+  "priceTrackingDisableFailed": "Neizdevās izslēgt mērķi serverī. Mēģini vēlreiz.",
+  "priceTrackingDisabled": "Cenas izsekošana serverī ir izslēgta",
+  "product": "Prece",
+  "productLinkMissing": "Preces saite nav pieejama",
+  "selectedSize": "Izvēlētais izmērs: {size}",
+  "@selectedSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "selectedSizeUnavailable": "Izvēlētais izmērs pašlaik nav pieejams",
+  "serverUnavailableSavedLocally": "Serveris īslaicīgi nav pieejams. Mērķis saglabāts tikai šajā ierīcē.",
+  "setTarget": "Iestatīt",
+  "sizeStoreCount": "Izmērs {size} · veikali: {count}",
+  "@sizeStoreCount": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sizes": "Izmēri",
+  "sizesLabel": "Izmēri: {sizes}",
+  "@sizesLabel": {
+    "placeholders": {
+      "sizes": {
+        "type": "String"
+      }
+    }
+  },
+  "store": "Veikals",
+  "storePrices": "Cenas veikalos",
+  "targetReached": "Mērķa cena sasniegta!",
+  "targetSavedServer": "Mērķis saglabāts serverī: {price}",
+  "@targetSavedServer": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "targetValue": "Mērķis: {price}",
+  "@targetValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "triggeredAtTarget": "Nostrādāja pie {triggeredPrice} • mērķis {targetPrice}",
+  "@triggeredAtTarget": {
+    "placeholders": {
+      "triggeredPrice": {
+        "type": "String"
+      },
+      "targetPrice": {
+        "type": "String"
+      }
+    }
+  },
+  "tryDifferentSearch": "Pamēģini mainīt meklēšanu vai filtrus.",
+  "unavailableSizesGray": "Pašlaik nepieejamie izmēri ir parādīti pelēki."
 }

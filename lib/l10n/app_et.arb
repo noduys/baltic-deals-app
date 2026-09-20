@@ -54,13 +54,177 @@
   "loadingError": "Toodete laadimine ebaõnnestus",
   "noProducts": "Tooteid ei leitud",
   "foundProducts": "Leitud: {count}",
-  "@foundProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@foundProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "loadedProducts": "Laaditud: {count}",
-  "@loadedProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@loadedProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "discountBadge": "-{percent}%",
-  "@discountBadge": {"placeholders": {"percent": {"type": "int"}}},
+  "@discountBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "storesCount": "{count, plural, =1{1 pood} other{{count} poodi}}",
-  "@storesCount": {"placeholders": {"count": {"type": "int"}}},
+  "@storesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "savingsUpTo": "Säästa kuni {amount} €",
-  "@savingsUpTo": {"placeholders": {"amount": {"type": "String"}}}
+  "@savingsUpTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "availableCount": "Saadaval: {count}",
+  "@availableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bestPriceValue": "Parim hind: {price}",
+  "@bestPriceValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "category": "Kategooria",
+  "changeTarget": "Muuda",
+  "chooseSize": "Vali suurus, et poode võrrelda",
+  "country": "Riik",
+  "currentPriceLabel": "Praegune hind: {price}",
+  "@currentPriceLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "filters": "Filtrid",
+  "gender": "Sugu",
+  "goToStore": "Mine poodi",
+  "hideFilters": "Peida filtrid",
+  "historyPoints": "Ajaloopunkte: {count}",
+  "@historyPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyStarted": "Hinnaajalugu alles hakkas kogunema. Uued punktid ilmuvad hinna muutumisel.",
+  "inStock": "Laos",
+  "invalidPrice": "Sisesta korrektne hind",
+  "invalidProductLink": "Vigane tootelink",
+  "loadOffersFailed": "Pakkumiste laadimine ebaõnnestus",
+  "loadPriceHistoryFailed": "Hinnaajaloo laadimine ebaõnnestus",
+  "loadSizesFailed": "Suuruste laadimine ebaõnnestus",
+  "loadingSizes": "Saadaolevate suuruste laadimine…",
+  "maximum": "Maksimum",
+  "minimum": "Miinimum",
+  "noOffers": "Pakkumisi veel pole",
+  "noSizeData": "Selle toote suuruste andmeid pole veel laaditud.",
+  "notSpecified": "Pole märgitud",
+  "now": "Praegu",
+  "openStoreFailed": "Poodi ei õnnestunud avada",
+  "priceAboveTarget": "Praegune hind on sihthinnast {amount} kõrgem",
+  "@priceAboveTarget": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "priceAlertInfo": "Sihthind salvestatakse Baltic Dealsi serverisse. Kui hind jõuab sihthinnani, saadab rakendus push-teavituse.",
+  "priceAlertPrompt": "Salvesta selle toote soovitud hind",
+  "priceAlreadyReached": "Hind on juba sihttasemeni jõudnud",
+  "priceHistory": "Hinnaajalugu",
+  "priceTrackingDisableFailed": "Sihthinna väljalülitamine serveris ebaõnnestus. Proovi uuesti.",
+  "priceTrackingDisabled": "Hinna jälgimine on serveris välja lülitatud",
+  "product": "Toode",
+  "productLinkMissing": "Tootelink puudub",
+  "selectedSize": "Valitud suurus: {size}",
+  "@selectedSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "selectedSizeUnavailable": "Valitud suurus pole praegu saadaval",
+  "serverUnavailableSavedLocally": "Server pole ajutiselt saadaval. Sihthind salvestati ainult sellesse seadmesse.",
+  "setTarget": "Määra",
+  "sizeStoreCount": "Suurus {size} · poode: {count}",
+  "@sizeStoreCount": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sizes": "Suurused",
+  "sizesLabel": "Suurused: {sizes}",
+  "@sizesLabel": {
+    "placeholders": {
+      "sizes": {
+        "type": "String"
+      }
+    }
+  },
+  "store": "Pood",
+  "storePrices": "Hinnad poodides",
+  "targetReached": "Sihthind saavutatud!",
+  "targetSavedServer": "Sihthind salvestati serverisse: {price}",
+  "@targetSavedServer": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "targetValue": "Sihthind: {price}",
+  "@targetValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "triggeredAtTarget": "Käivitus hinnaga {triggeredPrice} • siht {targetPrice}",
+  "@triggeredAtTarget": {
+    "placeholders": {
+      "triggeredPrice": {
+        "type": "String"
+      },
+      "targetPrice": {
+        "type": "String"
+      }
+    }
+  },
+  "tryDifferentSearch": "Proovi muuta otsingut või filtreid.",
+  "unavailableSizesGray": "Praegu mittesaadavad suurused on hallid."
 }

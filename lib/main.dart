@@ -86,7 +86,7 @@ Future<void> _setupFirebaseMessaging() async {
     );
 
     if (token == null || token.isEmpty) {
-      debugPrint('FCM TOKEN: не получен');
+      debugPrint('FCM TOKEN: not available');
     } else {
       debugPrint('FCM TOKEN: $token');
       await _registerPushToken(token);
@@ -288,7 +288,7 @@ class AppErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Повторить'),
+              label: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),
@@ -899,17 +899,18 @@ if (selectedStore != 'all') {
   }
 
   Future<void> openProduct(Product product) async {
+    final l10n = AppLocalizations.of(context)!;
     final value = product.productUrl;
 
     if (value == null || value.isEmpty) {
-      showMessage('Ссылка на товар отсутствует');
+      showMessage(l10n.productLinkMissing);
       return;
     }
 
     final uri = Uri.tryParse(value);
 
     if (uri == null) {
-      showMessage('Некорректная ссылка на товар');
+      showMessage(l10n.invalidProductLink);
       return;
     }
 
@@ -919,7 +920,7 @@ if (selectedStore != 'all') {
     );
 
     if (!opened) {
-      showMessage('Не удалось открыть магазин');
+      showMessage(l10n.openStoreFailed);
     }
   }
 
@@ -1843,7 +1844,9 @@ final storeField = DropdownButtonFormField<String>(
                       expanded ? Icons.expand_less : Icons.tune,
                     ),
                     label: Text(
-                      expanded ? 'Скрыть фильтры' : 'Фильтры',
+                      expanded
+                          ? AppLocalizations.of(context)!.hideFilters
+                          : AppLocalizations.of(context)!.filters,
                     ),
                   ),
                 ),
@@ -1991,7 +1994,6 @@ class PaginationFooter extends StatelessWidget {
     );
   }
 
-  String get pageLabel => '40 товаров';
 }
 
 class EmptyView extends StatelessWidget {
@@ -2030,7 +2032,7 @@ class EmptyView extends StatelessWidget {
             if (hasMore) ...[
               const SizedBox(height: 10),
               Text(
-                'Попробуй изменить поиск или фильтры.',
+                AppLocalizations.of(context)!.tryDifferentSearch,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.grey.shade600,
@@ -2138,7 +2140,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         if (isMultiStore)
                           _CardBadge(
-                            label: '${product.storesCount} магаз.',
+                            label: AppLocalizations.of(context)!.storesCount(product.storesCount),
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,
                             foregroundColor: Colors.white,
@@ -2468,7 +2470,7 @@ class ProductCardSizePreview extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Размеры: $label',
+                    AppLocalizations.of(context)!.sizesLabel(label),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -2550,7 +2552,7 @@ class StoreOffer {
       storeProductId:
           (json['store_product_id'] as num?)?.toInt() ?? 0,
       storeName:
-          json['store_name']?.toString() ?? 'Магазин',
+          json['store_name']?.toString() ?? 'Store',
       country:
           json['country']?.toString() ?? '',
       productUrl:
@@ -2619,7 +2621,7 @@ class ProductSizeStore {
 
     return ProductSizeStore(
       storeName:
-          json['store_name']?.toString() ?? 'Магазин',
+          json['store_name']?.toString() ?? 'Store',
       country:
           json['country']?.toString() ?? '',
       currentPrice:
@@ -2873,7 +2875,9 @@ class _ProductDetailsPageState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Цель сохранена на сервере: ${widget.priceFormatter(roundedTarget)} €',
+            AppLocalizations.of(context)!.targetSavedServer(
+              '${widget.priceFormatter(roundedTarget)} €',
+            ),
           ),
         ),
       );
@@ -2891,9 +2895,9 @@ class _ProductDetailsPageState
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Сервер временно недоступен. Цель сохранена только на этом устройстве.',
+            AppLocalizations.of(context)!.serverUnavailableSavedLocally,
           ),
         ),
       );
@@ -2939,17 +2943,19 @@ class _ProductDetailsPageState
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Отслеживание цены отключено на сервере'),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.priceTrackingDisabled,
+          ),
         ),
       );
     } catch (_) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Не удалось отключить цель на сервере. Попробуйте ещё раз.',
+            AppLocalizations.of(context)!.priceTrackingDisableFailed,
           ),
         ),
       );
@@ -2972,7 +2978,7 @@ class _ProductDetailsPageState
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Отслеживать снижение цены'),
+              title: Text(AppLocalizations.of(context)!.trackPrice),
               content: SizedBox(
                 width: 360,
                 child: Column(
@@ -2980,7 +2986,9 @@ class _ProductDetailsPageState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Текущая цена: ${widget.priceFormatter(widget.product.currentPrice)} €',
+                      AppLocalizations.of(context)!.currentPriceLabel(
+                        '${widget.priceFormatter(widget.product.currentPrice)} €',
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -2990,8 +2998,8 @@ class _ProductDetailsPageState
                         decimal: true,
                       ),
                       decoration: InputDecoration(
-                        labelText: 'Желаемая цена, €',
-                        hintText: 'Например 49.99',
+                        labelText: AppLocalizations.of(context)!.desiredPrice,
+                        hintText: AppLocalizations.of(context)!.priceExample,
                         errorText: validationError,
                         border: const OutlineInputBorder(),
                       ),
@@ -3003,7 +3011,7 @@ class _ProductDetailsPageState
                         if (value == null || value <= 0) {
                           setDialogState(() {
                             validationError =
-                                'Введите корректную цену';
+                                AppLocalizations.of(context)!.invalidPrice;
                           });
                           return;
                         }
@@ -3013,7 +3021,7 @@ class _ProductDetailsPageState
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Цель сохраняется на сервере Baltic Deals. Когда цена достигнет цели, приложение отправит push-уведомление.',
+                      AppLocalizations.of(context)!.priceAlertInfo,
                       style: TextStyle(
                         color: Colors.grey.shade700,
                         fontSize: 12,
@@ -3028,12 +3036,12 @@ class _ProductDetailsPageState
                   TextButton(
                     onPressed: () =>
                         Navigator.of(dialogContext).pop(-1),
-                    child: const Text('Отключить'),
+                    child: Text(AppLocalizations.of(context)!.disable),
                   ),
                 TextButton(
                   onPressed: () =>
                       Navigator.of(dialogContext).pop(),
-                  child: const Text('Отмена'),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -3044,14 +3052,14 @@ class _ProductDetailsPageState
                     if (value == null || value <= 0) {
                       setDialogState(() {
                         validationError =
-                            'Введите корректную цену';
+                            AppLocalizations.of(context)!.invalidPrice;
                       });
                       return;
                     }
 
                     Navigator.of(dialogContext).pop(value);
                   },
-                  child: const Text('Сохранить'),
+                  child: Text(AppLocalizations.of(context)!.save),
                 ),
               ],
             );
@@ -3303,13 +3311,13 @@ class _ProductDetailsPageState
         title: Text(
           product.brand?.isNotEmpty == true
               ? product.brand!
-              : 'Товар',
+              : AppLocalizations.of(context)!.product,
         ),
         actions: [
           IconButton(
             tooltip: isFavorite
-                ? 'Убрать из избранного'
-                : 'Добавить в избранное',
+                ? AppLocalizations.of(context)!.removeFavorite
+                : AppLocalizations.of(context)!.addFavorite,
             onPressed: () {
               setState(() {
                 isFavorite = !isFavorite;
@@ -3505,10 +3513,12 @@ class _ProductDetailsPageState
                               Text(
                                 priceAlertTriggered &&
                                         priceAlertTarget != null
-                                    ? 'Цена достигнута!'
+                                    ? AppLocalizations.of(context)!.targetReached
                                     : priceAlertTarget == null
-                                        ? 'Отслеживать снижение цены'
-                                        : 'Цель: ${widget.priceFormatter(priceAlertTarget!)} €',
+                                        ? AppLocalizations.of(context)!.trackPrice
+                                        : AppLocalizations.of(context)!.targetValue(
+                                            '${widget.priceFormatter(priceAlertTarget!)} €',
+                                          ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -3517,13 +3527,18 @@ class _ProductDetailsPageState
                               Text(
                                 priceAlertTriggered &&
                                         priceAlertTarget != null
-                                    ? 'Сработало при ${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} € • цель ${widget.priceFormatter(priceAlertTarget!)} €'
+                                    ? AppLocalizations.of(context)!.triggeredAtTarget(
+                                        '${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} €',
+                                        '${widget.priceFormatter(priceAlertTarget!)} €',
+                                      )
                                     : priceAlertTarget == null
-                                        ? 'Сохраним желаемую цену для этого товара'
+                                        ? AppLocalizations.of(context)!.priceAlertPrompt
                                         : widget.product.currentPrice <=
                                                 priceAlertTarget!
-                                            ? 'Цена уже достигла заданного уровня'
-                                            : 'Текущая цена выше цели на ${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} €',
+                                            ? AppLocalizations.of(context)!.priceAlreadyReached
+                                            : AppLocalizations.of(context)!.priceAboveTarget(
+                                                '${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} €',
+                                              ),
                                 style: TextStyle(
                                   color: Colors.grey.shade700,
                                   fontSize: 12,
@@ -3543,8 +3558,8 @@ class _ProductDetailsPageState
                           ),
                           label: Text(
                             priceAlertTarget == null
-                                ? 'Задать'
-                                : 'Изменить',
+                                ? AppLocalizations.of(context)!.setTarget
+                                : AppLocalizations.of(context)!.changeTarget,
                           ),
                         ),
                       ],
@@ -3553,27 +3568,27 @@ class _ProductDetailsPageState
                 const SizedBox(height: 24),
                 AppDetailRow(
                   icon: Icons.category_outlined,
-                  label: 'Категория',
+                  label: AppLocalizations.of(context)!.category,
                   value: _categoryLabel(
                     product.category,
                   ),
                 ),
                 AppDetailRow(
                   icon: Icons.person_outline,
-                  label: 'Пол',
+                  label: AppLocalizations.of(context)!.gender,
                   value:
                       product.gender?.isNotEmpty == true
                           ? product.gender!
-                          : 'Не указано',
+                          : AppLocalizations.of(context)!.notSpecified,
                 ),
                 AppDetailRow(
                   icon: Icons.storefront_outlined,
-                  label: 'Магазин',
+                  label: AppLocalizations.of(context)!.store,
                   value: product.storeName,
                 ),
                 AppDetailRow(
                   icon: Icons.public,
-                  label: 'Страна',
+                  label: AppLocalizations.of(context)!.country,
                   value: product.country,
                 ),
 
@@ -3582,10 +3597,10 @@ class _ProductDetailsPageState
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Размеры',
-                        style: TextStyle(
+                        AppLocalizations.of(context)!.sizes,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                         ),
@@ -3606,7 +3621,9 @@ class _ProductDetailsPageState
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '${allSizes.where(isSizeAvailable).length} доступно',
+                          AppLocalizations.of(context)!.availableCount(
+                            allSizes.where(isSizeAvailable).length,
+                          ),
                           style: TextStyle(
                             color: Theme.of(context)
                                 .colorScheme
@@ -3635,7 +3652,7 @@ class _ProductDetailsPageState
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Загружаем доступные размеры…',
+                          AppLocalizations.of(context)!.loadingSizes,
                           style: TextStyle(
                             color: Colors.grey.shade700,
                           ),
@@ -3657,10 +3674,10 @@ class _ProductDetailsPageState
                       children: [
                         const Icon(Icons.error_outline),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Не удалось загрузить размеры',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.loadSizesFailed,
+                            style: const TextStyle(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -3673,7 +3690,7 @@ class _ProductDetailsPageState
                             });
                             loadSizes();
                           },
-                          child: const Text('Повторить'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -3696,7 +3713,7 @@ class _ProductDetailsPageState
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Данные о размерах для этого товара пока не загружены.',
+                            AppLocalizations.of(context)!.noSizeData,
                             style: TextStyle(
                               color: Colors.grey.shade700,
                               height: 1.35,
@@ -3709,8 +3726,8 @@ class _ProductDetailsPageState
                 else ...[
                   Text(
                     selectedSize == null
-                        ? 'Выбери размер, чтобы сравнить магазины'
-                        : 'Выбран размер: $selectedSize',
+                        ? AppLocalizations.of(context)!.chooseSize
+                        : AppLocalizations.of(context)!.selectedSize(selectedSize!),
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                     ),
@@ -3737,7 +3754,7 @@ class _ProductDetailsPageState
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Недоступные сейчас размеры показаны серым.',
+                    AppLocalizations.of(context)!.unavailableSizesGray,
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -3754,7 +3771,7 @@ class _ProductDetailsPageState
 
                         if (selectedStores.isEmpty) {
                           return Text(
-                            'Выбранный размер сейчас недоступен',
+                            AppLocalizations.of(context)!.selectedSizeUnavailable,
                             style: TextStyle(
                               color: Colors.grey.shade600,
                             ),
@@ -3786,7 +3803,10 @@ class _ProductDetailsPageState
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Размер $selectedSize · ${selectedStores.length} ${selectedStores.length == 1 ? 'магазин' : 'магазина'}',
+                                          AppLocalizations.of(context)!.sizeStoreCount(
+                                            selectedSize!,
+                                            selectedStores.length,
+                                          ),
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w800,
                                           ),
@@ -3794,7 +3814,9 @@ class _ProductDetailsPageState
                                         if (bestPrice != null) ...[
                                           const SizedBox(height: 3),
                                           Text(
-                                            'Лучшая цена: ${widget.priceFormatter(bestPrice)} €',
+                                            AppLocalizations.of(context)!.bestPriceValue(
+                                              '${widget.priceFormatter(bestPrice)} €',
+                                            ),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -3857,9 +3879,9 @@ class _ProductDetailsPageState
                                                         12,
                                                       ),
                                                     ),
-                                                    child: const Text(
-                                                      'Лучшая цена',
-                                                      style: TextStyle(
+                                                    child: Text(
+                                                      AppLocalizations.of(context)!.bestPrice,
+                                                      style: const TextStyle(
                                                         fontSize: 11,
                                                         fontWeight:
                                                             FontWeight.w800,
@@ -3878,9 +3900,9 @@ class _ProductDetailsPageState
                                               ),
                                             ),
                                             const SizedBox(height: 2),
-                                            const Text(
-                                              'В наличии',
-                                              style: TextStyle(
+                                            Text(
+                                              AppLocalizations.of(context)!.inStock,
+                                              style: const TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w700,
                                               ),
@@ -3892,7 +3914,7 @@ class _ProductDetailsPageState
                                       FilledButton(
                                         onPressed: () =>
                                             openSizeStore(store),
-                                        child: const Text('Открыть'),
+                                        child: Text(AppLocalizations.of(context)!.open),
                                       ),
                                     ],
                                   ),
@@ -3907,9 +3929,9 @@ class _ProductDetailsPageState
                 const SizedBox(height: 10),
                 const Divider(),
                 const SizedBox(height: 12),
-                const Text(
-                  'Цены в магазинах',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.storePrices,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                   ),
@@ -3927,9 +3949,9 @@ class _ProductDetailsPageState
                 else if (offersError != null)
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Не удалось загрузить предложения',
+                          AppLocalizations.of(context)!.loadOffersFailed,
                         ),
                       ),
                       TextButton(
@@ -3940,13 +3962,13 @@ class _ProductDetailsPageState
                           });
                           loadOffers();
                         },
-                        child: const Text('Повторить'),
+                        child: Text(AppLocalizations.of(context)!.retry),
                       ),
                     ],
                   )
                 else if (offers.isEmpty)
                   Text(
-                    'Предложений пока нет',
+                    AppLocalizations.of(context)!.noOffers,
                     style: TextStyle(
                       color: Colors.grey.shade600,
                     ),
@@ -3967,9 +3989,9 @@ class _ProductDetailsPageState
                 const SizedBox(height: 10),
                 const Divider(),
                 const SizedBox(height: 12),
-                const Text(
-                  'История цены',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.priceHistory,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                   ),
@@ -3993,7 +4015,7 @@ class _ProductDetailsPageState
                       children: [
                         Expanded(
                           child: Text(
-                            'Не удалось загрузить историю цены',
+                            AppLocalizations.of(context)!.loadPriceHistoryFailed,
                             style: TextStyle(
                               color: Colors.grey.shade700,
                             ),
@@ -4007,7 +4029,7 @@ class _ProductDetailsPageState
                             });
                             loadPriceHistory();
                           },
-                          child: const Text('Повторить'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -4018,17 +4040,17 @@ class _ProductDetailsPageState
                     runSpacing: 8,
                     children: [
                       _PriceStat(
-                        label: 'Сейчас',
+                        label: AppLocalizations.of(context)!.now,
                         value:
                             '${widget.priceFormatter(product.currentPrice)} €',
                       ),
                       _PriceStat(
-                        label: 'Минимум',
+                        label: AppLocalizations.of(context)!.minimum,
                         value:
                             '${widget.priceFormatter(minHistoryPrice ?? product.currentPrice)} €',
                       ),
                       _PriceStat(
-                        label: 'Максимум',
+                        label: AppLocalizations.of(context)!.maximum,
                         value:
                             '${widget.priceFormatter(maxHistoryPrice ?? product.currentPrice)} €',
                       ),
@@ -4047,8 +4069,8 @@ class _ProductDetailsPageState
                   const SizedBox(height: 6),
                   Text(
                     history.length <= 1
-                        ? 'История только начала собираться. Новые точки появятся при изменении цены.'
-                        : 'Точек истории: ${history.length}',
+                        ? AppLocalizations.of(context)!.historyStarted
+                        : AppLocalizations.of(context)!.historyPoints(history.length),
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -4064,14 +4086,14 @@ class _ProductDetailsPageState
                     icon: const Icon(
                       Icons.open_in_new,
                     ),
-                    label: const Padding(
+                    label: Padding(
                       padding:
-                          EdgeInsets.symmetric(
+                          const EdgeInsets.symmetric(
                         vertical: 14,
                       ),
                       child: Text(
-                        'Перейти в магазин',
-                        style: TextStyle(
+                        AppLocalizations.of(context)!.goToStore,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -4125,15 +4147,15 @@ class _ProductDetailsPageState
   String _categoryLabel(String? category) {
     switch (category) {
       case 'shoes':
-        return 'Обувь';
+        return AppLocalizations.of(context)!.shoes;
       case 'clothing':
-        return 'Одежда';
+        return AppLocalizations.of(context)!.clothing;
       case 'sports':
-        return 'Спорт';
+        return AppLocalizations.of(context)!.sport;
       default:
         return category?.isNotEmpty == true
             ? category!
-            : 'Не указано';
+            : AppLocalizations.of(context)!.notSpecified;
     }
   }
 }
@@ -4203,7 +4225,7 @@ class _OfferCard extends StatelessWidget {
                       ),
                       if (offer.hasCoupon)
   _CardBadge(
-    label: 'КУПОН',
+    label: AppLocalizations.of(context)!.coupon,
     backgroundColor: Colors.blue.shade50,
     foregroundColor: Colors.blue.shade800,
   ),
@@ -4233,7 +4255,7 @@ class _OfferCard extends StatelessWidget {
             const SizedBox(width: 12),
             FilledButton(
               onPressed: onOpen,
-              child: const Text('Открыть'),
+              child: Text(AppLocalizations.of(context)!.open),
             ),
           ],
         ),
@@ -4461,9 +4483,9 @@ class ErrorView extends StatelessWidget {
             const SizedBox(
               height: 16,
             ),
-            const Text(
-              'Не удалось загрузить товары',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.loadingError,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight:
                     FontWeight.w700,

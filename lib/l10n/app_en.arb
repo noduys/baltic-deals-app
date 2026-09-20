@@ -54,13 +54,177 @@
   "loadingError": "Could not load products",
   "noProducts": "No products found",
   "foundProducts": "Found: {count}",
-  "@foundProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@foundProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "loadedProducts": "Loaded: {count}",
-  "@loadedProducts": {"placeholders": {"count": {"type": "int"}}},
+  "@loadedProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "discountBadge": "-{percent}%",
-  "@discountBadge": {"placeholders": {"percent": {"type": "int"}}},
+  "@discountBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "storesCount": "{count, plural, =1{1 store} other{{count} stores}}",
-  "@storesCount": {"placeholders": {"count": {"type": "int"}}},
+  "@storesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "savingsUpTo": "Save up to {amount} €",
-  "@savingsUpTo": {"placeholders": {"amount": {"type": "String"}}}
+  "@savingsUpTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "availableCount": "Available: {count}",
+  "@availableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bestPriceValue": "Best price: {price}",
+  "@bestPriceValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "category": "Category",
+  "changeTarget": "Change",
+  "chooseSize": "Choose a size to compare stores",
+  "country": "Country",
+  "currentPriceLabel": "Current price: {price}",
+  "@currentPriceLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "filters": "Filters",
+  "gender": "Gender",
+  "goToStore": "Go to store",
+  "hideFilters": "Hide filters",
+  "historyPoints": "History points: {count}",
+  "@historyPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyStarted": "Price history has just started. New points will appear when the price changes.",
+  "inStock": "In stock",
+  "invalidPrice": "Enter a valid price",
+  "invalidProductLink": "Invalid product link",
+  "loadOffersFailed": "Could not load offers",
+  "loadPriceHistoryFailed": "Could not load price history",
+  "loadSizesFailed": "Could not load sizes",
+  "loadingSizes": "Loading available sizes…",
+  "maximum": "Maximum",
+  "minimum": "Minimum",
+  "noOffers": "No offers yet",
+  "noSizeData": "Size data for this product is not available yet.",
+  "notSpecified": "Not specified",
+  "now": "Now",
+  "openStoreFailed": "Could not open the store",
+  "priceAboveTarget": "Current price is {amount} above the target",
+  "@priceAboveTarget": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "priceAlertInfo": "The target is saved on the Baltic Deals server. When the price reaches the target, the app will send a push notification.",
+  "priceAlertPrompt": "Save your desired price for this product",
+  "priceAlreadyReached": "The price has already reached the target level",
+  "priceHistory": "Price history",
+  "priceTrackingDisableFailed": "Could not disable the target on the server. Please try again.",
+  "priceTrackingDisabled": "Price tracking disabled on the server",
+  "product": "Product",
+  "productLinkMissing": "Product link is unavailable",
+  "selectedSize": "Selected size: {size}",
+  "@selectedSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "selectedSizeUnavailable": "The selected size is currently unavailable",
+  "serverUnavailableSavedLocally": "The server is temporarily unavailable. The target was saved only on this device.",
+  "setTarget": "Set",
+  "sizeStoreCount": "Size {size} · stores: {count}",
+  "@sizeStoreCount": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sizes": "Sizes",
+  "sizesLabel": "Sizes: {sizes}",
+  "@sizesLabel": {
+    "placeholders": {
+      "sizes": {
+        "type": "String"
+      }
+    }
+  },
+  "store": "Store",
+  "storePrices": "Store prices",
+  "targetReached": "Target reached!",
+  "targetSavedServer": "Target saved on the server: {price}",
+  "@targetSavedServer": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "targetValue": "Target: {price}",
+  "@targetValue": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "triggeredAtTarget": "Triggered at {triggeredPrice} • target {targetPrice}",
+  "@triggeredAtTarget": {
+    "placeholders": {
+      "triggeredPrice": {
+        "type": "String"
+      },
+      "targetPrice": {
+        "type": "String"
+      }
+    }
+  },
+  "tryDifferentSearch": "Try changing the search or filters.",
+  "unavailableSizesGray": "Currently unavailable sizes are shown in gray."
 }
