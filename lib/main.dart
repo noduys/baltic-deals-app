@@ -1,5 +1,6 @@
 ﻿import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -14,8 +15,34 @@ import 'package:url_launcher/url_launcher.dart';
 const String _webVapidKey =
     'BAeMMjHE9TkBtALMEoekwr0FlmgyjY6eeo03QFnlGFoqs8XNVY9mRYx4lqrLiCoRaoNT411Q7djVorhbuGLB6MI';
 
+const String _deviceIdPreferenceKey = 'app_device_id';
+
+Future<String> _getOrCreateDeviceId() async {
+  final prefs = await SharedPreferences.getInstance();
+  final existing = prefs.getString(_deviceIdPreferenceKey)?.trim();
+
+  if (existing != null && existing.isNotEmpty) {
+    return existing;
+  }
+
+  final random = Random.secure();
+  final bytes = List<int>.generate(
+    16,
+    (_) => random.nextInt(256),
+  );
+
+  final deviceId = bytes
+      .map((value) => value.toRadixString(16).padLeft(2, '0'))
+      .join();
+
+  await prefs.setString(_deviceIdPreferenceKey, deviceId);
+  return deviceId;
+}
+
 Future<void> _registerPushToken(String token) async {
   try {
+    final deviceId = await _getOrCreateDeviceId();
+
     final response = await http.post(
       Uri.parse(
         'https://baltic-deals-api.noduys.workers.dev/push-token',
@@ -25,6 +52,7 @@ Future<void> _registerPushToken(String token) async {
       },
       body: jsonEncode({
         'token': token,
+        'deviceId': deviceId,
       }),
     );
 
@@ -2709,6 +2737,7 @@ class _ProductDetailsPageState
 
   Future<void> loadPriceAlert() async {
     final prefs = await SharedPreferences.getInstance();
+    final deviceId = await _getOrCreateDeviceId();
     final localValue = prefs.getDouble(_priceAlertKey);
 
     if (mounted) {
@@ -2724,6 +2753,7 @@ class _ProductDetailsPageState
       ).replace(
         queryParameters: {
           'productId': widget.product.id.toString(),
+          'deviceId': deviceId,
         },
       );
 
@@ -2800,6 +2830,7 @@ class _ProductDetailsPageState
 
   Future<void> savePriceAlert(double target) async {
     final prefs = await SharedPreferences.getInstance();
+    final deviceId = await _getOrCreateDeviceId();
     final roundedTarget = double.parse(target.toStringAsFixed(2));
 
     try {
@@ -2813,6 +2844,7 @@ class _ProductDetailsPageState
         body: jsonEncode({
           'productId': widget.product.id,
           'targetPrice': roundedTarget,
+          'deviceId': deviceId,
         }),
       );
 
@@ -2870,6 +2902,7 @@ class _ProductDetailsPageState
 
   Future<void> removePriceAlert() async {
     final prefs = await SharedPreferences.getInstance();
+    final deviceId = await _getOrCreateDeviceId();
 
     try {
       final uri = Uri.parse(
@@ -2877,6 +2910,7 @@ class _ProductDetailsPageState
       ).replace(
         queryParameters: {
           'productId': widget.product.id.toString(),
+          'deviceId': deviceId,
         },
       );
 
@@ -2979,7 +3013,7 @@ class _ProductDetailsPageState
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Цель сохраняется на сервере Baltic Deals. Push-уведомления подключим позже через Firebase.',
+                      'Цель сохраняется на сервере Baltic Deals. Когда цена достигнет цели, приложение отправит push-уведомление.',
                       style: TextStyle(
                         color: Colors.grey.shade700,
                         fontSize: 12,
