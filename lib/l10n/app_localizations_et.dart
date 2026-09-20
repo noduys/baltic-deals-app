@@ -200,4 +200,179 @@ class AppLocalizationsEt extends AppLocalizations {
   String savingsUpTo(String amount) {
     return 'Säästa kuni $amount €';
   }
+
+  @override
+  String availableCount(int count) {
+    return 'Saadaval: $count';
+  }
+
+  @override
+  String bestPriceValue(String price) {
+    return 'Parim hind: $price';
+  }
+
+  @override
+  String get category => 'Kategooria';
+
+  @override
+  String get changeTarget => 'Muuda';
+
+  @override
+  String get chooseSize => 'Vali suurus, et poode võrrelda';
+
+  @override
+  String get country => 'Riik';
+
+  @override
+  String currentPriceLabel(String price) {
+    return 'Praegune hind: $price';
+  }
+
+  @override
+  String get filters => 'Filtrid';
+
+  @override
+  String get gender => 'Sugu';
+
+  @override
+  String get goToStore => 'Mine poodi';
+
+  @override
+  String get hideFilters => 'Peida filtrid';
+
+  @override
+  String historyPoints(int count) {
+    return 'Ajaloopunkte: $count';
+  }
+
+  @override
+  String get historyStarted => 'Hinnaajalugu alles hakkas kogunema. Uued punktid ilmuvad hinna muutumisel.';
+
+  @override
+  String get inStock => 'Laos';
+
+  @override
+  String get invalidPrice => 'Sisesta korrektne hind';
+
+  @override
+  String get invalidProductLink => 'Vigane tootelink';
+
+  @override
+  String get loadOffersFailed => 'Pakkumiste laadimine ebaõnnestus';
+
+  @override
+  String get loadPriceHistoryFailed => 'Hinnaajaloo laadimine ebaõnnestus';
+
+  @override
+  String get loadSizesFailed => 'Suuruste laadimine ebaõnnestus';
+
+  @override
+  String get loadingSizes => 'Saadaolevate suuruste laadimine…';
+
+  @override
+  String get maximum => 'Maksimum';
+
+  @override
+  String get minimum => 'Miinimum';
+
+  @override
+  String get noOffers => 'Pakkumisi veel pole';
+
+  @override
+  String get noSizeData => 'Selle toote suuruste andmeid pole veel laaditud.';
+
+  @override
+  String get notSpecified => 'Pole märgitud';
+
+  @override
+  String get now => 'Praegu';
+
+  @override
+  String get openStoreFailed => 'Poodi ei õnnestunud avada';
+
+  @override
+  String priceAboveTarget(String amount) {
+    return 'Praegune hind on sihthinnast $amount kõrgem';
+  }
+
+  @override
+  String get priceAlertInfo => 'Sihthind salvestatakse Baltic Dealsi serverisse. Kui hind jõuab sihthinnani, saadab rakendus push-teavituse.';
+
+  @override
+  String get priceAlertPrompt => 'Salvesta selle toote soovitud hind';
+
+  @override
+  String get priceAlreadyReached => 'Hind on juba sihttasemeni jõudnud';
+
+  @override
+  String get priceHistory => 'Hinnaajalugu';
+
+  @override
+  String get priceTrackingDisableFailed => 'Sihthinna väljalülitamine serveris ebaõnnestus. Proovi uuesti.';
+
+  @override
+  String get priceTrackingDisabled => 'Hinna jälgimine on serveris välja lülitatud';
+
+  @override
+  String get product => 'Toode';
+
+  @override
+  String get productLinkMissing => 'Tootelink puudub';
+
+  @override
+  String selectedSize(String size) {
+    return 'Valitud suurus: $size';
+  }
+
+  @override
+  String get selectedSizeUnavailable => 'Valitud suurus pole praegu saadaval';
+
+  @override
+  String get serverUnavailableSavedLocally => 'Server pole ajutiselt saadaval. Sihthind salvestati ainult sellesse seadmesse.';
+
+  @override
+  String get setTarget => 'Määra';
+
+  @override
+  String sizeStoreCount(String size, int count) {
+    return 'Suurus $size · poode: $count';
+  }
+
+  @override
+  String get sizes => 'Suurused';
+
+  @override
+  String sizesLabel(String sizes) {
+    return 'Suurused: $sizes';
+  }
+
+  @override
+  String get store => 'Pood';
+
+  @override
+  String get storePrices => 'Hinnad poodides';
+
+  @override
+  String get targetReached => 'Sihthind saavutatud!';
+
+  @override
+  String targetSavedServer(String price) {
+    return 'Sihthind salvestati serverisse: $price';
+  }
+
+  @override
+  String targetValue(String price) {
+    return 'Sihthind: $price';
+  }
+
+  @override
+  String triggeredAtTarget(String triggeredPrice, String targetPrice) {
+    return 'Käivitus hinnaga $triggeredPrice • siht $targetPrice';
+  }
+
+  @override
+  String get tryDifferentSearch => 'Proovi muuta otsingut või filtreid.';
+
+  @override
+  String get unavailableSizesGray => 'Praegu mittesaadavad suurused on hallid.';
 }

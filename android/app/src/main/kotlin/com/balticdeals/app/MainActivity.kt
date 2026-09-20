@@ -1,4 +1,4 @@
-package com.example.baltic_deals_app
+package com.balticdeals.app
 
 import io.flutter.embedding.android.FlutterActivity
 

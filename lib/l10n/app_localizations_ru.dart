@@ -202,4 +202,179 @@ class AppLocalizationsRu extends AppLocalizations {
   String savingsUpTo(String amount) {
     return 'Экономия до $amount €';
   }
+
+  @override
+  String availableCount(int count) {
+    return 'Доступно: $count';
+  }
+
+  @override
+  String bestPriceValue(String price) {
+    return 'Лучшая цена: $price';
+  }
+
+  @override
+  String get category => 'Категория';
+
+  @override
+  String get changeTarget => 'Изменить';
+
+  @override
+  String get chooseSize => 'Выбери размер, чтобы сравнить магазины';
+
+  @override
+  String get country => 'Страна';
+
+  @override
+  String currentPriceLabel(String price) {
+    return 'Текущая цена: $price';
+  }
+
+  @override
+  String get filters => 'Фильтры';
+
+  @override
+  String get gender => 'Пол';
+
+  @override
+  String get goToStore => 'Перейти в магазин';
+
+  @override
+  String get hideFilters => 'Скрыть фильтры';
+
+  @override
+  String historyPoints(int count) {
+    return 'Точек истории: $count';
+  }
+
+  @override
+  String get historyStarted => 'История только начала собираться. Новые точки появятся при изменении цены.';
+
+  @override
+  String get inStock => 'В наличии';
+
+  @override
+  String get invalidPrice => 'Введите корректную цену';
+
+  @override
+  String get invalidProductLink => 'Некорректная ссылка на товар';
+
+  @override
+  String get loadOffersFailed => 'Не удалось загрузить предложения';
+
+  @override
+  String get loadPriceHistoryFailed => 'Не удалось загрузить историю цены';
+
+  @override
+  String get loadSizesFailed => 'Не удалось загрузить размеры';
+
+  @override
+  String get loadingSizes => 'Загружаем доступные размеры…';
+
+  @override
+  String get maximum => 'Максимум';
+
+  @override
+  String get minimum => 'Минимум';
+
+  @override
+  String get noOffers => 'Предложений пока нет';
+
+  @override
+  String get noSizeData => 'Данные о размерах для этого товара пока не загружены.';
+
+  @override
+  String get notSpecified => 'Не указано';
+
+  @override
+  String get now => 'Сейчас';
+
+  @override
+  String get openStoreFailed => 'Не удалось открыть магазин';
+
+  @override
+  String priceAboveTarget(String amount) {
+    return 'Текущая цена выше цели на $amount';
+  }
+
+  @override
+  String get priceAlertInfo => 'Цель сохраняется на сервере Baltic Deals. Когда цена достигнет цели, приложение отправит push-уведомление.';
+
+  @override
+  String get priceAlertPrompt => 'Сохраним желаемую цену для этого товара';
+
+  @override
+  String get priceAlreadyReached => 'Цена уже достигла заданного уровня';
+
+  @override
+  String get priceHistory => 'История цены';
+
+  @override
+  String get priceTrackingDisableFailed => 'Не удалось отключить цель на сервере. Попробуйте ещё раз.';
+
+  @override
+  String get priceTrackingDisabled => 'Отслеживание цены отключено на сервере';
+
+  @override
+  String get product => 'Товар';
+
+  @override
+  String get productLinkMissing => 'Ссылка на товар отсутствует';
+
+  @override
+  String selectedSize(String size) {
+    return 'Выбран размер: $size';
+  }
+
+  @override
+  String get selectedSizeUnavailable => 'Выбранный размер сейчас недоступен';
+
+  @override
+  String get serverUnavailableSavedLocally => 'Сервер временно недоступен. Цель сохранена только на этом устройстве.';
+
+  @override
+  String get setTarget => 'Задать';
+
+  @override
+  String sizeStoreCount(String size, int count) {
+    return 'Размер $size · магазинов: $count';
+  }
+
+  @override
+  String get sizes => 'Размеры';
+
+  @override
+  String sizesLabel(String sizes) {
+    return 'Размеры: $sizes';
+  }
+
+  @override
+  String get store => 'Магазин';
+
+  @override
+  String get storePrices => 'Цены в магазинах';
+
+  @override
+  String get targetReached => 'Цена достигнута!';
+
+  @override
+  String targetSavedServer(String price) {
+    return 'Цель сохранена на сервере: $price';
+  }
+
+  @override
+  String targetValue(String price) {
+    return 'Цель: $price';
+  }
+
+  @override
+  String triggeredAtTarget(String triggeredPrice, String targetPrice) {
+    return 'Сработало при $triggeredPrice • цель $targetPrice';
+  }
+
+  @override
+  String get tryDifferentSearch => 'Попробуй изменить поиск или фильтры.';
+
+  @override
+  String get unavailableSizesGray => 'Недоступные сейчас размеры показаны серым.';
 }

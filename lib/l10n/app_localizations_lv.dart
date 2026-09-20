@@ -200,4 +200,179 @@ class AppLocalizationsLv extends AppLocalizations {
   String savingsUpTo(String amount) {
     return 'Ietaupi līdz $amount €';
   }
+
+  @override
+  String availableCount(int count) {
+    return 'Pieejami: $count';
+  }
+
+  @override
+  String bestPriceValue(String price) {
+    return 'Labākā cena: $price';
+  }
+
+  @override
+  String get category => 'Kategorija';
+
+  @override
+  String get changeTarget => 'Mainīt';
+
+  @override
+  String get chooseSize => 'Izvēlies izmēru, lai salīdzinātu veikalus';
+
+  @override
+  String get country => 'Valsts';
+
+  @override
+  String currentPriceLabel(String price) {
+    return 'Pašreizējā cena: $price';
+  }
+
+  @override
+  String get filters => 'Filtri';
+
+  @override
+  String get gender => 'Dzimums';
+
+  @override
+  String get goToStore => 'Doties uz veikalu';
+
+  @override
+  String get hideFilters => 'Paslēpt filtrus';
+
+  @override
+  String historyPoints(int count) {
+    return 'Vēstures punkti: $count';
+  }
+
+  @override
+  String get historyStarted => 'Cenu vēsture tikko sākta. Jauni punkti parādīsies, kad cena mainīsies.';
+
+  @override
+  String get inStock => 'Ir noliktavā';
+
+  @override
+  String get invalidPrice => 'Ievadi derīgu cenu';
+
+  @override
+  String get invalidProductLink => 'Nederīga preces saite';
+
+  @override
+  String get loadOffersFailed => 'Neizdevās ielādēt piedāvājumus';
+
+  @override
+  String get loadPriceHistoryFailed => 'Neizdevās ielādēt cenu vēsturi';
+
+  @override
+  String get loadSizesFailed => 'Neizdevās ielādēt izmērus';
+
+  @override
+  String get loadingSizes => 'Ielādē pieejamos izmērus…';
+
+  @override
+  String get maximum => 'Maksimums';
+
+  @override
+  String get minimum => 'Minimums';
+
+  @override
+  String get noOffers => 'Piedāvājumu vēl nav';
+
+  @override
+  String get noSizeData => 'Šai precei izmēru dati vēl nav ielādēti.';
+
+  @override
+  String get notSpecified => 'Nav norādīts';
+
+  @override
+  String get now => 'Tagad';
+
+  @override
+  String get openStoreFailed => 'Neizdevās atvērt veikalu';
+
+  @override
+  String priceAboveTarget(String amount) {
+    return 'Pašreizējā cena ir par $amount augstāka par mērķi';
+  }
+
+  @override
+  String get priceAlertInfo => 'Mērķa cena tiek saglabāta Baltic Deals serverī. Kad cena sasniegs mērķi, lietotne nosūtīs push paziņojumu.';
+
+  @override
+  String get priceAlertPrompt => 'Saglabā vēlamo cenu šai precei';
+
+  @override
+  String get priceAlreadyReached => 'Cena jau ir sasniegusi mērķa līmeni';
+
+  @override
+  String get priceHistory => 'Cenu vēsture';
+
+  @override
+  String get priceTrackingDisableFailed => 'Neizdevās izslēgt mērķi serverī. Mēģini vēlreiz.';
+
+  @override
+  String get priceTrackingDisabled => 'Cenas izsekošana serverī ir izslēgta';
+
+  @override
+  String get product => 'Prece';
+
+  @override
+  String get productLinkMissing => 'Preces saite nav pieejama';
+
+  @override
+  String selectedSize(String size) {
+    return 'Izvēlētais izmērs: $size';
+  }
+
+  @override
+  String get selectedSizeUnavailable => 'Izvēlētais izmērs pašlaik nav pieejams';
+
+  @override
+  String get serverUnavailableSavedLocally => 'Serveris īslaicīgi nav pieejams. Mērķis saglabāts tikai šajā ierīcē.';
+
+  @override
+  String get setTarget => 'Iestatīt';
+
+  @override
+  String sizeStoreCount(String size, int count) {
+    return 'Izmērs $size · veikali: $count';
+  }
+
+  @override
+  String get sizes => 'Izmēri';
+
+  @override
+  String sizesLabel(String sizes) {
+    return 'Izmēri: $sizes';
+  }
+
+  @override
+  String get store => 'Veikals';
+
+  @override
+  String get storePrices => 'Cenas veikalos';
+
+  @override
+  String get targetReached => 'Mērķa cena sasniegta!';
+
+  @override
+  String targetSavedServer(String price) {
+    return 'Mērķis saglabāts serverī: $price';
+  }
+
+  @override
+  String targetValue(String price) {
+    return 'Mērķis: $price';
+  }
+
+  @override
+  String triggeredAtTarget(String triggeredPrice, String targetPrice) {
+    return 'Nostrādāja pie $triggeredPrice • mērķis $targetPrice';
+  }
+
+  @override
+  String get tryDifferentSearch => 'Pamēģini mainīt meklēšanu vai filtrus.';
+
+  @override
+  String get unavailableSizesGray => 'Pašlaik nepieejamie izmēri ir parādīti pelēki.';
 }

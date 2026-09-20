@@ -454,6 +454,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save up to {amount} €'**
   String savingsUpTo(String amount);
+
+  /// No description provided for @availableCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Available: {count}'**
+  String availableCount(int count);
+
+  /// No description provided for @bestPriceValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Best price: {price}'**
+  String bestPriceValue(String price);
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @changeTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get changeTarget;
+
+  /// No description provided for @chooseSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a size to compare stores'**
+  String get chooseSize;
+
+  /// No description provided for @country.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get country;
+
+  /// No description provided for @currentPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current price: {price}'**
+  String currentPriceLabel(String price);
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @gender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get gender;
+
+  /// No description provided for @goToStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to store'**
+  String get goToStore;
+
+  /// No description provided for @hideFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide filters'**
+  String get hideFilters;
+
+  /// No description provided for @historyPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'History points: {count}'**
+  String historyPoints(int count);
+
+  /// No description provided for @historyStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Price history has just started. New points will appear when the price changes.'**
+  String get historyStarted;
+
+  /// No description provided for @inStock.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock'**
+  String get inStock;
+
+  /// No description provided for @invalidPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid price'**
+  String get invalidPrice;
+
+  /// No description provided for @invalidProductLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid product link'**
+  String get invalidProductLink;
+
+  /// No description provided for @loadOffersFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load offers'**
+  String get loadOffersFailed;
+
+  /// No description provided for @loadPriceHistoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load price history'**
+  String get loadPriceHistoryFailed;
+
+  /// No description provided for @loadSizesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load sizes'**
+  String get loadSizesFailed;
+
+  /// No description provided for @loadingSizes.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading available sizes…'**
+  String get loadingSizes;
+
+  /// No description provided for @maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum'**
+  String get maximum;
+
+  /// No description provided for @minimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum'**
+  String get minimum;
+
+  /// No description provided for @noOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'No offers yet'**
+  String get noOffers;
+
+  /// No description provided for @noSizeData.
+  ///
+  /// In en, this message translates to:
+  /// **'Size data for this product is not available yet.'**
+  String get noSizeData;
+
+  /// No description provided for @notSpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get notSpecified;
+
+  /// No description provided for @now.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get now;
+
+  /// No description provided for @openStoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the store'**
+  String get openStoreFailed;
+
+  /// No description provided for @priceAboveTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Current price is {amount} above the target'**
+  String priceAboveTarget(String amount);
+
+  /// No description provided for @priceAlertInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'The target is saved on the Baltic Deals server. When the price reaches the target, the app will send a push notification.'**
+  String get priceAlertInfo;
+
+  /// No description provided for @priceAlertPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your desired price for this product'**
+  String get priceAlertPrompt;
+
+  /// No description provided for @priceAlreadyReached.
+  ///
+  /// In en, this message translates to:
+  /// **'The price has already reached the target level'**
+  String get priceAlreadyReached;
+
+  /// No description provided for @priceHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Price history'**
+  String get priceHistory;
+
+  /// No description provided for @priceTrackingDisableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not disable the target on the server. Please try again.'**
+  String get priceTrackingDisableFailed;
+
+  /// No description provided for @priceTrackingDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Price tracking disabled on the server'**
+  String get priceTrackingDisabled;
+
+  /// No description provided for @product.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get product;
+
+  /// No description provided for @productLinkMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Product link is unavailable'**
+  String get productLinkMissing;
+
+  /// No description provided for @selectedSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected size: {size}'**
+  String selectedSize(String size);
+
+  /// No description provided for @selectedSizeUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected size is currently unavailable'**
+  String get selectedSizeUnavailable;
+
+  /// No description provided for @serverUnavailableSavedLocally.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is temporarily unavailable. The target was saved only on this device.'**
+  String get serverUnavailableSavedLocally;
+
+  /// No description provided for @setTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set'**
+  String get setTarget;
+
+  /// No description provided for @sizeStoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Size {size} · stores: {count}'**
+  String sizeStoreCount(String size, int count);
+
+  /// No description provided for @sizes.
+  ///
+  /// In en, this message translates to:
+  /// **'Sizes'**
+  String get sizes;
+
+  /// No description provided for @sizesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sizes: {sizes}'**
+  String sizesLabel(String sizes);
+
+  /// No description provided for @store.
+  ///
+  /// In en, this message translates to:
+  /// **'Store'**
+  String get store;
+
+  /// No description provided for @storePrices.
+  ///
+  /// In en, this message translates to:
+  /// **'Store prices'**
+  String get storePrices;
+
+  /// No description provided for @targetReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Target reached!'**
+  String get targetReached;
+
+  /// No description provided for @targetSavedServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Target saved on the server: {price}'**
+  String targetSavedServer(String price);
+
+  /// No description provided for @targetValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Target: {price}'**
+  String targetValue(String price);
+
+  /// No description provided for @triggeredAtTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Triggered at {triggeredPrice} • target {targetPrice}'**
+  String triggeredAtTarget(String triggeredPrice, String targetPrice);
+
+  /// No description provided for @tryDifferentSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing the search or filters.'**
+  String get tryDifferentSearch;
+
+  /// No description provided for @unavailableSizesGray.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently unavailable sizes are shown in gray.'**
+  String get unavailableSizesGray;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

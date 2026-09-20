@@ -200,4 +200,179 @@ class AppLocalizationsLt extends AppLocalizations {
   String savingsUpTo(String amount) {
     return 'Sutaupyk iki $amount €';
   }
+
+  @override
+  String availableCount(int count) {
+    return 'Prieinama: $count';
+  }
+
+  @override
+  String bestPriceValue(String price) {
+    return 'Geriausia kaina: $price';
+  }
+
+  @override
+  String get category => 'Kategorija';
+
+  @override
+  String get changeTarget => 'Keisti';
+
+  @override
+  String get chooseSize => 'Pasirink dydį, kad palygintum parduotuves';
+
+  @override
+  String get country => 'Šalis';
+
+  @override
+  String currentPriceLabel(String price) {
+    return 'Dabartinė kaina: $price';
+  }
+
+  @override
+  String get filters => 'Filtrai';
+
+  @override
+  String get gender => 'Lytis';
+
+  @override
+  String get goToStore => 'Eiti į parduotuvę';
+
+  @override
+  String get hideFilters => 'Slėpti filtrus';
+
+  @override
+  String historyPoints(int count) {
+    return 'Istorijos taškų: $count';
+  }
+
+  @override
+  String get historyStarted => 'Kainos istorija tik pradėta kaupti. Nauji taškai atsiras pasikeitus kainai.';
+
+  @override
+  String get inStock => 'Yra sandėlyje';
+
+  @override
+  String get invalidPrice => 'Įvesk teisingą kainą';
+
+  @override
+  String get invalidProductLink => 'Neteisinga prekės nuoroda';
+
+  @override
+  String get loadOffersFailed => 'Nepavyko įkelti pasiūlymų';
+
+  @override
+  String get loadPriceHistoryFailed => 'Nepavyko įkelti kainos istorijos';
+
+  @override
+  String get loadSizesFailed => 'Nepavyko įkelti dydžių';
+
+  @override
+  String get loadingSizes => 'Įkeliami galimi dydžiai…';
+
+  @override
+  String get maximum => 'Maksimumas';
+
+  @override
+  String get minimum => 'Minimumas';
+
+  @override
+  String get noOffers => 'Pasiūlymų kol kas nėra';
+
+  @override
+  String get noSizeData => 'Šios prekės dydžių duomenys dar neįkelti.';
+
+  @override
+  String get notSpecified => 'Nenurodyta';
+
+  @override
+  String get now => 'Dabar';
+
+  @override
+  String get openStoreFailed => 'Nepavyko atidaryti parduotuvės';
+
+  @override
+  String priceAboveTarget(String amount) {
+    return 'Dabartinė kaina yra $amount didesnė už tikslą';
+  }
+
+  @override
+  String get priceAlertInfo => 'Tikslinė kaina išsaugoma Baltic Deals serveryje. Kai kaina pasieks tikslą, programa išsiųs push pranešimą.';
+
+  @override
+  String get priceAlertPrompt => 'Išsaugok norimą šios prekės kainą';
+
+  @override
+  String get priceAlreadyReached => 'Kaina jau pasiekė nustatytą lygį';
+
+  @override
+  String get priceHistory => 'Kainos istorija';
+
+  @override
+  String get priceTrackingDisableFailed => 'Nepavyko išjungti tikslo serveryje. Bandyk dar kartą.';
+
+  @override
+  String get priceTrackingDisabled => 'Kainos stebėjimas serveryje išjungtas';
+
+  @override
+  String get product => 'Prekė';
+
+  @override
+  String get productLinkMissing => 'Prekės nuorodos nėra';
+
+  @override
+  String selectedSize(String size) {
+    return 'Pasirinktas dydis: $size';
+  }
+
+  @override
+  String get selectedSizeUnavailable => 'Pasirinkto dydžio šiuo metu nėra';
+
+  @override
+  String get serverUnavailableSavedLocally => 'Serveris laikinai nepasiekiamas. Tikslas išsaugotas tik šiame įrenginyje.';
+
+  @override
+  String get setTarget => 'Nustatyti';
+
+  @override
+  String sizeStoreCount(String size, int count) {
+    return 'Dydis $size · parduotuvių: $count';
+  }
+
+  @override
+  String get sizes => 'Dydžiai';
+
+  @override
+  String sizesLabel(String sizes) {
+    return 'Dydžiai: $sizes';
+  }
+
+  @override
+  String get store => 'Parduotuvė';
+
+  @override
+  String get storePrices => 'Kainos parduotuvėse';
+
+  @override
+  String get targetReached => 'Tikslinė kaina pasiekta!';
+
+  @override
+  String targetSavedServer(String price) {
+    return 'Tikslas išsaugotas serveryje: $price';
+  }
+
+  @override
+  String targetValue(String price) {
+    return 'Tikslas: $price';
+  }
+
+  @override
+  String triggeredAtTarget(String triggeredPrice, String targetPrice) {
+    return 'Suveikė ties $triggeredPrice • tikslas $targetPrice';
+  }
+
+  @override
+  String get tryDifferentSearch => 'Pabandyk pakeisti paiešką arba filtrus.';
+
+  @override
+  String get unavailableSizesGray => 'Šiuo metu neprieinami dydžiai rodomi pilkai.';
 }
