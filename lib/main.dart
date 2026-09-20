@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -891,7 +891,7 @@ if (selectedStore != 'all') {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 510,
+            height: 470,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: items.length,
@@ -900,7 +900,7 @@ if (selectedStore != 'all') {
                 final product = items[index];
 
                 return SizedBox(
-                  width: 240,
+                  width: 260,
                   child: ProductCard(
                     product: product,
                     imageUrl: product.imageUrl ?? '',
@@ -1160,14 +1160,13 @@ onStoreChanged: (value) {
 
                                   int columns;
 
-                                  if (width >= 1400) {
+                                  if (width >= 1500) {
                                     columns = 5;
-                                  } else if (width >=
-                                      1100) {
+                                  } else if (width >= 1180) {
                                     columns = 4;
-                                  } else if (width >= 800) {
+                                  } else if (width >= 860) {
                                     columns = 3;
-                                  } else if (width >= 520) {
+                                  } else if (width >= 560) {
                                     columns = 2;
                                   } else {
                                     columns = 1;
@@ -1257,8 +1256,10 @@ onStoreChanged: (value) {
                                                 16,
                                             childAspectRatio:
                                                 columns == 1
-                                                    ? 0.87
-                                                    : 0.58,
+                                                    ? 0.82
+                                                    : columns == 2
+                                                        ? 0.72
+                                                        : 0.68,
                                           ),
                                           delegate:
                                               SliverChildBuilderDelegate(
@@ -1385,12 +1386,26 @@ class _FiltersBarState extends State<FiltersBar> {
     return InputDecoration(
       labelText: label,
       isDense: true,
+      filled: true,
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 14,
         vertical: 14,
       ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
+          width: 1.6,
+        ),
       ),
     );
   }
@@ -1405,6 +1420,8 @@ class _FiltersBarState extends State<FiltersBar> {
       decoration: InputDecoration(
         hintText: 'Поиск по товару или бренду',
         prefixIcon: const Icon(Icons.search),
+        filled: true,
+        fillColor: Colors.white,
         suffixIcon: widget.searchController.text.isNotEmpty
             ? IconButton(
                 onPressed: () {
@@ -1416,7 +1433,7 @@ class _FiltersBarState extends State<FiltersBar> {
               )
             : null,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
         ),
       ),
     );
@@ -1569,8 +1586,14 @@ final storeField = DropdownButtonFormField<String>(
     );
 
     final countText = Text(
-      'Найдено: ${widget.resultCount} • Загружено: ${widget.loadedCount}',
-      style: const TextStyle(fontWeight: FontWeight.w700),
+      '${widget.resultCount} товаров',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        color: Colors.grey.shade700,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
     );
 
     if (isMobile) {
@@ -1834,11 +1857,20 @@ class ProductCard extends StatelessWidget {
     final showSizePreview =
         category != 'beauty' && category != 'perfume';
 
+    final brand = (product.brand?.trim().isNotEmpty ?? false)
+        ? product.brand!.trim()
+        : product.storeName;
+
     return Card(
+      margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      elevation: 1,
+      elevation: 0,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: Colors.grey.shade200,
+        ),
       ),
       child: InkWell(
         onTap: onDetails,
@@ -1846,13 +1878,13 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              flex: 5,
+              flex: 4,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.all(14),
+                    color: const Color(0xFFFAFAFA),
+                    padding: const EdgeInsets.all(16),
                     child: imageUrl.isEmpty
                         ? const AppProductImagePlaceholder()
                         : Image.network(
@@ -1866,8 +1898,9 @@ class ProductCard extends StatelessWidget {
                           ),
                   ),
                   Positioned(
-                    top: 10,
                     left: 10,
+                    top: 10,
+                    right: 58,
                     child: Wrap(
                       spacing: 6,
                       runSpacing: 6,
@@ -1881,7 +1914,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         if (isMultiStore)
                           _CardBadge(
-                            label: 'Сравнение цен',
+                            label: '${product.storesCount} магаз.',
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,
                             foregroundColor: Colors.white,
@@ -1893,16 +1926,21 @@ class ProductCard extends StatelessWidget {
                     top: 8,
                     right: 8,
                     child: Material(
-                      color: Colors.white.withValues(alpha: 0.94),
+                      color: Colors.white.withValues(alpha: 0.96),
                       shape: const CircleBorder(),
+                      elevation: 1,
                       child: IconButton(
+                        visualDensity: VisualDensity.compact,
                         tooltip: isFavorite
                             ? 'Убрать из избранного'
                             : 'Добавить в избранное',
                         onPressed: onFavorite,
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? const Color(0xFFD93636) : null,
+                          size: 21,
+                          color: isFavorite
+                              ? const Color(0xFFD93636)
+                              : Colors.grey.shade700,
                         ),
                       ),
                     ),
@@ -1911,39 +1949,22 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             Expanded(
-              flex: 6,
+              flex: 5,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 11, 16, 10),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            (product.brand?.isNotEmpty ?? false)
-                                ? product.brand!.toUpperCase()
-                                : product.storeName.toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                        ),
-                        if (isMultiStore)
-                          Text(
-                            '${product.storesCount} магазина',
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                      ],
+                    Text(
+                      brand.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -1951,53 +1972,69 @@ class ProductCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         fontSize: 15,
-                        height: 1.23,
+                        height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      isMultiStore
-                          ? 'Лучшая цена • ${product.storeName}'
-                          : '${product.storeName} â€¢ ${product.country}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: isMultiStore
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey.shade600,
-                        fontSize: 12,
-                        fontWeight:
-                            isMultiStore ? FontWeight.w700 : FontWeight.w400,
-                      ),
+                    const SizedBox(height: 7),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.storefront_outlined,
+                          size: 15,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            isMultiStore
+                                ? 'Лучшая цена · ${product.storeName}'
+                                : product.storeName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: isMultiStore
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey.shade700,
+                              fontSize: 12,
+                              fontWeight: isMultiStore
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     if (hasSavings) ...[
                       const SizedBox(height: 8),
                       Container(
-                        width: double.infinity,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 7,
+                          horizontal: 9,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           color: Theme.of(context)
                               .colorScheme
                               .secondaryContainer
-                              .withValues(alpha: 0.65),
+                              .withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.savings_outlined, size: 16),
-                            const SizedBox(width: 6),
-                            Expanded(
+                            const Icon(
+                              Icons.savings_outlined,
+                              size: 15,
+                            ),
+                            const SizedBox(width: 5),
+                            Flexible(
                               child: Text(
-                                'Экономия до ${priceFormatter(product.savingsAmount)} €',
+                                'Экономия ${priceFormatter(product.savingsAmount)} €',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -2009,76 +2046,68 @@ class ProductCard extends StatelessWidget {
                     if (showSizePreview)
                       ProductCardSizePreview(productId: product.id),
                     const Spacer(),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
-                        Expanded(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${priceFormatter(product.currentPrice)} €',
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                    if (product.hasCoupon) ...[
-  const SizedBox(width: 8),
-  Container(
-    padding: const EdgeInsets.symmetric(
-      horizontal: 8,
-      vertical: 4,
-    ),
-    decoration: BoxDecoration(
-      color: Colors.blue.shade50,
-      borderRadius: BorderRadius.circular(999),
-      border: Border.all(
-        color: Colors.blue.shade300,
-      ),
-    ),
-    child: Text(
-      'КУПОН',
-      style: TextStyle(
-        color: Colors.blue.shade800,
-        fontSize: 11,
-        fontWeight: FontWeight.w800,
-      ),
-    ),
-  ),
-],
-                              if (hasOldPrice) ...[
-                                const SizedBox(width: 8),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 2),
-                                  child: Text(
-                                    '${priceFormatter(product.oldPrice!)} €',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 12,
-                                      decoration: TextDecoration.lineThrough,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
+                        Text(
+                          '${priceFormatter(product.currentPrice)} €',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            height: 1,
                           ),
                         ),
+                        if (hasOldPrice)
+                          Text(
+                            '${priceFormatter(product.oldPrice!)} €',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        if (product.hasCoupon)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: Colors.blue.shade200,
+                              ),
+                            ),
+                            child: Text(
+                              'КУПОН',
+                              style: TextStyle(
+                                color: Colors.blue.shade800,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
+                      height: 42,
                       child: FilledButton.icon(
                         onPressed: onDetails,
                         icon: Icon(
                           isMultiStore
                               ? Icons.compare_arrows
-                              : Icons.open_in_new,
+                              : Icons.info_outline,
                           size: 18,
                         ),
                         label: Text(
-                          isMultiStore ? 'Сравнить магазины' : 'Подробнее',
+                          isMultiStore ? 'Сравнить цены' : 'Подробнее',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -2186,7 +2215,7 @@ class ProductCardSizePreview extends StatelessWidget {
         final label = [
           ...visible,
           if (remaining > 0) '+$remaining',
-        ].join(' â€¢ ');
+        ].join(' • ');
 
         return Padding(
           padding: const EdgeInsets.only(top: 8),
@@ -3123,7 +3152,7 @@ class _ProductDetailsPageState
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  '${product.storeName} â€¢ ${product.country}',
+                  '${product.storeName} • ${product.country}',
                   style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 14,
@@ -3525,7 +3554,7 @@ class _ProductDetailsPageState
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Размер $selectedSize · ${selectedStores.length} ${selectedStores.length == 1 ? 'ÃÂ¼ÃÂ°ÃÂ³ÃÂ°ÃÂ·ÃÂ¸ÃÂ½' : 'ÃÂ¼ÃÂ°ÃÂ³ÃÂ°ÃÂ·ÃÂ¸ÃÂ½ÃÂ°'}',
+                                          'Размер $selectedSize · ${selectedStores.length} ${selectedStores.length == 1 ? 'магазин' : 'магазина'}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w800,
                                           ),
@@ -4235,4 +4264,5 @@ class ErrorView extends StatelessWidget {
       ),
     );
   }
+
 }
