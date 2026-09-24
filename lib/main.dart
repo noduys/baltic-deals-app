@@ -192,9 +192,72 @@ class _BalticDealsAppState extends State<BalticDealsApp> {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF176B5B),
+          seedColor: const Color(0xFF0F766E),
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: const Color(0xFF0F766E),
+          onPrimary: Colors.white,
+          secondary: const Color(0xFF19A89D),
+          onSecondary: Colors.white,
+          surface: const Color(0xFFFFFFFF),
+          error: const Color(0xFFE5484D),
         ),
-        scaffoldBackgroundColor: const Color(0xFFF5F6F7),
+        scaffoldBackgroundColor: const Color(0xFFF4F7F8),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF172126),
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          titleTextStyle: TextStyle(
+            color: Color(0xFF172126),
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        cardTheme: const CardThemeData(
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF0F766E),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF0F766E),
+            side: const BorderSide(color: Color(0xFFB9D8D4)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFD7E0E2)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFD7E0E2)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+              color: Color(0xFF19A89D),
+              width: 1.6,
+            ),
+          ),
+        ),
       ),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -999,8 +1062,9 @@ if (selectedStore != 'all') {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 470,
+            height: 390,
             child: ListView.separated(
+              padding: const EdgeInsets.only(top: 16),
               scrollDirection: Axis.horizontal,
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(width: 14),
@@ -1188,7 +1252,7 @@ if (selectedStore != 'all') {
           ),
           Positioned.fill(
             child: Container(
-              color: Colors.white.withValues(alpha: 0.30),
+              color: Colors.white.withValues(alpha: 0.72),
             ),
           ),
           loading
@@ -2103,14 +2167,14 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              flex: 4,
+            SizedBox(
+              height: 154,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   Container(
-                    color: const Color(0xFFFAFAFA),
-                    padding: const EdgeInsets.all(16),
+                    color: const Color(0xFFF7F9F9),
+                    padding: const EdgeInsets.all(10),
                     child: imageUrl.isEmpty
                         ? const AppProductImagePlaceholder()
                         : Image.network(
@@ -2135,15 +2199,14 @@ class ProductCard extends StatelessWidget {
                             product.discountPercent! > 0)
                           _CardBadge(
                             label: '-${product.discountPercent}%',
-                            backgroundColor: const Color(0xFFD93636),
+                            backgroundColor: const Color(0xFFE5484D),
                             foregroundColor: Colors.white,
                           ),
                         if (isMultiStore)
                           _CardBadge(
                             label: AppLocalizations.of(context)!.storesCount(product.storesCount),
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                            foregroundColor: Colors.white,
+                            backgroundColor: const Color(0xFFE5F4F2),
+                            foregroundColor: const Color(0xFF0F766E),
                           ),
                       ],
                     ),
@@ -2165,8 +2228,8 @@ class ProductCard extends StatelessWidget {
                           isFavorite ? Icons.favorite : Icons.favorite_border,
                           size: 21,
                           color: isFavorite
-                              ? const Color(0xFFD93636)
-                              : Colors.grey.shade700,
+                              ? const Color(0xFFE5484D)
+                              : const Color(0xFF4B5560),
                         ),
                       ),
                     ),
@@ -2175,9 +2238,8 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             Expanded(
-              flex: 5,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2221,7 +2283,7 @@ class ProductCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: isMultiStore
-                                  ? Theme.of(context).colorScheme.primary
+                                  ? const Color(0xFF0F766E)
                                   : Colors.grey.shade700,
                               fontSize: 12,
                               fontWeight: isMultiStore
@@ -2240,10 +2302,7 @@ class ProductCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .secondaryContainer
-                              .withValues(alpha: 0.55),
+                          color: const Color(0xFFE8F5F3),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -2303,16 +2362,16 @@ class ProductCard extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
+                              color: const Color(0xFFE8F5F3),
                               borderRadius: BorderRadius.circular(999),
                               border: Border.all(
-                                color: Colors.blue.shade200,
+                                color: const Color(0xFFB8DED9),
                               ),
                             ),
                             child: Text(
                               AppLocalizations.of(context)!.coupon,
                               style: TextStyle(
-                                color: Colors.blue.shade800,
+                                color: const Color(0xFF0F766E),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -2324,18 +2383,52 @@ class ProductCard extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       height: 42,
-                      child: FilledButton.icon(
-                        onPressed: onDetails,
-                        icon: Icon(
-                          isMultiStore
-                              ? Icons.compare_arrows
-                              : Icons.info_outline,
-                          size: 18,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF2C9CC3),
+                              Color(0xFF5ED6D0),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.28),
+                            width: 1,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x260B7285),
+                              offset: Offset(0, 3),
+                              blurRadius: 7,
+                              spreadRadius: 0,
+                            ),
+                          ],
                         ),
-                        label: Text(
-                          isMultiStore ? AppLocalizations.of(context)!.compareStores : AppLocalizations.of(context)!.details,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: onDetails,
+                          icon: Icon(
+                            isMultiStore
+                                ? Icons.compare_arrows
+                                : Icons.info_outline,
+                            size: 18,
+                          ),
+                          label: Text(
+                            isMultiStore ? AppLocalizations.of(context)!.compareStores : AppLocalizations.of(context)!.details,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
                     ),
@@ -3330,7 +3423,7 @@ class _ProductDetailsPageState
                   ? Icons.favorite
                   : Icons.favorite_border,
               color: isFavorite
-                  ? const Color(0xFFD93636)
+                  ? const Color(0xFFE5484D)
                   : null,
             ),
           ),
@@ -3431,7 +3524,7 @@ class _ProductDetailsPageState
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD93636),
+                          color: const Color(0xFFE5484D),
                           borderRadius:
                               BorderRadius.circular(20),
                         ),
@@ -4243,7 +4336,7 @@ class _OfferCard extends StatelessWidget {
                         Text(
                           '-${offer.discountPercent}%',
                           style: const TextStyle(
-                            color: Color(0xFFD93636),
+                            color: Color(0xFFE5484D),
                             fontWeight: FontWeight.w800,
                           ),
                         ),
