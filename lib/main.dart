@@ -1072,8 +1072,13 @@ if (selectedStore != 'all') {
                   ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 16),
               TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 onPressed: () {
                   final category = switch (section) {
                     'fashion' => 'clothing',
@@ -1102,7 +1107,7 @@ if (selectedStore != 'all') {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           SizedBox(
             height: 390,
             child: ListView.separated(
@@ -1149,15 +1154,35 @@ if (selectedStore != 'all') {
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
       child: DropdownButtonFormField<String>(
         initialValue: 'all',
         isExpanded: true,
+        icon: const Icon(Icons.keyboard_arrow_down_rounded),
         decoration: InputDecoration(
           labelText: AppLocalizations.of(context)!.stores,
-          prefixIcon: const Icon(Icons.storefront_outlined),
+          prefixIcon: const Icon(Icons.storefront_outlined, size: 21),
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFA),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFDDE6E6)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFDDE6E6)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+              color: Color(0xFF0F766E),
+              width: 1.4,
+            ),
           ),
         ),
         items: [
@@ -1194,10 +1219,13 @@ if (selectedStore != 'all') {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 58,
+        titleSpacing: 16,
         title: Text(
           widget.storeTitle ?? 'Baltic Deals',
           style: const TextStyle(
             fontWeight: FontWeight.w800,
+            letterSpacing: -0.3,
           ),
         ),
         actions: [
