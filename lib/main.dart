@@ -1473,70 +1473,71 @@ onStoreChanged: (value) {
                                             ),
                                           ),
                                         ),
-                                      SliverPadding(
-                                        padding:
-                                            const EdgeInsets
-                                                .fromLTRB(
-                                          20,
-                                          20,
-                                          20,
-                                          10,
-                                        ),
-                                        sliver:
-                                            SliverGrid(
-                                          gridDelegate:
-                                              SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount:
-                                                columns,
-                                            crossAxisSpacing:
-                                                16,
-                                            mainAxisSpacing:
-                                                16,
-                                            childAspectRatio:
-                                                columns == 1
-                                                    ? 0.82
-                                                    : columns == 2
-                                                        ? 0.72
-                                                        : 0.68,
+                                      if (isStoreCatalog)
+                                        SliverPadding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            20,
+                                            20,
+                                            20,
+                                            10,
                                           ),
-                                          delegate:
-                                              SliverChildBuilderDelegate(
-                                            (
-                                              context,
-                                              index,
-                                            ) {
-                                              final product =
-                                                  filteredProducts[
-                                                      index];
-
-                                              return ProductCard(
-                                                product:
-                                                    product,
-                                                imageUrl:
-                                                    product.imageUrl ?? '',
-                                                isFavorite:
-                                                    favoriteIds
-                                                        .contains(
-                                                  product.id,
-                                                ),
-                                                onFavorite: () =>
-                                                    toggleFavorite(
-                                                  product,
-                                                ),
-                                                onDetails: () =>
-                                                    openDetails(
-                                                  product,
-                                                ),
-                                                priceFormatter:
-                                                    price,
-                                              );
-                                            },
-                                            childCount:
-                                                filteredProducts
-                                                    .length,
+                                          sliver: SliverList(
+                                            delegate: SliverChildBuilderDelegate(
+                                              (context, index) {
+                                                final product = filteredProducts[index];
+                                                return Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom: index == filteredProducts.length - 1 ? 0 : 12,
+                                                  ),
+                                                  child: StoreCatalogCard(
+                                                    product: product,
+                                                    imageUrl: product.imageUrl ?? '',
+                                                    isFavorite: favoriteIds.contains(product.id),
+                                                    onFavorite: () => toggleFavorite(product),
+                                                    onDetails: () => openDetails(product),
+                                                    priceFormatter: price,
+                                                  ),
+                                                );
+                                              },
+                                              childCount: filteredProducts.length,
+                                            ),
+                                          ),
+                                        )
+                                      else
+                                        SliverPadding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            20,
+                                            20,
+                                            20,
+                                            10,
+                                          ),
+                                          sliver: SliverGrid(
+                                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: columns,
+                                              crossAxisSpacing: 16,
+                                              mainAxisSpacing: 16,
+                                              childAspectRatio: columns == 1
+                                                  ? 0.82
+                                                  : columns == 2
+                                                      ? 0.72
+                                                      : 0.68,
+                                            ),
+                                            delegate: SliverChildBuilderDelegate(
+                                              (context, index) {
+                                                final product = filteredProducts[index];
+                                                return ProductCard(
+                                                  product: product,
+                                                  imageUrl: product.imageUrl ?? '',
+                                                  isFavorite: favoriteIds.contains(product.id),
+                                                  onFavorite: () => toggleFavorite(product),
+                                                  onDetails: () => openDetails(product),
+                                                  priceFormatter: price,
+                                                );
+                                              },
+                                              childCount: filteredProducts.length,
+                                            ),
                                           ),
                                         ),
-                                      ),
                                       SliverToBoxAdapter(
                                         child:
                                             PaginationFooter(
@@ -2113,6 +2114,210 @@ class EmptyView extends StatelessWidget {
                 ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class StoreCatalogCard extends StatelessWidget {
+  final Product product;
+  final String imageUrl;
+  final bool isFavorite;
+  final VoidCallback onFavorite;
+  final VoidCallback onDetails;
+  final String Function(double) priceFormatter;
+
+  const StoreCatalogCard({
+    super.key,
+    required this.product,
+    required this.imageUrl,
+    required this.isFavorite,
+    required this.onFavorite,
+    required this.onDetails,
+    required this.priceFormatter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasOldPrice =
+        product.oldPrice != null && product.oldPrice! > product.currentPrice;
+    final brand = (product.brand?.trim().isNotEmpty ?? false)
+        ? product.brand!.trim()
+        : product.storeName;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: InkWell(
+        onTap: onDetails,
+        child: SizedBox(
+          height: 176,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 132,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(
+                      color: const Color(0xFFF7F9F9),
+                      padding: const EdgeInsets.all(10),
+                      child: imageUrl.isEmpty
+                          ? const AppProductImagePlaceholder()
+                          : Image.network(
+                              imageUrl,
+                              fit: BoxFit.contain,
+                              webHtmlElementStrategy:
+                                  WebHtmlElementStrategy.prefer,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const AppProductImagePlaceholder(),
+                            ),
+                    ),
+                    if (product.discountPercent != null &&
+                        product.discountPercent! > 0)
+                      Positioned(
+                        left: 10,
+                        top: 10,
+                        child: _CardBadge(
+                          label: '-${product.discountPercent}%',
+                          backgroundColor: const Color(0xFFE5484D),
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              brand.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 34,
+                            height: 34,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              tooltip: isFavorite
+                                  ? AppLocalizations.of(context)!.removeFavorite
+                                  : AppLocalizations.of(context)!.addFavorite,
+                              onPressed: onFavorite,
+                              icon: Icon(
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 21,
+                                color: isFavorite
+                                    ? const Color(0xFFE5484D)
+                                    : const Color(0xFF4B5560),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.storefront_outlined,
+                            size: 15,
+                            color: Colors.grey.shade600,
+                          ),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              product.storeName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 3,
+                              children: [
+                                Text(
+                                  '${priceFormatter(product.currentPrice)} €',
+                                  style: const TextStyle(
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w900,
+                                    height: 1,
+                                  ),
+                                ),
+                                if (hasOldPrice)
+                                  Text(
+                                    '${priceFormatter(product.oldPrice!)} €',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 1),
+                            child: Icon(
+                              Icons.chevron_right_rounded,
+                              size: 25,
+                              color: Color(0xFF66727A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
