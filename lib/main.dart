@@ -1047,15 +1047,57 @@ if (selectedStore != 'all') {
             children: [
               Icon(
                 icon,
-                size: 22,
+                size: 20,
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () {
+                  final category = switch (section) {
+                    'fashion' => 'clothing',
+                    'tech' => 'electronics',
+                    _ => section,
+                  };
+
+                  setState(() {
+                    selectedCategory = category;
+                  });
+                  loadProducts(reset: true);
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.all,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(Icons.arrow_forward_rounded, size: 17),
+                  ],
                 ),
               ),
             ],
