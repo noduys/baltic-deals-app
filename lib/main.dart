@@ -1972,25 +1972,61 @@ final storeField = DropdownButtonFormField<String>(
       width: double.infinity,
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 300, child: searchField),
-          SizedBox(width: 175, child: categoryField),
-          SizedBox(width: 175, child: brandField),
-          if (widget.showStoreFilter)
-            SizedBox(width: 185, child: storeField),
-          SizedBox(width: 115, child: minPriceField),
-          SizedBox(width: 115, child: maxPriceField),
-          SizedBox(width: 140, child: discountField),
-          SizedBox(width: 225, child: sortField),
-          multiStoreField,
-          resetButton,
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 150),
-            child: countText,
+          Row(
+            children: [
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: searchField,
+                ),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    expanded = !expanded;
+                  });
+                },
+                icon: Icon(expanded ? Icons.expand_less : Icons.tune),
+                label: Text(
+                  expanded
+                      ? AppLocalizations.of(context)!.hideFilters
+                      : AppLocalizations.of(context)!.filters,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Flexible(child: countText),
+            ],
+          ),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 180),
+            crossFadeState: expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SizedBox(width: 175, child: categoryField),
+                  SizedBox(width: 175, child: brandField),
+                  if (widget.showStoreFilter)
+                    SizedBox(width: 185, child: storeField),
+                  SizedBox(width: 115, child: minPriceField),
+                  SizedBox(width: 115, child: maxPriceField),
+                  SizedBox(width: 140, child: discountField),
+                  SizedBox(width: 225, child: sortField),
+                  multiStoreField,
+                  resetButton,
+                ],
+              ),
+            ),
           ),
         ],
       ),
