@@ -519,6 +519,7 @@ Set<int> favoriteIds = {};
   String selectedCategory = 'all';
   String selectedBrand = 'all';
   String selectedStore = 'all';
+  String selectedGender = 'all';
   int selectedMinDiscount = 0;
   SortMode selectedSort = SortMode.discountHigh;
   bool multiStoreOnly = false;
@@ -532,8 +533,71 @@ void initState() {
   loadProducts(reset: true);
   if (!isStoreCatalog) {
     loadHomeCheapest();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForAppUpdate();
+    });
   }
 }
+
+
+  static const int _currentAndroidBuild = 4;
+
+  Future<void> _checkForAppUpdate({bool showUpToDate = false}) async {
+    try {
+      final response = await http
+          .get(Uri.parse('$apiBase/app-version'))
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode != 200) return;
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final latestBuild = (data['versionCode'] as num?)?.toInt() ?? 0;
+      final apkUrl = data['apkUrl']?.toString().trim() ?? '';
+      final latestVersion = data['versionName']?.toString().trim() ?? '';
+
+      if (!mounted) return;
+
+      if (latestBuild <= _currentAndroidBuild || apkUrl.isEmpty) {
+        if (showUpToDate) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Baltic Deals is up to date')),
+          );
+        }
+        return;
+      }
+
+      final shouldUpdate = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Baltic Deals update'),
+          content: Text(
+            latestVersion.isEmpty
+                ? 'A new version of Baltic Deals is available.'
+                : 'Baltic Deals $latestVersion is available.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Later'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Update'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldUpdate == true) {
+        final uri = Uri.tryParse(apkUrl);
+        if (uri != null) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      }
+    } catch (e) {
+      debugPrint('App update check failed: $e');
+    }
+  }
 
 Future<void> loadHomeCheapest() async {
   try {
@@ -626,7 +690,7 @@ void dispose() {
 }
 
   void _onScroll() {
-    if (!scrollController.hasClients) return;
+    if (!isStoreCatalog || !scrollController.hasClients) return;
 
     final position = scrollController.position;
 
@@ -806,11 +870,20 @@ if (selectedStore != 'all') {
 
   List<Product> get visibleProducts {
     final result = products.where((product) {
-      if (!showFavoritesOnly) {
-        return true;
+      if (showFavoritesOnly && !favoriteIds.contains(product.id)) {
+        return false;
       }
 
-      return favoriteIds.contains(product.id);
+      if (selectedGender != 'all') {
+        final gender = (product.gender ?? '').trim().toLowerCase();
+        final wanted = selectedGender.toLowerCase();
+
+        if (gender != wanted) {
+          return false;
+        }
+      }
+
+      return true;
     }).toList();
 
     switch (selectedSort) {
@@ -1047,67 +1120,20 @@ if (selectedStore != 'all') {
             children: [
               Icon(
                 icon,
-                size: 20,
+                size: 22,
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              TextButton(
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                onPressed: () {
-                  final category = switch (section) {
-                    'fashion' => 'clothing',
-                    'tech' => 'electronics',
-                    _ => section,
-                  };
-
-                  setState(() {
-                    selectedCategory = category;
-                  });
-                  loadProducts(reset: true);
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.all,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    const Icon(Icons.arrow_forward_rounded, size: 17),
-                  ],
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           SizedBox(
             height: 390,
             child: ListView.separated(
@@ -1154,35 +1180,15 @@ if (selectedStore != 'all') {
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: DropdownButtonFormField<String>(
         initialValue: 'all',
         isExpanded: true,
-        icon: const Icon(Icons.keyboard_arrow_down_rounded),
         decoration: InputDecoration(
           labelText: AppLocalizations.of(context)!.stores,
-          prefixIcon: const Icon(Icons.storefront_outlined, size: 21),
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-          filled: true,
-          fillColor: const Color(0xFFF8FAFA),
+          prefixIcon: const Icon(Icons.storefront_outlined),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFDDE6E6)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFDDE6E6)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: Color(0xFF0F766E),
-              width: 1.4,
-            ),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
         items: [
@@ -1213,19 +1219,58 @@ if (selectedStore != 'all') {
     );
   }
 
+
+  Widget _buildGenderSelector() {
+    if (!isStoreCatalog) return const SizedBox.shrink();
+
+    String label(String value) {
+      final code = Localizations.localeOf(context).languageCode;
+      if (value == 'men') {
+        if (code == 'ru') return 'Мужское';
+        if (code == 'et') return 'Meestele';
+        return 'Men';
+      }
+      if (value == 'women') {
+        if (code == 'ru') return 'Женское';
+        if (code == 'et') return 'Naistele';
+        return 'Women';
+      }
+      if (code == 'ru') return 'Все';
+      if (code == 'et') return 'Kõik';
+      return 'All';
+    }
+
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+      child: SegmentedButton<String>(
+        segments: [
+          ButtonSegment(value: 'all', label: Text(label('all'))),
+          ButtonSegment(value: 'men', label: Text(label('men'))),
+          ButtonSegment(value: 'women', label: Text(label('women'))),
+        ],
+        selected: {selectedGender},
+        showSelectedIcon: false,
+        onSelectionChanged: (values) {
+          setState(() {
+            selectedGender = values.first;
+          });
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredProducts = visibleProducts;
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 58,
-        titleSpacing: 16,
         title: Text(
           widget.storeTitle ?? 'Baltic Deals',
           style: const TextStyle(
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.3,
           ),
         ),
         actions: [
@@ -1249,6 +1294,12 @@ if (selectedStore != 'all') {
             onPressed: refreshProducts,
             icon: const Icon(Icons.refresh),
           ),
+          if (!isStoreCatalog)
+            IconButton(
+              tooltip: 'Check for updates',
+              onPressed: () => _checkForAppUpdate(showUpToDate: true),
+              icon: const Icon(Icons.system_update_alt),
+            ),
           PopupMenuButton<String>(
             tooltip: AppLocalizations.of(context)!.language,
             icon: const Icon(Icons.language),
@@ -1337,6 +1388,7 @@ if (selectedStore != 'all') {
               : Column(
                   children: [
                     if (!isStoreCatalog) _buildHomeStorePicker(),
+                    if (isStoreCatalog) _buildGenderSelector(),
                     if (showFavoritesOnly)
                       Container(
                         width: double.infinity,
@@ -1460,23 +1512,6 @@ onStoreChanged: (value) {
                               child: LayoutBuilder(
                                 builder:
                                     (context, constraints) {
-                                  final width =
-                                      constraints.maxWidth;
-
-                                  int columns;
-
-                                  if (width >= 1500) {
-                                    columns = 5;
-                                  } else if (width >= 1180) {
-                                    columns = 4;
-                                  } else if (width >= 860) {
-                                    columns = 3;
-                                  } else if (width >= 560) {
-                                    columns = 2;
-                                  } else {
-                                    columns = 1;
-                                  }
-
                                   return CustomScrollView(
                                     controller:
                                         scrollController,
@@ -1546,71 +1581,44 @@ onStoreChanged: (value) {
                                       if (isStoreCatalog)
                                         SliverPadding(
                                           padding: const EdgeInsets.fromLTRB(
-                                            20,
-                                            20,
-                                            20,
+                                            16,
+                                            16,
+                                            16,
                                             10,
                                           ),
                                           sliver: SliverList(
                                             delegate: SliverChildBuilderDelegate(
                                               (context, index) {
-                                                final product = filteredProducts[index];
+                                                final product =
+                                                    filteredProducts[index];
+
                                                 return Padding(
-                                                  padding: EdgeInsets.only(
-                                                    bottom: index == filteredProducts.length - 1 ? 0 : 12,
+                                                  padding: const EdgeInsets.only(
+                                                    bottom: 12,
                                                   ),
-                                                  child: StoreCatalogCard(
+                                                  child: ProductListCard(
                                                     product: product,
-                                                    imageUrl: product.imageUrl ?? '',
-                                                    isFavorite: favoriteIds.contains(product.id),
-                                                    onFavorite: () => toggleFavorite(product),
-                                                    onDetails: () => openDetails(product),
+                                                    imageUrl:
+                                                        product.imageUrl ?? '',
+                                                    isFavorite: favoriteIds
+                                                        .contains(product.id),
+                                                    onFavorite: () =>
+                                                        toggleFavorite(product),
+                                                    onDetails: () =>
+                                                        openDetails(product),
                                                     priceFormatter: price,
                                                   ),
                                                 );
                                               },
-                                              childCount: filteredProducts.length,
-                                            ),
-                                          ),
-                                        )
-                                      else
-                                        SliverPadding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                            20,
-                                            20,
-                                            20,
-                                            10,
-                                          ),
-                                          sliver: SliverGrid(
-                                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: columns,
-                                              crossAxisSpacing: 16,
-                                              mainAxisSpacing: 16,
-                                              childAspectRatio: columns == 1
-                                                  ? 0.82
-                                                  : columns == 2
-                                                      ? 0.72
-                                                      : 0.68,
-                                            ),
-                                            delegate: SliverChildBuilderDelegate(
-                                              (context, index) {
-                                                final product = filteredProducts[index];
-                                                return ProductCard(
-                                                  product: product,
-                                                  imageUrl: product.imageUrl ?? '',
-                                                  isFavorite: favoriteIds.contains(product.id),
-                                                  onFavorite: () => toggleFavorite(product),
-                                                  onDetails: () => openDetails(product),
-                                                  priceFormatter: price,
-                                                );
-                                              },
-                                              childCount: filteredProducts.length,
+                                              childCount:
+                                                  filteredProducts.length,
                                             ),
                                           ),
                                         ),
-                                      SliverToBoxAdapter(
-                                        child:
-                                            PaginationFooter(
+                                      if (isStoreCatalog)
+                                        SliverToBoxAdapter(
+                                          child:
+                                              PaginationFooter(
                                           loadingMore:
                                               loadingMore,
                                           hasMore: hasMore,
@@ -2042,61 +2050,25 @@ final storeField = DropdownButtonFormField<String>(
       width: double.infinity,
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: searchField,
-                ),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    expanded = !expanded;
-                  });
-                },
-                icon: Icon(expanded ? Icons.expand_less : Icons.tune),
-                label: Text(
-                  expanded
-                      ? AppLocalizations.of(context)!.hideFilters
-                      : AppLocalizations.of(context)!.filters,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Flexible(child: countText),
-            ],
-          ),
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 180),
-            crossFadeState: expanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox(width: double.infinity),
-            secondChild: Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  SizedBox(width: 175, child: categoryField),
-                  SizedBox(width: 175, child: brandField),
-                  if (widget.showStoreFilter)
-                    SizedBox(width: 185, child: storeField),
-                  SizedBox(width: 115, child: minPriceField),
-                  SizedBox(width: 115, child: maxPriceField),
-                  SizedBox(width: 140, child: discountField),
-                  SizedBox(width: 225, child: sortField),
-                  multiStoreField,
-                  resetButton,
-                ],
-              ),
-            ),
+          SizedBox(width: 300, child: searchField),
+          SizedBox(width: 175, child: categoryField),
+          SizedBox(width: 175, child: brandField),
+          if (widget.showStoreFilter)
+            SizedBox(width: 185, child: storeField),
+          SizedBox(width: 115, child: minPriceField),
+          SizedBox(width: 115, child: maxPriceField),
+          SizedBox(width: 140, child: discountField),
+          SizedBox(width: 225, child: sortField),
+          multiStoreField,
+          resetButton,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 150),
+            child: countText,
           ),
         ],
       ),
@@ -2226,7 +2198,7 @@ class EmptyView extends StatelessWidget {
   }
 }
 
-class StoreCatalogCard extends StatelessWidget {
+class ProductListCard extends StatelessWidget {
   final Product product;
   final String imageUrl;
   final bool isFavorite;
@@ -2234,7 +2206,7 @@ class StoreCatalogCard extends StatelessWidget {
   final VoidCallback onDetails;
   final String Function(double) priceFormatter;
 
-  const StoreCatalogCard({
+  const ProductListCard({
     super.key,
     required this.product,
     required this.imageUrl,
@@ -2258,40 +2230,46 @@ class StoreCatalogCard extends StatelessWidget {
       elevation: 0,
       color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey.shade200),
       ),
       child: InkWell(
         onTap: onDetails,
-        child: SizedBox(
-          height: 176,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 132,
+                width: 112,
+                height: 132,
                 child: Stack(
-                  fit: StackFit.expand,
                   children: [
-                    Container(
-                      color: const Color(0xFFF7F9F9),
-                      padding: const EdgeInsets.all(10),
-                      child: imageUrl.isEmpty
-                          ? const AppProductImagePlaceholder()
-                          : Image.network(
-                              imageUrl,
-                              fit: BoxFit.contain,
-                              webHtmlElementStrategy:
-                                  WebHtmlElementStrategy.prefer,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const AppProductImagePlaceholder(),
-                            ),
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF7F9F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        child: imageUrl.isEmpty
+                            ? const AppProductImagePlaceholder()
+                            : Image.network(
+                                imageUrl,
+                                fit: BoxFit.contain,
+                                webHtmlElementStrategy:
+                                    WebHtmlElementStrategy.prefer,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const AppProductImagePlaceholder();
+                                },
+                              ),
+                      ),
                     ),
                     if (product.discountPercent != null &&
                         product.discountPercent! > 0)
                       Positioned(
-                        left: 10,
-                        top: 10,
+                        left: 6,
+                        top: 6,
                         child: _CardBadge(
                           label: '-${product.discountPercent}%',
                           backgroundColor: const Color(0xFFE5484D),
@@ -2301,9 +2279,10 @@ class StoreCatalogCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+                child: SizedBox(
+                  height: 132,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -2319,15 +2298,16 @@ class StoreCatalogCard extends StatelessWidget {
                                 color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 11,
-                                letterSpacing: 0.5,
+                                letterSpacing: 0.4,
                               ),
                             ),
                           ),
                           SizedBox(
                             width: 34,
-                            height: 34,
+                            height: 30,
                             child: IconButton(
                               padding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
                               tooltip: isFavorite
                                   ? AppLocalizations.of(context)!.removeFavorite
                                   : AppLocalizations.of(context)!.addFavorite,
@@ -2345,25 +2325,26 @@ class StoreCatalogCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 3),
                       Text(
                         product.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                          height: 1.2,
+                          fontSize: 14,
+                          height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 5),
                       Row(
                         children: [
                           Icon(
                             Icons.storefront_outlined,
-                            size: 15,
+                            size: 14,
                             color: Colors.grey.shade600,
                           ),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               product.storeName,
@@ -2371,8 +2352,7 @@ class StoreCatalogCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: Colors.grey.shade700,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                fontSize: 11,
                               ),
                             ),
                           ),
@@ -2380,18 +2360,17 @@ class StoreCatalogCard extends StatelessWidget {
                       ),
                       const Spacer(),
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Expanded(
+                          Flexible(
                             child: Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 8,
-                              runSpacing: 3,
+                              spacing: 7,
+                              runSpacing: 2,
                               children: [
                                 Text(
                                   '${priceFormatter(product.currentPrice)} €',
                                   style: const TextStyle(
-                                    fontSize: 21,
+                                    fontSize: 19,
                                     fontWeight: FontWeight.w900,
                                     height: 1,
                                   ),
@@ -2401,20 +2380,19 @@ class StoreCatalogCard extends StatelessWidget {
                                     '${priceFormatter(product.oldPrice!)} €',
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       decoration: TextDecoration.lineThrough,
                                     ),
                                   ),
                               ],
                             ),
                           ),
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 1),
-                            child: Icon(
-                              Icons.chevron_right_rounded,
-                              size: 25,
-                              color: Color(0xFF66727A),
-                            ),
+                          const SizedBox(width: 8),
+                          IconButton.filledTonal(
+                            visualDensity: VisualDensity.compact,
+                            tooltip: AppLocalizations.of(context)!.details,
+                            onPressed: onDetails,
+                            icon: const Icon(Icons.chevron_right, size: 20),
                           ),
                         ],
                       ),
@@ -2429,6 +2407,7 @@ class StoreCatalogCard extends StatelessWidget {
     );
   }
 }
+
 
 class ProductCard extends StatelessWidget {
   final Product product;
