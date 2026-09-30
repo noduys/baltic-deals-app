@@ -420,6 +420,7 @@ class Product {
   final String storeName;
   final String country;
   final double currentPrice;
+  final double? couponPrice;
   final bool hasCoupon;
   final double? oldPrice;
   final String currency;
@@ -439,6 +440,7 @@ class Product {
     required this.storeName,
     required this.country,
     required this.currentPrice,
+    required this.couponPrice,
     required this.oldPrice,
     required this.currency,
     required this.discountPercent,
@@ -462,6 +464,7 @@ class Product {
       storeName: json['store_name']?.toString() ?? 'Sportland',
       country: json['country']?.toString() ?? 'EE',
       currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
+      couponPrice: (json['coupon_price'] as num?)?.toDouble(),
       oldPrice: (json['old_price'] as num?)?.toDouble(),
       currency: json['currency']?.toString() ?? 'EUR',
       discountPercent: (json['discount_percent'] as num?)?.toInt(),
@@ -2218,6 +2221,12 @@ class ProductListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasCouponPrice =
+        product.couponPrice != null &&
+        product.couponPrice! > 0 &&
+        product.couponPrice! < product.currentPrice;
+    final displayPrice =
+        hasCouponPrice ? product.couponPrice! : product.currentPrice;
     final hasOldPrice =
         product.oldPrice != null && product.oldPrice! > product.currentPrice;
     final brand = (product.brand?.trim().isNotEmpty ?? false)
@@ -2368,16 +2377,25 @@ class ProductListCard extends StatelessWidget {
                               runSpacing: 2,
                               children: [
                                 Text(
-                                  '${priceFormatter(product.currentPrice)} €',
+                                  '${priceFormatter(displayPrice)} €',
                                   style: const TextStyle(
                                     fontSize: 19,
                                     fontWeight: FontWeight.w900,
                                     height: 1,
                                   ),
                                 ),
-                                if (hasOldPrice)
+                                if (hasCouponPrice)
                                   Text(
-                                    '${priceFormatter(product.oldPrice!)} €',
+                                    ' €',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 11,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  )
+                                else if (hasOldPrice)
+                                  Text(
+                                    ' €',
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
                                       fontSize: 11,
@@ -2429,6 +2447,12 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasCouponPrice =
+        product.couponPrice != null &&
+        product.couponPrice! > 0 &&
+        product.couponPrice! < product.currentPrice;
+    final displayPrice =
+        hasCouponPrice ? product.couponPrice! : product.currentPrice;
     final hasOldPrice =
         product.oldPrice != null && product.oldPrice! > product.currentPrice;
     final isMultiStore = product.storesCount > 1;
@@ -2629,16 +2653,25 @@ class ProductCard extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         Text(
-                          '${priceFormatter(product.currentPrice)} €',
+                          '${priceFormatter(displayPrice)} €',
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
                             height: 1,
                           ),
                         ),
-                        if (hasOldPrice)
-                          Text(
-                            '${priceFormatter(product.oldPrice!)} €',
+                        if (hasCouponPrice)
+                                  Text(
+                                    ' €',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 11,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  )
+                                else if (hasOldPrice)
+                                  Text(
+                                    ' €',
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 12,
@@ -2909,6 +2942,7 @@ class StoreOffer {
   final String country;
   final String productUrl;
   final double currentPrice;
+  final double? couponPrice;
   final double? oldPrice;
   final String currency;
   final String? availability;
@@ -2921,6 +2955,7 @@ class StoreOffer {
     required this.country,
     required this.productUrl,
     required this.currentPrice,
+    required this.couponPrice,
     required this.oldPrice,
     required this.currency,
     required this.availability,
@@ -2942,6 +2977,8 @@ class StoreOffer {
           json['product_url']?.toString() ?? '',
       currentPrice:
           (json['current_price'] as num?)?.toDouble() ?? 0,
+      couponPrice:
+          (json['coupon_price'] as num?)?.toDouble(),
       oldPrice:
           (json['old_price'] as num?)?.toDouble(),
       currency:
@@ -2971,10 +3008,10 @@ class ProductSizeOption {
     Map<String, dynamic> json,
   ) {
     return ProductSizeOption(
-      size: json['size']?.toString() ?? '',
+      size: json['size']?.toString().trim() ?? '',
       availability:
-          json['availability']?.toString(),
-      ean: json['ean']?.toString(),
+          json['availability']?.toString().trim().toLowerCase(),
+      ean: json['ean']?.toString().trim(),
     );
   }
 }
@@ -3027,7 +3064,7 @@ class ProductSizeStore {
   bool hasSize(String size) {
     return sizes.any(
       (item) =>
-          item.size == size &&
+          item.size.trim() == size.trim() &&
           item.availability != 'out_of_stock',
     );
   }
@@ -4558,9 +4595,15 @@ class _OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasCouponPrice =
+        offer.couponPrice != null &&
+        offer.couponPrice! > 0 &&
+        offer.couponPrice! < offer.currentPrice;
+    final displayPrice =
+        hasCouponPrice ? offer.couponPrice! : offer.currentPrice;
     final hasOldPrice =
         offer.oldPrice != null &&
-            offer.oldPrice! > offer.currentPrice;
+        offer.oldPrice! > offer.currentPrice;
 
     return Card(
       margin: const EdgeInsets.only(
@@ -4600,7 +4643,7 @@ class _OfferCard extends StatelessWidget {
                         WrapCrossAlignment.center,
                     children: [
                       Text(
-                        '${priceFormatter(offer.currentPrice)} €',
+                        '${priceFormatter(displayPrice)} €',
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 18,
@@ -4901,3 +4944,14 @@ class ErrorView extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
