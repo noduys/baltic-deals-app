@@ -5,11 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'firebase_options.dart';
-import 'barcode_scanner_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const String _webVapidKey =
     'BAeMMjHE9TkBtALMEoekwr0FlmgyjY6eeo03QFnlGFoqs8XNVY9mRYx4lqrLiCoRaoNT411Q7djVorhbuGLB6MI';
@@ -17,7 +16,9 @@ const String _webVapidKey =
 Future<void> _registerPushToken(String token) async {
   try {
     final response = await http.post(
-      Uri.parse('https://baltic-deals-api.noduys.workers.dev/push-token'),
+      Uri.parse(
+        'https://baltic-deals-api.noduys.workers.dev/push-token',
+      ),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -26,14 +27,17 @@ Future<void> _registerPushToken(String token) async {
       }),
     );
 
-    debugPrint('Push token register status: ${response.statusCode}');
-    debugPrint('Push token register body: ${response.body}');
+    debugPrint(
+      'Push token register status: ${response.statusCode}',
+    );
+    debugPrint(
+      'Push token register body: ${response.body}',
+    );
   } catch (error, stackTrace) {
     debugPrint('Push token register error: $error');
     debugPrintStack(stackTrace: stackTrace);
   }
 }
-
 Future<void> _setupFirebaseMessaging() async {
   try {
     final messaging = FirebaseMessaging.instance;
@@ -44,14 +48,16 @@ Future<void> _setupFirebaseMessaging() async {
       sound: true,
     );
 
-    debugPrint('FCM permission: ${settings.authorizationStatus}');
+    debugPrint(
+      'FCM permission: ${settings.authorizationStatus}',
+    );
 
     final token = await messaging.getToken(
       vapidKey: _webVapidKey,
     );
 
     if (token == null || token.isEmpty) {
-      debugPrint('FCM TOKEN: не получен');
+      debugPrint('FCM TOKEN: Ð½Ðµ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½');
     } else {
       debugPrint('FCM TOKEN: $token');
       await _registerPushToken(token);
@@ -120,6 +126,7 @@ enum SortMode {
   brand,
 }
 
+
 class AppProductImagePlaceholder extends StatelessWidget {
   const AppProductImagePlaceholder({super.key});
 
@@ -159,13 +166,13 @@ class AppErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Не удалось загрузить товары',
+              'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ Ñ‚Ð¾Ð²Ð°Ñ€Ñ‹',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
@@ -174,7 +181,7 @@ class AppErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Повторить'),
+              label: const Text('ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ'),
             ),
           ],
         ),
@@ -274,8 +281,8 @@ class Product {
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       id: (json['id'] as num?)?.toInt() ??
-          (json['product_id'] as num?)?.toInt() ??
-          0,
+    (json['product_id'] as num?)?.toInt() ??
+    0,
       name: json['name']?.toString() ?? 'Product',
       brand: json['brand']?.toString(),
       category: json['category']?.toString(),
@@ -290,35 +297,31 @@ class Product {
       discountPercent: (json['discount_percent'] as num?)?.toInt(),
       hasCoupon: (json['has_coupon'] as num?)?.toInt() == 1,
       storesCount: (json['stores_count'] as num?)?.toInt() ?? 1,
-      savingsAmount: (json['savings_amount'] as num?)?.toDouble() ?? 0,
+      savingsAmount:
+          (json['savings_amount'] as num?)?.toDouble() ?? 0,
       homeSection: json['home_section']?.toString(),
     );
   }
 }
 
 class ProductsPage extends StatefulWidget {
-  final String? initialStore;
-  final String? storeTitle;
-
-  const ProductsPage({
-    super.key,
-    this.initialStore,
-    this.storeTitle,
-  });
+  const ProductsPage({super.key});
 
   @override
   State<ProductsPage> createState() => _ProductsPageState();
 }
 
 class _ProductsPageState extends State<ProductsPage> {
-  bool get isStoreCatalog => widget.initialStore != null;
-  static const String currentAppVersion = '1.3.0';
-  static const String apiBase = 'https://baltic-deals-api.noduys.workers.dev';
+  static const String apiBase =
+      'https://baltic-deals-api.noduys.workers.dev';
   static const int pageSize = 40;
 
-  final TextEditingController searchController = TextEditingController();
-  final TextEditingController minPriceController = TextEditingController();
-  final TextEditingController maxPriceController = TextEditingController();
+  final TextEditingController searchController =
+      TextEditingController();
+  final TextEditingController minPriceController =
+      TextEditingController();
+  final TextEditingController maxPriceController =
+      TextEditingController();
   final ScrollController scrollController = ScrollController();
   Timer? searchDebounce;
   Timer? priceDebounce;
@@ -329,172 +332,84 @@ class _ProductsPageState extends State<ProductsPage> {
   String? error;
 
   List<Product> products = [];
-  int productsRequestId = 0;
-  List<Product> homeCheapest = [];
-  bool homeCheapestLoading = true;
-  Set<int> favoriteIds = {};
+List<Product> homeCheapest = [];
+bool homeCheapestLoading = true;
+Set<int> favoriteIds = {};
   bool showFavoritesOnly = false;
 
   String selectedCategory = 'all';
-  String selectedGender = 'all';
   String selectedBrand = 'all';
   String selectedStore = 'all';
   int selectedMinDiscount = 0;
   SortMode selectedSort = SortMode.discountHigh;
   bool multiStoreOnly = false;
 
-  Future<void> checkForAppUpdate({bool manual = false}) async {
-    try {
-      final uri = Uri.parse('$apiBase/app-version');
-      final response = await http.get(uri).timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final latestVersion = data['version']?.toString() ?? '';
-        final downloadUrl =
-            data['apk_url']?.toString() ?? data['url']?.toString() ?? '';
-
-        if (latestVersion.isNotEmpty && latestVersion != currentAppVersion) {
-          if (!mounted) return;
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.system_update, color: Color(0xFF176B5B)),
-                  SizedBox(width: 10),
-                  Text('Доступно обновление'),
-                ],
-              ),
-              content: Text(
-                'Вышла новая версия приложения: $latestVersion.\n'
-                'Установленная версия: $currentAppVersion.\n\n'
-                'Хотите обновить сейчас?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Позже'),
-                ),
-                FilledButton.icon(
-                  icon: const Icon(Icons.download),
-                  label: const Text('Обновить'),
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    if (downloadUrl.isNotEmpty) {
-                      final url = Uri.parse(downloadUrl);
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                ),
-              ],
-            ),
-          );
-        } else if (manual) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('У вас установлена последняя версия')),
-          );
-        }
-      }
-    } catch (_) {
-      if (manual && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Не удалось проверить наличие обновлений')),
-        );
-      }
-    }
-  }
-
   @override
-  void initState() {
-    super.initState();
-    selectedStore = widget.initialStore ?? 'all';
-    scrollController.addListener(_onScroll);
-    loadFavorites();
-    loadProducts(reset: true);
-    if (!isStoreCatalog) {
-      loadHomeCheapest();
+void initState() {
+  super.initState();
+  scrollController.addListener(_onScroll);
+  loadFavorites();
+  loadProducts(reset: true);
+  loadHomeCheapest();
+}
+
+Future<void> loadHomeCheapest() async {
+  try {
+    final response = await http.get(
+      Uri.parse('$apiBase/home-cheapest?limit=30'),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('HTTP ${response.statusCode}');
     }
-    checkForAppUpdate();
+
+    final decoded =
+        jsonDecode(response.body) as Map<String, dynamic>;
+
+    final items =
+        decoded['products'] as List<dynamic>? ?? const [];
+
+    final loaded = items
+        .map(
+          (item) => Product.fromJson(
+            item as Map<String, dynamic>,
+          ),
+        )
+        .toList();
+
+    if (!mounted) return;
+
+    setState(() {
+      homeCheapest = loaded;
+      homeCheapestLoading = false;
+    });
+  } catch (e) {
+    debugPrint('Home cheapest load error: $e');
+
+    if (!mounted) return;
+
+    setState(() {
+      homeCheapestLoading = false;
+    });
   }
+}
 
-  Future<void> loadHomeCheapest() async {
-    try {
-      const sections = <String, String>{
-        'beauty': 'beauty',
-        'fashion': 'clothing',
-        'shoes': 'shoes',
-        'tech': 'electronics',
-      };
-
-      final loaded = <Product>[];
-
-      for (final entry in sections.entries) {
-        final uri = Uri.parse('$apiBase/products').replace(
-          queryParameters: {
-            'category': entry.value,
-            'limit': '80',
-            'offset': '0',
-          },
-        );
-
-        final response = await http.get(uri);
-
-        if (response.statusCode != 200) {
-          continue;
-        }
-
-        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-        final items = decoded['products'] as List<dynamic>? ?? const [];
-
-        for (final item in items) {
-          final json = Map<String, dynamic>.from(item as Map<String, dynamic>);
-          json['home_section'] = entry.key;
-          loaded.add(Product.fromJson(json));
-        }
-      }
-
-      loaded.sort((a, b) {
-        final discountCompare =
-            (b.discountPercent ?? 0).compareTo(a.discountPercent ?? 0);
-        if (discountCompare != 0) return discountCompare;
-
-        final savingsCompare = b.savingsAmount.compareTo(a.savingsAmount);
-        if (savingsCompare != 0) return savingsCompare;
-
-        return a.currentPrice.compareTo(b.currentPrice);
-      });
-
-      if (!mounted) return;
-
-      setState(() {
-        homeCheapest = loaded;
-        homeCheapestLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Home discounts load error: $e');
-      if (!mounted) return;
-      setState(() {
-        homeCheapestLoading = false;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    searchDebounce?.cancel();
-    priceDebounce?.cancel();
-    searchController.dispose();
-    minPriceController.dispose();
-    maxPriceController.dispose();
-    scrollController.dispose();
-    super.dispose();
-  }
+@override
+void dispose() {
+  searchDebounce?.cancel();
+  priceDebounce?.cancel();
+  searchController.dispose();
+  minPriceController.dispose();
+  maxPriceController.dispose();
+  scrollController.dispose();
+  super.dispose();
+}
 
   void _onScroll() {
     if (!scrollController.hasClients) return;
+
     final position = scrollController.position;
+
     if (position.pixels >= position.maxScrollExtent - 500) {
       loadMore();
     }
@@ -502,12 +417,16 @@ class _ProductsPageState extends State<ProductsPage> {
 
   Future<void> loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
-    final values = prefs.getStringList('favorite_product_ids') ?? [];
+    final values =
+        prefs.getStringList('favorite_product_ids') ?? [];
 
     if (!mounted) return;
 
     setState(() {
-      favoriteIds = values.map(int.tryParse).whereType<int>().toSet();
+      favoriteIds = values
+          .map(int.tryParse)
+          .whereType<int>()
+          .toSet();
     });
   }
 
@@ -529,13 +448,15 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Future<void> loadProducts({required bool reset}) async {
-    final requestId = ++productsRequestId;
-
     if (reset) {
       setState(() {
         loadingMore = false;
         error = null;
         hasMore = true;
+
+        // ÐŸÐ¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÐ¼ Ð±Ð¾Ð»ÑŒÑˆÐ¾Ð¹ loader Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð¿Ñ€Ð¸ ÑÐ°Ð¼Ð¾Ð¹ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐµ.
+        // ÐŸÑ€Ð¸ Ð¿Ð¾Ð¸ÑÐºÐµ Ð¸ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð°Ñ… Ð¾ÑÑ‚Ð°Ð²Ð»ÑÐµÐ¼ ÑÐºÑ€Ð°Ð½ Ð½Ð° Ð¼ÐµÑÑ‚Ðµ,
+        // Ñ‡Ñ‚Ð¾Ð±Ñ‹ TextField Ð½Ðµ Ñ‚ÐµÑ€ÑÐ» Ñ„Ð¾ÐºÑƒÑ Ð¿Ð¾ÑÐ»Ðµ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð±ÑƒÐºÐ²Ñ‹.
         loading = products.isEmpty;
       });
     }
@@ -544,25 +465,49 @@ class _ProductsPageState extends State<ProductsPage> {
 
     try {
       final queryParameters = <String, String>{
+        'country': 'EE',
         'limit': '$pageSize',
         'offset': '$offset',
       };
 
       final search = searchController.text.trim();
-      if (search.isNotEmpty) queryParameters['search'] = search;
-      if (selectedCategory != 'all') queryParameters['category'] = selectedCategory;
-      if (selectedGender != 'all') queryParameters['gender'] = selectedGender;
-      if (selectedBrand != 'all') queryParameters['brand'] = selectedBrand;
-      if (selectedStore != 'all') queryParameters['store'] = selectedStore;
 
-      final minPrice = double.tryParse(minPriceController.text.trim());
-      final maxPrice = double.tryParse(maxPriceController.text.trim());
+      if (search.isNotEmpty) {
+        queryParameters['search'] = search;
+      }
 
-      if (minPrice != null) queryParameters['minPrice'] = '$minPrice';
-      if (maxPrice != null) queryParameters['maxPrice'] = '$maxPrice';
-      if (selectedMinDiscount > 0) queryParameters['minDiscount'] = '$selectedMinDiscount';
+      if (selectedCategory != 'all') {
+        queryParameters['category'] = selectedCategory;
+      }
 
-      if (multiStoreOnly || selectedSort == SortMode.savingsHigh) {
+      if (selectedBrand != 'all') {
+        queryParameters['brand'] = selectedBrand;
+      }
+if (selectedStore != 'all') {
+  queryParameters['store'] = selectedStore;
+}
+      final minPrice =
+          double.tryParse(minPriceController.text.trim());
+      final maxPrice =
+          double.tryParse(maxPriceController.text.trim());
+
+      if (minPrice != null) {
+        queryParameters['minPrice'] = '$minPrice';
+      }
+
+      if (maxPrice != null) {
+        queryParameters['maxPrice'] = '$maxPrice';
+      }
+
+      if (selectedMinDiscount > 0) {
+        queryParameters['minDiscount'] =
+            '$selectedMinDiscount';
+      }
+
+      if (
+        multiStoreOnly ||
+        selectedSort == SortMode.savingsHigh
+      ) {
         queryParameters['multiStoreOnly'] = 'true';
       }
 
@@ -570,24 +515,35 @@ class _ProductsPageState extends State<ProductsPage> {
         queryParameters['sort'] = 'savings';
       }
 
-      final uri = Uri.parse('$apiBase/products').replace(
+      final uri = Uri.parse(
+        '$apiBase/products',
+      ).replace(
         queryParameters: queryParameters,
       );
 
       final response = await http.get(uri);
 
       if (response.statusCode != 200) {
-        throw Exception('API returned ${response.statusCode}');
+        throw Exception(
+          'API returned ${response.statusCode}',
+        );
       }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      final items = decoded['products'] as List<dynamic>? ?? [];
+      final decoded =
+          jsonDecode(response.body) as Map<String, dynamic>;
+
+      final items =
+          decoded['products'] as List<dynamic>? ?? [];
 
       final loadedProducts = items
-          .map((item) => Product.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => Product.fromJson(
+              item as Map<String, dynamic>,
+            ),
+          )
           .toList();
 
-      if (!mounted || requestId != productsRequestId) return;
+      if (!mounted) return;
 
       setState(() {
         if (reset) {
@@ -595,12 +551,14 @@ class _ProductsPageState extends State<ProductsPage> {
         } else {
           products.addAll(loadedProducts);
         }
+
         loading = false;
         loadingMore = false;
         hasMore = loadedProducts.length == pageSize;
       });
     } catch (e) {
       if (!mounted) return;
+
       setState(() {
         loading = false;
         loadingMore = false;
@@ -610,10 +568,14 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Future<void> loadMore() async {
-    if (loading || loadingMore || !hasMore) return;
+    if (loading || loadingMore || !hasMore) {
+      return;
+    }
+
     setState(() {
       loadingMore = true;
     });
+
     await loadProducts(reset: false);
   }
 
@@ -623,35 +585,67 @@ class _ProductsPageState extends State<ProductsPage> {
 
   List<Product> get visibleProducts {
     final result = products.where((product) {
-      if (!showFavoritesOnly) return true;
+      if (!showFavoritesOnly) {
+        return true;
+      }
+
       return favoriteIds.contains(product.id);
     }).toList();
 
     switch (selectedSort) {
       case SortMode.savingsHigh:
-        result.sort((a, b) => b.savingsAmount.compareTo(a.savingsAmount));
+        result.sort(
+          (a, b) =>
+              b.savingsAmount.compareTo(a.savingsAmount),
+        );
         break;
+
       case SortMode.discountHigh:
         result.sort((a, b) {
           final discountCompare =
-              (b.discountPercent ?? 0).compareTo(a.discountPercent ?? 0);
-          if (discountCompare != 0) return discountCompare;
-          return a.currentPrice.compareTo(b.currentPrice);
+              (b.discountPercent ?? 0)
+                  .compareTo(a.discountPercent ?? 0);
+
+          if (discountCompare != 0) {
+            return discountCompare;
+          }
+
+          return a.currentPrice
+              .compareTo(b.currentPrice);
         });
         break;
+
       case SortMode.priceLow:
-        result.sort((a, b) => a.currentPrice.compareTo(b.currentPrice));
+        result.sort(
+          (a, b) =>
+              a.currentPrice.compareTo(b.currentPrice),
+        );
         break;
+
       case SortMode.priceHigh:
-        result.sort((a, b) => b.currentPrice.compareTo(a.currentPrice));
+        result.sort(
+          (a, b) =>
+              b.currentPrice.compareTo(a.currentPrice),
+        );
         break;
+
       case SortMode.brand:
         result.sort((a, b) {
-          final brandA = (a.brand ?? '').toLowerCase();
-          final brandB = (b.brand ?? '').toLowerCase();
-          final brandCompare = brandA.compareTo(brandB);
-          if (brandCompare != 0) return brandCompare;
-          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          final brandA =
+              (a.brand ?? '').toLowerCase();
+          final brandB =
+              (b.brand ?? '').toLowerCase();
+
+          final brandCompare =
+              brandA.compareTo(brandB);
+
+          if (brandCompare != 0) {
+            return brandCompare;
+          }
+
+          return a.name
+              .toLowerCase()
+              .compareTo(b.name.toLowerCase());
         });
         break;
     }
@@ -661,18 +655,26 @@ class _ProductsPageState extends State<ProductsPage> {
 
   void onSearchChanged(String value) {
     searchDebounce?.cancel();
-    searchDebounce = Timer(const Duration(milliseconds: 450), () {
-      if (!mounted) return;
-      loadProducts(reset: true);
-    });
+
+    searchDebounce = Timer(
+      const Duration(milliseconds: 450),
+      () {
+        if (!mounted) return;
+        loadProducts(reset: true);
+      },
+    );
   }
 
   void onPriceChanged(String value) {
     priceDebounce?.cancel();
-    priceDebounce = Timer(const Duration(milliseconds: 450), () {
-      if (!mounted) return;
-      loadProducts(reset: true);
-    });
+
+    priceDebounce = Timer(
+      const Duration(milliseconds: 450),
+      () {
+        if (!mounted) return;
+        loadProducts(reset: true);
+      },
+    );
   }
 
   List<String> get availableBrands {
@@ -682,25 +684,45 @@ class _ProductsPageState extends State<ProductsPage> {
         .where((brand) => brand.isNotEmpty)
         .toSet()
         .toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      ..sort(
+        (a, b) => a.toLowerCase().compareTo(
+          b.toLowerCase(),
+        ),
+      );
+
     return brands;
   }
 
   void resetFilters() {
     searchDebounce?.cancel();
+
     setState(() {
       searchController.clear();
       minPriceController.clear();
       maxPriceController.clear();
       selectedCategory = 'all';
-      selectedGender = 'all';
       selectedBrand = 'all';
-      selectedStore = widget.initialStore ?? 'all';
+      selectedStore = 'all';
       selectedMinDiscount = 0;
       selectedSort = SortMode.discountHigh;
       multiStoreOnly = false;
     });
+
     loadProducts(reset: true);
+  }
+
+  String proxyImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return '';
+    }
+
+    return Uri.parse(
+      '$apiBase/image',
+    ).replace(
+      queryParameters: {
+        'url': imageUrl,
+      },
+    ).toString();
   }
 
   void openDetails(Product product) {
@@ -720,27 +742,36 @@ class _ProductsPageState extends State<ProductsPage> {
 
   Future<void> openProduct(Product product) async {
     final value = product.productUrl;
+
     if (value == null || value.isEmpty) {
-      showMessage('Ссылка на товар отсутствует');
+      showMessage('Ð¡ÑÑ‹Ð»ÐºÐ° Ð½Ð° Ñ‚Ð¾Ð²Ð°Ñ€ Ð¾Ñ‚ÑÑƒÑ‚ÑÑ‚Ð²ÑƒÐµÑ‚');
       return;
     }
 
     final uri = Uri.tryParse(value);
+
     if (uri == null) {
-      showMessage('Некорректная ссылка на товар');
+      showMessage('ÐÐµÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ð°Ñ ÑÑÑ‹Ð»ÐºÐ° Ð½Ð° Ñ‚Ð¾Ð²Ð°Ñ€');
       return;
     }
 
-    final opened = await launchUrl(uri, mode: LaunchMode.platformDefault);
+    final opened = await launchUrl(
+      uri,
+      mode: LaunchMode.platformDefault,
+    );
+
     if (!opened) {
-      showMessage('Не удалось открыть магазин');
+      showMessage('ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚ÑŒ Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½');
     }
   }
 
   void showMessage(String message) {
     if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+      ),
     );
   }
 
@@ -749,21 +780,9 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   List<Product> _homeProductsFor(String section) {
-    final items =
-        homeCheapest.where((product) => product.homeSection == section).toList();
-
-    items.sort((a, b) {
-      final discountCompare =
-          (b.discountPercent ?? 0).compareTo(a.discountPercent ?? 0);
-      if (discountCompare != 0) return discountCompare;
-
-      final savingsCompare = b.savingsAmount.compareTo(a.savingsAmount);
-      if (savingsCompare != 0) return savingsCompare;
-
-      return a.currentPrice.compareTo(b.currentPrice);
-    });
-
-    return items.take(10).toList();
+    return homeCheapest
+        .where((product) => product.homeSection == section)
+        .toList();
   }
 
   Widget _buildHomeSection({
@@ -772,7 +791,10 @@ class _ProductsPageState extends State<ProductsPage> {
     required IconData icon,
   }) {
     final items = _homeProductsFor(section);
-    if (items.isEmpty) return const SizedBox.shrink();
+
+    if (items.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
@@ -798,13 +820,14 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 510,
+            height: 430,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(width: 14),
               itemBuilder: (context, index) {
                 final product = items[index];
+
                 return SizedBox(
                   width: 240,
                   child: ProductCard(
@@ -824,114 +847,38 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  void _openStoreCatalog(String store) {
-    final title = store.replaceAll(' Estonia', '');
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProductsPage(
-          initialStore: store,
-          storeTitle: title,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHomeStorePicker() {
-    return Container(
-      width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: DropdownButtonFormField<String>(
-        initialValue: 'all',
-        isExpanded: true,
-        decoration: InputDecoration(
-          labelText: 'Открыть магазин',
-          prefixIcon: const Icon(Icons.storefront_outlined),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        items: const [
-          DropdownMenuItem(value: 'all', child: Text('Все магазины')),
-          DropdownMenuItem(value: 'Sportland Estonia', child: Text('Sportland')),
-          DropdownMenuItem(value: 'Rademar Estonia', child: Text('Rademar')),
-          DropdownMenuItem(value: 'Weekend Estonia', child: Text('Weekend')),
-          DropdownMenuItem(value: 'ABOUT YOU Estonia', child: Text('ABOUT YOU')),
-          DropdownMenuItem(value: 'Ballzy Estonia', child: Text('Ballzy')),
-          DropdownMenuItem(value: 'Sports Direct Estonia', child: Text('Sports Direct')),
-          DropdownMenuItem(value: 'BestSecret', child: Text('BestSecret')),
-          DropdownMenuItem(value: 'Denim Dream', child: Text('Denim Dream')),
-          DropdownMenuItem(value: '1a.ee', child: Text('1a.ee')),
-          DropdownMenuItem(value: 'Decathlon Estonia', child: Text('Decathlon')),
-          DropdownMenuItem(value: 'Notino', child: Text('Notino')),
-          DropdownMenuItem(value: 'Stockmann Estonia', child: Text('Stockmann')),
-          DropdownMenuItem(value: 'Membershop Estonia', child: Text('Membershop')),
-        ],
-        onChanged: (value) {
-          if (value == null || value == 'all') return;
-          _openStoreCatalog(value);
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final filteredProducts = visibleProducts;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.storeTitle ?? 'Baltic Deals',
-          style: const TextStyle(fontWeight: FontWeight.w800),
+        title: const Text(
+          'Baltic Deals',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+          ),
         ),
         actions: [
           IconButton(
             tooltip: showFavoritesOnly
-                ? 'Показать все товары'
-                : 'Показать избранное',
+                ? 'ÐŸÐ¾ÐºÐ°Ð·Ð°Ñ‚ÑŒ Ð²ÑÐµ Ñ‚Ð¾Ð²Ð°Ñ€Ñ‹'
+                : 'ÐŸÐ¾ÐºÐ°Ð·Ð°Ñ‚ÑŒ Ð¸Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ðµ',
             onPressed: () {
               setState(() {
                 showFavoritesOnly = !showFavoritesOnly;
               });
             },
             icon: Icon(
-              showFavoritesOnly ? Icons.favorite : Icons.favorite_border,
+              showFavoritesOnly
+                  ? Icons.favorite
+                  : Icons.favorite_border,
             ),
           ),
           IconButton(
-            tooltip: 'Обновить товары',
+            tooltip: 'ÐžÐ±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ',
             onPressed: refreshProducts,
             icon: const Icon(Icons.refresh),
-          ),
-          IconButton(
-            tooltip: 'Проверить обновление',
-            icon: const Icon(Icons.system_update_alt),
-            onPressed: () => checkForAppUpdate(manual: true),
-          ),
-          PopupMenuButton<String>(
-            tooltip: 'Смена языка',
-            icon: const Icon(Icons.language),
-            onSelected: (langCode) {},
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'ru', child: Text('Русский')),
-              PopupMenuItem(value: 'et', child: Text('Eesti')),
-              PopupMenuItem(value: 'lv', child: Text('Latviešu')),
-              PopupMenuItem(value: 'lt', child: Text('Lietuvių')),
-              PopupMenuItem(value: 'en', child: Text('English')),
-            ],
-          ),
-          IconButton(
-            tooltip: 'Сканер штрихкода',
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const BarcodeScannerPage(),
-                ),
-              );
-            },
           ),
           const SizedBox(width: 8),
         ],
@@ -950,279 +897,310 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
           ),
           loading
-              ? const Center(child: CircularProgressIndicator())
-              : error != null && products.isEmpty
-                  ? AppErrorView(
-                      message: error!,
-                      onRetry: refreshProducts,
-                    )
-                  : Column(
-                      children: [
-                        if (!isStoreCatalog) _buildHomeStorePicker(),
-                        if (showFavoritesOnly)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primaryContainer,
-                            child: Row(
-                              children: [
-                                const Icon(Icons.favorite),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Избранное: ${favoriteIds.length}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const Spacer(),
-                                TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      showFavoritesOnly = false;
-                                    });
-                                  },
-                                  child: const Text('Показать все'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        FiltersBar(
-                          searchController: searchController,
-                          minPriceController: minPriceController,
-                          maxPriceController: maxPriceController,
-                          selectedCategory: selectedCategory,
-                          selectedGender: selectedGender,
-                          selectedBrand: selectedBrand,
-                          selectedStore: selectedStore,
-                          availableBrands: availableBrands,
-                          selectedMinDiscount: selectedMinDiscount,
-                          selectedSort: selectedSort,
-                          multiStoreOnly: multiStoreOnly,
-                          onMultiStoreOnlyChanged: (value) {
-                            setState(() {
-                              multiStoreOnly = value;
-                            });
-                            loadProducts(reset: true);
-                          },
-                          onSearchChanged: onSearchChanged,
-                          onCategoryChanged: (value) {
-                            if (value == null) return;
-                            setState(() {
-                              selectedCategory = value;
-                            });
-                            loadProducts(reset: true);
-                          },
-                          onGenderChanged: (value) {
-                            if (value == null) return;
-                            setState(() {
-                              selectedGender = value;
-                            });
-                            loadProducts(reset: true);
-                          },
-                          onBrandChanged: (value) {
-                            if (value == null) return;
-                            setState(() {
-                              selectedBrand = value;
-                            });
-                            loadProducts(reset: true);
-                          },
-                          onStoreChanged: (value) {
-                            if (value == null) return;
-                            setState(() {
-                              selectedStore = value;
-                            });
-                            loadProducts(reset: true);
-                          },
-                          onMinPriceChanged: onPriceChanged,
-                          onMaxPriceChanged: onPriceChanged,
-                          onDiscountChanged: (value) {
-                            if (value == null) return;
-                            setState(() {
-                              selectedMinDiscount = value;
-                            });
-                            loadProducts(reset: true);
-                          },
-                          onSortChanged: (value) {
-                            if (value == null) return;
-                            final previousSort = selectedSort;
-                            setState(() {
-                              selectedSort = value;
-                            });
-                            if (previousSort == SortMode.savingsHigh ||
-                                value == SortMode.savingsHigh) {
-                              loadProducts(reset: true);
-                            }
-                          },
-                          onReset: resetFilters,
-                          resultCount: filteredProducts.length,
-                          loadedCount: products.length,
-                          showStoreFilter: false,
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : error != null && products.isEmpty
+              ? AppErrorView(
+                  message: error!,
+                  onRetry: refreshProducts,
+                )
+              : Column(
+                  children: [
+                    if (showFavoritesOnly)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
                         ),
-                        Expanded(
-                          child: filteredProducts.isEmpty
-                              ? EmptyView(
-                                  hasMore: hasMore,
-                                  loadingMore: loadingMore,
-                                  onLoadMore: loadMore,
-                                )
-                              : RefreshIndicator(
-                                  onRefresh: refreshProducts,
-                                  child: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final width = constraints.maxWidth;
-                                      int columns;
-                                      if (width >= 1400) {
-                                        columns = 5;
-                                      } else if (width >= 1100) {
-                                        columns = 4;
-                                      } else if (width >= 800) {
-                                        columns = 3;
-                                      } else if (width >= 520) {
-                                        columns = 2;
-                                      } else {
-                                        columns = 1;
-                                      }
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.favorite),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Ð˜Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ðµ: ${favoriteIds.length}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const Spacer(),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  showFavoritesOnly = false;
+                                });
+                              },
+                              child: const Text('ÐŸÐ¾ÐºÐ°Ð·Ð°Ñ‚ÑŒ Ð²ÑÐµ'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    FiltersBar(
+                      searchController: searchController,
+                      minPriceController: minPriceController,
+                      maxPriceController: maxPriceController,
+                      selectedCategory: selectedCategory,
+                      selectedBrand: selectedBrand,
+                      selectedStore: selectedStore,
+                      availableBrands: availableBrands,
+                      selectedMinDiscount:
+                          selectedMinDiscount,
+                      selectedSort: selectedSort,
+                      multiStoreOnly: multiStoreOnly,
+                      onMultiStoreOnlyChanged: (value) {
+                        setState(() {
+                          multiStoreOnly = value;
+                        });
+                        loadProducts(reset: true);
+                      },
+                      onSearchChanged: onSearchChanged,
+                      onCategoryChanged: (value) {
+                        if (value == null) return;
 
-                                      return CustomScrollView(
-                                        controller: scrollController,
-                                        physics:
-                                            const AlwaysScrollableScrollPhysics(),
-                                        slivers: [
-                                          if (!isStoreCatalog &&
-                                              homeCheapest.isNotEmpty)
-                                            SliverToBoxAdapter(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.fromLTRB(
-                                                  20,
-                                                  20,
-                                                  20,
-                                                  6,
-                                                ),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Text(
-                                                      'Самые большие скидки сейчас',
-                                                      style: TextStyle(
-                                                        fontSize: 22,
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      'Топ скидок на красоту, одежду, обувь и технику',
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                        color: Colors.grey.shade700,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 18),
-                                                    _buildHomeSection(
-                                                      section: 'beauty',
-                                                      title: 'Красота',
-                                                      icon:
-                                                          Icons.spa_outlined,
-                                                    ),
-                                                    _buildHomeSection(
-                                                      section: 'fashion',
-                                                      title: 'Одежда',
-                                                      icon: Icons
-                                                          .checkroom_outlined,
-                                                    ),
-                                                    _buildHomeSection(
-                                                      section: 'shoes',
-                                                      title: 'Обувь',
-                                                      icon: Icons
-                                                          .shopping_bag_outlined,
-                                                    ),
-                                                    _buildHomeSection(
-                                                      section: 'tech',
-                                                      title: 'Техника',
-                                                      icon: Icons
-                                                          .devices_outlined,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          SliverPadding(
+                        setState(() {
+                          selectedCategory = value;
+                        });
+
+                        loadProducts(reset: true);
+                      },
+                      onBrandChanged: (value) {
+  if (value == null) return;
+
+  setState(() {
+    selectedBrand = value;
+  });
+
+  loadProducts(reset: true);
+},
+onStoreChanged: (value) {
+  if (value == null) return;
+
+  setState(() {
+    selectedStore = value;
+  });
+
+  loadProducts(reset: true);
+},
+                      onMinPriceChanged: onPriceChanged,
+                      onMaxPriceChanged: onPriceChanged,
+                      onDiscountChanged: (value) {
+                        if (value == null) return;
+
+                        setState(() {
+                          selectedMinDiscount = value;
+                        });
+
+                        loadProducts(reset: true);
+                      },
+                      onSortChanged: (value) {
+                        if (value == null) return;
+
+                        final previousSort = selectedSort;
+
+                        setState(() {
+                          selectedSort = value;
+                        });
+
+                        if (
+                          previousSort == SortMode.savingsHigh ||
+                          value == SortMode.savingsHigh
+                        ) {
+                          loadProducts(reset: true);
+                        }
+                      },
+                      onReset: resetFilters,
+                      resultCount:
+                          filteredProducts.length,
+                      loadedCount: products.length,
+                    ),
+                    Expanded(
+                      child: filteredProducts.isEmpty
+                          ? EmptyView(
+                              hasMore: hasMore,
+                              loadingMore: loadingMore,
+                              onLoadMore: loadMore,
+                            )
+                          : RefreshIndicator(
+                              onRefresh: refreshProducts,
+                              child: LayoutBuilder(
+                                builder:
+                                    (context, constraints) {
+                                  final width =
+                                      constraints.maxWidth;
+
+                                  int columns;
+
+                                  if (width >= 1400) {
+                                    columns = 5;
+                                  } else if (width >=
+                                      1100) {
+                                    columns = 4;
+                                  } else if (width >= 800) {
+                                    columns = 3;
+                                  } else if (width >= 520) {
+                                    columns = 2;
+                                  } else {
+                                    columns = 1;
+                                  }
+
+                                  return CustomScrollView(
+                                    controller:
+                                        scrollController,
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    slivers: [
+                                      if (homeCheapest.isNotEmpty)
+                                        SliverToBoxAdapter(
+                                          child: Padding(
                                             padding: const EdgeInsets.fromLTRB(
                                               20,
                                               20,
                                               20,
-                                              10,
+                                              6,
                                             ),
-                                            sliver: SliverGrid(
-                                              gridDelegate:
-                                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                                crossAxisCount: columns,
-                                                crossAxisSpacing: 16,
-                                                mainAxisSpacing: 16,
-                                                childAspectRatio: columns == 1
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Лучшие цены сейчас',
+                                                  style: TextStyle(
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  'Красота, одежда, обувь и техника по выгодным ценам',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    color: Colors.grey.shade700,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 18),
+                                                _buildHomeSection(
+                                                  section: 'beauty',
+                                                  title: 'Красота',
+                                                  icon: Icons.spa_outlined,
+                                                ),
+                                                _buildHomeSection(
+                                                  section: 'fashion',
+                                                  title: 'Одежда',
+                                                  icon:
+                                                      Icons.checkroom_outlined,
+                                                ),
+                                                _buildHomeSection(
+                                                  section: 'shoes',
+                                                  title: 'Обувь',
+                                                  icon:
+                                                      Icons.shopping_bag_outlined,
+                                                ),
+                                                _buildHomeSection(
+                                                  section: 'tech',
+                                                  title: 'Техника',
+                                                  icon:
+                                                      Icons.devices_outlined,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      SliverPadding(
+                                        padding:
+                                            const EdgeInsets
+                                                .fromLTRB(
+                                          20,
+                                          20,
+                                          20,
+                                          10,
+                                        ),
+                                        sliver:
+                                            SliverGrid(
+                                          gridDelegate:
+                                              SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount:
+                                                columns,
+                                            crossAxisSpacing:
+                                                16,
+                                            mainAxisSpacing:
+                                                16,
+                                            childAspectRatio:
+                                                columns == 1
                                                     ? 0.87
                                                     : 0.58,
-                                              ),
-                                              delegate:
-                                                  SliverChildBuilderDelegate(
-                                                (context, index) {
-                                                  final product =
-                                                      filteredProducts[index];
-                                                  return ProductCard(
-                                                    product: product,
-                                                    imageUrl:
-                                                        product.imageUrl ?? '',
-                                                    isFavorite: favoriteIds
-                                                        .contains(product.id),
-                                                    onFavorite: () =>
-                                                        toggleFavorite(product),
-                                                    onDetails: () =>
-                                                        openDetails(product),
-                                                    priceFormatter: price,
-                                                  );
-                                                },
-                                                childCount:
-                                                    filteredProducts.length,
-                                              ),
-                                            ),
                                           ),
-                                          SliverToBoxAdapter(
-                                            child: PaginationFooter(
-                                              loadingMore: loadingMore,
-                                              hasMore: hasMore,
-                                              loadedCount: products.length,
-                                              onLoadMore: loadMore,
-                                            ),
+                                          delegate:
+                                              SliverChildBuilderDelegate(
+                                            (
+                                              context,
+                                              index,
+                                            ) {
+                                              final product =
+                                                  filteredProducts[
+                                                      index];
+
+                                              return ProductCard(
+                                                product:
+                                                    product,
+                                                imageUrl:
+                                                    product.imageUrl ?? '',
+                                                isFavorite:
+                                                    favoriteIds
+                                                        .contains(
+                                                  product.id,
+                                                ),
+                                                onFavorite: () =>
+                                                    toggleFavorite(
+                                                  product,
+                                                ),
+                                                onDetails: () =>
+                                                    openDetails(
+                                                  product,
+                                                ),
+                                                priceFormatter:
+                                                    price,
+                                              );
+                                            },
+                                            childCount:
+                                                filteredProducts
+                                                    .length,
                                           ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ),
-                        ),
-                      ],
+                                        ),
+                                      ),
+                                      SliverToBoxAdapter(
+                                        child:
+                                            PaginationFooter(
+                                          loadingMore:
+                                              loadingMore,
+                                          hasMore: hasMore,
+                                          loadedCount:
+                                              products.length,
+                                          onLoadMore:
+                                              loadMore,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
                     ),
-        ],
-      ),
-    );
+                  ],
+                ),
+          ],
+        ),    );
   }
 }
-
 class FiltersBar extends StatefulWidget {
   final TextEditingController searchController;
   final TextEditingController minPriceController;
   final TextEditingController maxPriceController;
   final String selectedCategory;
-  final String selectedGender;
   final String selectedBrand;
   final String selectedStore;
   final List<String> availableBrands;
@@ -1232,7 +1210,6 @@ class FiltersBar extends StatefulWidget {
   final ValueChanged<bool> onMultiStoreOnlyChanged;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String?> onCategoryChanged;
-  final ValueChanged<String?> onGenderChanged;
   final ValueChanged<String?> onBrandChanged;
   final ValueChanged<String?> onStoreChanged;
   final ValueChanged<String> onMinPriceChanged;
@@ -1242,7 +1219,6 @@ class FiltersBar extends StatefulWidget {
   final VoidCallback onReset;
   final int resultCount;
   final int loadedCount;
-  final bool showStoreFilter;
 
   const FiltersBar({
     super.key,
@@ -1250,7 +1226,6 @@ class FiltersBar extends StatefulWidget {
     required this.minPriceController,
     required this.maxPriceController,
     required this.selectedCategory,
-    required this.selectedGender,
     required this.selectedBrand,
     required this.selectedStore,
     required this.availableBrands,
@@ -1260,7 +1235,6 @@ class FiltersBar extends StatefulWidget {
     required this.onMultiStoreOnlyChanged,
     required this.onSearchChanged,
     required this.onCategoryChanged,
-    required this.onGenderChanged,
     required this.onBrandChanged,
     required this.onStoreChanged,
     required this.onMinPriceChanged,
@@ -1270,7 +1244,6 @@ class FiltersBar extends StatefulWidget {
     required this.onReset,
     required this.resultCount,
     required this.loadedCount,
-    this.showStoreFilter = true,
   });
 
   @override
@@ -1283,11 +1256,6 @@ class _FiltersBarState extends State<FiltersBar> {
   InputDecoration _fieldDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      isDense: true,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 14,
-      ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -1302,7 +1270,7 @@ class _FiltersBarState extends State<FiltersBar> {
       controller: widget.searchController,
       onChanged: widget.onSearchChanged,
       decoration: InputDecoration(
-        hintText: 'Поиск по товару или бренду',
+        hintText: 'ÐŸÐ¾Ð¸ÑÐº Ð¿Ð¾ Ñ‚Ð¾Ð²Ð°Ñ€Ñƒ Ð¸Ð»Ð¸ Ð±Ñ€ÐµÐ½Ð´Ñƒ',
         prefixIcon: const Icon(Icons.search),
         suffixIcon: widget.searchController.text.isNotEmpty
             ? IconButton(
@@ -1322,35 +1290,22 @@ class _FiltersBarState extends State<FiltersBar> {
 
     final categoryField = DropdownButtonFormField<String>(
       initialValue: widget.selectedCategory,
-      isExpanded: true,
-      isDense: true,
-      decoration: _fieldDecoration('Категория'),
+      decoration: _fieldDecoration('ÐšÐ°Ñ‚ÐµÐ³Ð¾Ñ€Ð¸Ñ'),
       items: const [
-        DropdownMenuItem(value: 'all', child: Text('Все')),
-        DropdownMenuItem(value: 'clothing', child: Text('Одежда')),
-        DropdownMenuItem(value: 'shoes', child: Text('Обувь')),
-        DropdownMenuItem(value: 'accessories', child: Text('Аксессуары')),
-        DropdownMenuItem(value: 'beauty', child: Text('Красота')),
-        DropdownMenuItem(value: 'perfume', child: Text('Парфюмерия')),
-        DropdownMenuItem(value: 'electronics', child: Text('Техника')),
-        DropdownMenuItem(value: 'home', child: Text('Дом')),
-        DropdownMenuItem(value: 'sports', child: Text('Спорт')),
+        DropdownMenuItem(value: 'all', child: Text('Ð’ÑÐµ')),
+        DropdownMenuItem(value: 'shoes', child: Text('ÐžÐ±ÑƒÐ²ÑŒ')),
+        DropdownMenuItem(value: 'clothing', child: Text('ÐžÐ´ÐµÐ¶Ð´Ð°')),
+        DropdownMenuItem(value: 'sports', child: Text('Ð¡Ð¿Ð¾Ñ€Ñ‚')),
+        DropdownMenuItem(
+          value: 'Kosmeetika',
+          child: Text('Косметика'),
+        ),
+        DropdownMenuItem(
+          value: 'Parfüümid',
+          child: Text('Парфюмерия'),
+        ),
       ],
       onChanged: widget.onCategoryChanged,
-    );
-
-    final genderField = DropdownButtonFormField<String>(
-      initialValue: widget.selectedGender,
-      isExpanded: true,
-      isDense: true,
-      decoration: _fieldDecoration('Пол'),
-      items: const [
-        DropdownMenuItem(value: 'all', child: Text('Все')),
-        DropdownMenuItem(value: 'men', child: Text('Мужское')),
-        DropdownMenuItem(value: 'women', child: Text('Женское')),
-        DropdownMenuItem(value: 'kids', child: Text('Детское / Унисекс')),
-      ],
-      onChanged: widget.onGenderChanged,
     );
 
     final brandField = DropdownButtonFormField<String>(
@@ -1358,12 +1313,11 @@ class _FiltersBarState extends State<FiltersBar> {
           ? widget.selectedBrand
           : 'all',
       isExpanded: true,
-      isDense: true,
-      decoration: _fieldDecoration('Бренд'),
+      decoration: _fieldDecoration('Ð‘Ñ€ÐµÐ½Ð´'),
       items: [
         const DropdownMenuItem(
           value: 'all',
-          child: Text('Все бренды'),
+          child: Text('Ð’ÑÐµ Ð±Ñ€ÐµÐ½Ð´Ñ‹'),
         ),
         ...widget.availableBrands.map(
           (brand) => DropdownMenuItem(
@@ -1378,50 +1332,77 @@ class _FiltersBarState extends State<FiltersBar> {
       onChanged: widget.onBrandChanged,
     );
 
-    final storeField = DropdownButtonFormField<String>(
-      initialValue: widget.selectedStore,
-      isExpanded: true,
-      isDense: true,
-      decoration: _fieldDecoration('Магазин'),
-      items: const [
-        DropdownMenuItem(value: 'all', child: Text('Все магазины')),
-        DropdownMenuItem(value: 'Sportland Estonia', child: Text('Sportland')),
-        DropdownMenuItem(value: 'Rademar Estonia', child: Text('Rademar')),
-        DropdownMenuItem(value: 'Weekend Estonia', child: Text('Weekend')),
-        DropdownMenuItem(value: 'ABOUT YOU Estonia', child: Text('ABOUT YOU')),
-        DropdownMenuItem(value: 'Ballzy Estonia', child: Text('Ballzy')),
-        DropdownMenuItem(value: 'Sports Direct Estonia', child: Text('Sports Direct')),
-        DropdownMenuItem(value: 'BestSecret', child: Text('BestSecret')),
-        DropdownMenuItem(value: 'Denim Dream', child: Text('Denim Dream')),
-        DropdownMenuItem(value: '1a.ee', child: Text('1a.ee')),
-        DropdownMenuItem(value: 'Decathlon Estonia', child: Text('Decathlon')),
-        DropdownMenuItem(value: 'Notino', child: Text('Notino')),
-        DropdownMenuItem(value: 'Stockmann Estonia', child: Text('Stockmann')),
-        DropdownMenuItem(value: 'Membershop Estonia', child: Text('Membershop')),
-      ],
-      onChanged: widget.onStoreChanged,
-    );
-
+final storeField = DropdownButtonFormField<String>(
+  initialValue: widget.selectedStore,
+  isExpanded: true,
+  decoration: _fieldDecoration('Магазин'),
+  items: const [
+    DropdownMenuItem(
+      value: 'all',
+      child: Text('Все магазины'),
+    ),
+    DropdownMenuItem(
+      value: 'Sportland Estonia',
+      child: Text('Sportland Estonia'),
+    ),
+    DropdownMenuItem(
+      value: 'Weekend Estonia',
+      child: Text('Weekend Estonia'),
+    ),
+    DropdownMenuItem(
+      value: 'Rademar Estonia',
+      child: Text('Rademar Estonia'),
+    ),
+    DropdownMenuItem(
+      value: 'ABOUT YOU Estonia',
+      child: Text('ABOUT YOU Estonia'),
+    ),
+    DropdownMenuItem(
+      value: 'BestSecret',
+      child: Text('BestSecret'),
+    ),
+    DropdownMenuItem(
+      value: 'Kaup24',
+      child: Text('Kaup24'),
+    ),
+    DropdownMenuItem(
+      value: 'Denim Dream',
+      child: Text('Denim Dream'),
+    ),
+    DropdownMenuItem(
+      value: '1a.ee',
+      child: Text('1a.ee'),
+    ),
+    DropdownMenuItem(
+      value: 'Decathlon Estonia',
+      child: Text('Decathlon Estonia'),
+    ),
+    DropdownMenuItem(
+      value: 'Notino',
+      child: Text('Notino'),
+    ),
+  ],
+  onChanged: widget.onStoreChanged,
+);
     final minPriceField = TextField(
       controller: widget.minPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: widget.onMinPriceChanged,
-      decoration: _fieldDecoration('Цена от').copyWith(suffixText: '€'),
+      decoration: _fieldDecoration('Ð¦ÐµÐ½Ð° Ð¾Ñ‚').copyWith(suffixText: 'â‚¬'),
     );
 
     final maxPriceField = TextField(
       controller: widget.maxPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: widget.onMaxPriceChanged,
-      decoration: _fieldDecoration('Цена до').copyWith(suffixText: '€'),
+      decoration: _fieldDecoration('Ð¦ÐµÐ½Ð° Ð´Ð¾').copyWith(suffixText: 'â‚¬'),
     );
 
     final discountField = DropdownButtonFormField<int>(
       initialValue: widget.selectedMinDiscount,
-      isDense: true,
-      decoration: _fieldDecoration('Скидка от'),
+      decoration: _fieldDecoration('Ð¡ÐºÐ¸Ð´ÐºÐ° Ð¾Ñ‚'),
       items: const [
-        DropdownMenuItem(value: 0, child: Text('Любая')),
+        DropdownMenuItem(value: 0, child: Text('Ð›ÑŽÐ±Ð°Ñ')),
         DropdownMenuItem(value: 20, child: Text('20%')),
         DropdownMenuItem(value: 30, child: Text('30%')),
         DropdownMenuItem(value: 40, child: Text('40%')),
@@ -1435,28 +1416,27 @@ class _FiltersBarState extends State<FiltersBar> {
     final sortField = DropdownButtonFormField<SortMode>(
       initialValue: widget.selectedSort,
       isExpanded: true,
-      isDense: true,
-      decoration: _fieldDecoration('Сортировка'),
+      decoration: _fieldDecoration('Ð¡Ð¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ°'),
       items: const [
         DropdownMenuItem(
           value: SortMode.discountHigh,
-          child: Text('Самая большая скидка', overflow: TextOverflow.ellipsis),
+          child: Text('Ð¡Ð°Ð¼Ð°Ñ Ð±Ð¾Ð»ÑŒÑˆÐ°Ñ ÑÐºÐ¸Ð´ÐºÐ°', overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.savingsHigh,
-          child: Text('Максимальная экономия', overflow: TextOverflow.ellipsis),
+          child: Text('ÐœÐ°ÐºÑÐ¸Ð¼Ð°Ð»ÑŒÐ½Ð°Ñ ÑÐºÐ¾Ð½Ð¾Ð¼Ð¸Ñ', overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.priceLow,
-          child: Text('Сначала дешевле', overflow: TextOverflow.ellipsis),
+          child: Text('Ð¡Ð½Ð°Ñ‡Ð°Ð»Ð° Ð´ÐµÑˆÐµÐ²Ð»Ðµ', overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.priceHigh,
-          child: Text('Сначала дороже', overflow: TextOverflow.ellipsis),
+          child: Text('Ð¡Ð½Ð°Ñ‡Ð°Ð»Ð° Ð´Ð¾Ñ€Ð¾Ð¶Ðµ', overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.brand,
-          child: Text('По бренду', overflow: TextOverflow.ellipsis),
+          child: Text('ÐŸÐ¾ Ð±Ñ€ÐµÐ½Ð´Ñƒ', overflow: TextOverflow.ellipsis),
         ),
       ],
       onChanged: widget.onSortChanged,
@@ -1468,7 +1448,7 @@ class _FiltersBarState extends State<FiltersBar> {
         selected: widget.multiStoreOnly,
         onSelected: widget.onMultiStoreOnlyChanged,
         avatar: const Icon(Icons.compare_arrows, size: 18),
-        label: const Text('Есть в нескольких магазинах'),
+        label: const Text('Ð•ÑÑ‚ÑŒ Ð² Ð½ÐµÑÐºÐ¾Ð»ÑŒÐºÐ¸Ñ… Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½Ð°Ñ…'),
       ),
     );
 
@@ -1477,12 +1457,12 @@ class _FiltersBarState extends State<FiltersBar> {
       child: OutlinedButton.icon(
         onPressed: widget.onReset,
         icon: const Icon(Icons.filter_alt_off),
-        label: const Text('Сбросить'),
+        label: const Text('Ð¡Ð±Ñ€Ð¾ÑÐ¸Ñ‚ÑŒ'),
       ),
     );
 
     final countText = Text(
-      'Найдено: ${widget.resultCount} • Загружено: ${widget.loadedCount}',
+      'ÐÐ°Ð¹Ð´ÐµÐ½Ð¾: ${widget.resultCount} â€¢ Ð—Ð°Ð³Ñ€ÑƒÐ¶ÐµÐ½Ð¾: ${widget.loadedCount}',
       style: const TextStyle(fontWeight: FontWeight.w700),
     );
 
@@ -1509,7 +1489,7 @@ class _FiltersBarState extends State<FiltersBar> {
                       expanded ? Icons.expand_less : Icons.tune,
                     ),
                     label: Text(
-                      expanded ? 'Скрыть фильтры' : 'Фильтры',
+                      expanded ? 'Ð¡ÐºÑ€Ñ‹Ñ‚ÑŒ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹' : 'Ð¤Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹',
                     ),
                   ),
                 ),
@@ -1529,14 +1509,10 @@ class _FiltersBarState extends State<FiltersBar> {
                     children: [
                       categoryField,
                       const SizedBox(height: 12),
-                      genderField,
-                      const SizedBox(height: 12),
                       brandField,
                       const SizedBox(height: 12),
-                      if (widget.showStoreFilter) ...[
-                        storeField,
-                        const SizedBox(height: 12),
-                      ],
+                      storeField,
+const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(child: minPriceField),
@@ -1571,22 +1547,20 @@ class _FiltersBarState extends State<FiltersBar> {
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
       child: Wrap(
         spacing: 12,
         runSpacing: 12,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          SizedBox(width: 300, child: searchField),
-          SizedBox(width: 175, child: categoryField),
-          SizedBox(width: 160, child: genderField),
-          SizedBox(width: 175, child: brandField),
-          if (widget.showStoreFilter)
-            SizedBox(width: 185, child: storeField),
-          SizedBox(width: 115, child: minPriceField),
-          SizedBox(width: 115, child: maxPriceField),
-          SizedBox(width: 140, child: discountField),
-          SizedBox(width: 225, child: sortField),
+          SizedBox(width: 280, child: searchField),
+          SizedBox(width: 150, child: categoryField),
+          SizedBox(width: 180, child: brandField),
+          SizedBox(width: 190, child: storeField),
+          SizedBox(width: 120, child: minPriceField),
+          SizedBox(width: 120, child: maxPriceField),
+          SizedBox(width: 145, child: discountField),
+          SizedBox(width: 235, child: sortField),
           multiStoreField,
           resetButton,
           ConstrainedBox(
@@ -1629,7 +1603,7 @@ class PaginationFooter extends StatelessWidget {
         padding: const EdgeInsets.all(28),
         child: Center(
           child: Text(
-            'Все загруженные товары показаны',
+            'Ð’ÑÐµ Ð·Ð°Ð³Ñ€ÑƒÐ¶ÐµÐ½Ð½Ñ‹Ðµ Ñ‚Ð¾Ð²Ð°Ñ€Ñ‹ Ð¿Ð¾ÐºÐ°Ð·Ð°Ð½Ñ‹',
             style: TextStyle(
               color: Colors.grey.shade600,
               fontWeight: FontWeight.w600,
@@ -1640,18 +1614,27 @@ class PaginationFooter extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        28,
+      ),
       child: Center(
         child: OutlinedButton.icon(
           onPressed: onLoadMore,
-          icon: const Icon(Icons.expand_more),
-          label: Text('Загрузить ещё $pageLabel'),
+          icon: const Icon(
+            Icons.expand_more,
+          ),
+          label: Text(
+            'Ð—Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ ÐµÑ‰Ñ‘ $pageLabel',
+          ),
         ),
       ),
     );
   }
 
-  String get pageLabel => '40 товаров';
+  String get pageLabel => '40 Ñ‚Ð¾Ð²Ð°Ñ€Ð¾Ð²';
 }
 
 class EmptyView extends StatelessWidget {
@@ -1680,7 +1663,7 @@ class EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Ничего не найдено',
+              'ÐÐ¸Ñ‡ÐµÐ³Ð¾ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ð¾',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
@@ -1690,9 +1673,11 @@ class EmptyView extends StatelessWidget {
             if (hasMore) ...[
               const SizedBox(height: 10),
               Text(
-                'Попробуй изменить поиск или фильтры.',
+                'ÐŸÐ¾Ð¿Ñ€Ð¾Ð±ÑƒÐ¹ Ð¸Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ Ð¿Ð¾Ð¸ÑÐº Ð¸Ð»Ð¸ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ñ‹.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                ),
               ),
               const SizedBox(height: 16),
               if (loadingMore)
@@ -1701,7 +1686,7 @@ class EmptyView extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onLoadMore,
                   icon: const Icon(Icons.expand_more),
-                  label: const Text('Загрузить ещё'),
+                  label: const Text('Ð—Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ ÐµÑ‰Ñ‘'),
                 ),
             ],
           ],
@@ -1735,9 +1720,6 @@ class ProductCard extends StatelessWidget {
         product.oldPrice != null && product.oldPrice! > product.currentPrice;
     final isMultiStore = product.storesCount > 1;
     final hasSavings = isMultiStore && product.savingsAmount > 0;
-    final category = product.category?.trim().toLowerCase();
-    final showSizePreview =
-        category != 'beauty' && category != 'perfume';
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -1751,7 +1733,7 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              flex: 5,
+              flex: 6,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -1786,7 +1768,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         if (isMultiStore)
                           _CardBadge(
-                            label: 'Сравнение цен',
+                            label: 'Ð¡Ñ€Ð°Ð²Ð½ÐµÐ½Ð¸Ðµ Ñ†ÐµÐ½',
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,
                             foregroundColor: Colors.white,
@@ -1802,8 +1784,8 @@ class ProductCard extends StatelessWidget {
                       shape: const CircleBorder(),
                       child: IconButton(
                         tooltip: isFavorite
-                            ? 'Убрать из избранного'
-                            : 'Добавить в избранное',
+                            ? 'Ð£Ð±Ñ€Ð°Ñ‚ÑŒ Ð¸Ð· Ð¸Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ð³Ð¾'
+                            : 'Ð”Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ Ð² Ð¸Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ðµ',
                         onPressed: onFavorite,
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -1816,9 +1798,9 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             Expanded(
-              flex: 6,
+              flex: 5,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 11, 16, 10),
+                padding: const EdgeInsets.fromLTRB(16, 13, 16, 15),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1841,7 +1823,7 @@ class ProductCard extends StatelessWidget {
                         ),
                         if (isMultiStore)
                           Text(
-                            '${product.storesCount} магазина',
+                            '${product.storesCount} Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½Ð°',
                             style: TextStyle(
                               color: Colors.grey.shade700,
                               fontSize: 11,
@@ -1861,11 +1843,11 @@ class ProductCard extends StatelessWidget {
                         height: 1.23,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 7),
                     Text(
                       isMultiStore
-                          ? 'Лучшая цена • ${product.storeName}'
-                          : '${product.storeName} • ${product.country}',
+                          ? 'Ð›ÑƒÑ‡ÑˆÐ°Ñ Ñ†ÐµÐ½Ð° â€¢ ${product.storeName}'
+                          : '${product.storeName} â€¢ ${product.country}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1898,7 +1880,7 @@ class ProductCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                'Экономия до ${priceFormatter(product.savingsAmount)} €',
+                                'Ð­ÐºÐ¾Ð½Ð¾Ð¼Ð¸Ñ Ð´Ð¾ ${priceFormatter(product.savingsAmount)} â‚¬',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -1911,8 +1893,7 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (showSizePreview)
-                      ProductCardSizePreview(productId: product.id),
+                    ProductCardSizePreview(productId: product.id),
                     const Spacer(),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1922,42 +1903,42 @@ class ProductCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '${priceFormatter(product.currentPrice)} €',
+                                '${priceFormatter(product.currentPrice)} â‚¬',
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
-                              if (product.hasCoupon) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(999),
-                                    border: Border.all(
-                                      color: Colors.blue.shade300,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'КУПОН',
-                                    style: TextStyle(
-                                      color: Colors.blue.shade800,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                    if (product.hasCoupon) ...[
+  const SizedBox(width: 8),
+  Container(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 8,
+      vertical: 4,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.blue.shade50,
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(
+        color: Colors.blue.shade300,
+      ),
+    ),
+    child: Text(
+      'ÐšÐ£ÐŸÐžÐ',
+      style: TextStyle(
+        color: Colors.blue.shade800,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+      ),
+    ),
+  ),
+],
                               if (hasOldPrice) ...[
                                 const SizedBox(width: 8),
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 2),
                                   child: Text(
-                                    '${priceFormatter(product.oldPrice!)} €',
+                                    '${priceFormatter(product.oldPrice!)} â‚¬',
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
                                       fontSize: 12,
@@ -1983,7 +1964,7 @@ class ProductCard extends StatelessWidget {
                           size: 18,
                         ),
                         label: Text(
-                          isMultiStore ? 'Сравнить магазины' : 'Подробнее',
+                          isMultiStore ? 'Ð¡Ñ€Ð°Ð²Ð½Ð¸Ñ‚ÑŒ Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½Ñ‹' : 'ÐŸÐ¾Ð´Ñ€Ð¾Ð±Ð½ÐµÐµ',
                         ),
                       ),
                     ),
@@ -1998,6 +1979,7 @@ class ProductCard extends StatelessWidget {
   }
 }
 
+
 class ProductCardSizePreview extends StatelessWidget {
   final int productId;
 
@@ -2006,7 +1988,9 @@ class ProductCardSizePreview extends StatelessWidget {
     required this.productId,
   });
 
-  static const String _apiBase = 'https://baltic-deals-api.noduys.workers.dev';
+  static const String _apiBase =
+      'https://baltic-deals-api.noduys.workers.dev';
+
   static final Map<int, Future<List<String>>> _cache = {};
 
   Future<List<String>> _loadSizes() {
@@ -2019,20 +2003,28 @@ class ProductCardSizePreview extends StatelessWidget {
         );
 
         final response = await http.get(uri);
-        if (response.statusCode != 200) return <String>[];
+
+        if (response.statusCode != 200) {
+          return <String>[];
+        }
 
         final decoded = jsonDecode(response.body);
-        if (decoded is! Map<String, dynamic>) return <String>[];
+
+        if (decoded is! Map<String, dynamic>) {
+          return <String>[];
+        }
 
         final stores = decoded['stores'] as List<dynamic>? ?? const [];
         final available = <String>{};
 
         for (final storeValue in stores) {
           if (storeValue is! Map) continue;
+
           final sizes = storeValue['sizes'] as List<dynamic>? ?? const [];
 
           for (final sizeValue in sizes) {
             if (sizeValue is! Map) continue;
+
             final size = sizeValue['size']?.toString().trim() ?? '';
             final availability =
                 sizeValue['availability']?.toString().toLowerCase() ?? '';
@@ -2044,6 +2036,7 @@ class ProductCardSizePreview extends StatelessWidget {
         }
 
         final result = available.toList();
+
         result.sort((a, b) {
           final aNumber = double.tryParse(a.replaceAll(',', '.'));
           final bNumber = double.tryParse(b.replaceAll(',', '.'));
@@ -2051,6 +2044,7 @@ class ProductCardSizePreview extends StatelessWidget {
           if (aNumber != null && bNumber != null) {
             return aNumber.compareTo(bNumber);
           }
+
           return a.compareTo(b);
         });
 
@@ -2067,7 +2061,10 @@ class ProductCardSizePreview extends StatelessWidget {
       future: _loadSizes(),
       builder: (context, snapshot) {
         final sizes = snapshot.data;
-        if (sizes == null || sizes.isEmpty) return const SizedBox.shrink();
+
+        if (sizes == null || sizes.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
         final visible = sizes.take(4).toList();
         final remaining = sizes.length - visible.length;
@@ -2075,17 +2072,22 @@ class ProductCardSizePreview extends StatelessWidget {
         final label = [
           ...visible,
           if (remaining > 0) '+$remaining',
-        ].join(' • ');
+        ].join(' â€¢ ');
 
         return Padding(
           padding: const EdgeInsets.only(top: 8),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 6,
+            ),
             decoration: BoxDecoration(
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(
+                color: Colors.grey.shade300,
+              ),
             ),
             child: Row(
               children: [
@@ -2097,7 +2099,7 @@ class ProductCardSizePreview extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Размеры: $label',
+                    'Ð Ð°Ð·Ð¼ÐµÑ€Ñ‹: $label',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -2114,6 +2116,7 @@ class ProductCardSizePreview extends StatelessWidget {
     );
   }
 }
+
 
 class _CardBadge extends StatelessWidget {
   final String label;
@@ -2147,7 +2150,7 @@ class _CardBadge extends StatelessWidget {
 }
 
 class StoreOffer {
-  final int storeProductIdId;
+  final int storeProductId;
   final String storeName;
   final String country;
   final String productUrl;
@@ -2159,7 +2162,7 @@ class StoreOffer {
   final bool hasCoupon;
 
   const StoreOffer({
-    required this.storeProductIdId,
+    required this.storeProductId,
     required this.storeName,
     required this.country,
     required this.productUrl,
@@ -2171,18 +2174,30 @@ class StoreOffer {
     required this.hasCoupon,
   });
 
-  factory StoreOffer.fromJson(Map<String, dynamic> json) {
+  factory StoreOffer.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return StoreOffer(
-      storeProductIdId: (json['store_product_id'] as num?)?.toInt() ?? 0,
-      storeName: json['store_name']?.toString() ?? 'Магазин',
-      country: json['country']?.toString() ?? '',
-      productUrl: json['product_url']?.toString() ?? '',
-      currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
-      oldPrice: (json['old_price'] as num?)?.toDouble(),
-      currency: json['currency']?.toString() ?? 'EUR',
-      availability: json['availability']?.toString(),
-      discountPercent: (json['discount_percent'] as num?)?.toInt(),
-      hasCoupon: (json['has_coupon'] as num?)?.toInt() == 1,
+      storeProductId:
+          (json['store_product_id'] as num?)?.toInt() ?? 0,
+      storeName:
+          json['store_name']?.toString() ?? 'ÐœÐ°Ð³Ð°Ð·Ð¸Ð½',
+      country:
+          json['country']?.toString() ?? '',
+      productUrl:
+          json['product_url']?.toString() ?? '',
+      currentPrice:
+          (json['current_price'] as num?)?.toDouble() ?? 0,
+      oldPrice:
+          (json['old_price'] as num?)?.toDouble(),
+      currency:
+          json['currency']?.toString() ?? 'EUR',
+      availability:
+          json['availability']?.toString(),
+      discountPercent:
+          (json['discount_percent'] as num?)?.toInt(),
+          hasCoupon:
+    (json['has_coupon'] as num?)?.toInt() == 1,
     );
   }
 }
@@ -2198,10 +2213,13 @@ class ProductSizeOption {
     required this.ean,
   });
 
-  factory ProductSizeOption.fromJson(Map<String, dynamic> json) {
+  factory ProductSizeOption.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return ProductSizeOption(
       size: json['size']?.toString() ?? '',
-      availability: json['availability']?.toString(),
+      availability:
+          json['availability']?.toString(),
       ean: json['ean']?.toString(),
     );
   }
@@ -2224,17 +2242,29 @@ class ProductSizeStore {
     required this.sizes,
   });
 
-  factory ProductSizeStore.fromJson(Map<String, dynamic> json) {
-    final rawSizes = json['sizes'] as List<dynamic>? ?? [];
+  factory ProductSizeStore.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final rawSizes =
+        json['sizes'] as List<dynamic>? ?? [];
 
     return ProductSizeStore(
-      storeName: json['store_name']?.toString() ?? 'Магазин',
-      country: json['country']?.toString() ?? '',
-      currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
-      currency: json['currency']?.toString() ?? 'EUR',
-      productUrl: json['product_url']?.toString() ?? '',
+      storeName:
+          json['store_name']?.toString() ?? 'ÐœÐ°Ð³Ð°Ð·Ð¸Ð½',
+      country:
+          json['country']?.toString() ?? '',
+      currentPrice:
+          (json['current_price'] as num?)?.toDouble() ?? 0,
+      currency:
+          json['currency']?.toString() ?? 'EUR',
+      productUrl:
+          json['product_url']?.toString() ?? '',
       sizes: rawSizes
-          .map((item) => ProductSizeOption.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => ProductSizeOption.fromJson(
+              item as Map<String, dynamic>,
+            ),
+          )
           .where((item) => item.size.isNotEmpty)
           .toList(),
     );
@@ -2242,7 +2272,9 @@ class ProductSizeStore {
 
   bool hasSize(String size) {
     return sizes.any(
-      (item) => item.size == size && item.availability != 'out_of_stock',
+      (item) =>
+          item.size == size &&
+          item.availability != 'out_of_stock',
     );
   }
 }
@@ -2256,10 +2288,15 @@ class PriceHistoryPoint {
     required this.recordedAt,
   });
 
-  factory PriceHistoryPoint.fromJson(Map<String, dynamic> json) {
+  factory PriceHistoryPoint.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return PriceHistoryPoint(
-      price: (json['price'] as num?)?.toDouble() ?? 0,
-      recordedAt: DateTime.tryParse(json['recorded_at']?.toString() ?? ''),
+      price:
+          (json['price'] as num?)?.toDouble() ?? 0,
+      recordedAt: DateTime.tryParse(
+        json['recorded_at']?.toString() ?? '',
+      ),
     );
   }
 }
@@ -2283,11 +2320,14 @@ class ProductDetailsPage extends StatefulWidget {
   });
 
   @override
-  State<ProductDetailsPage> createState() => _ProductDetailsPageState();
+  State<ProductDetailsPage> createState() =>
+      _ProductDetailsPageState();
 }
 
-class _ProductDetailsPageState extends State<ProductDetailsPage> {
-  static const String apiBase = 'https://baltic-deals-api.noduys.workers.dev';
+class _ProductDetailsPageState
+    extends State<ProductDetailsPage> {
+  static const String apiBase =
+      'https://baltic-deals-api.noduys.workers.dev';
 
   late bool isFavorite;
 
@@ -2323,7 +2363,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     loadPriceAlert();
   }
 
-  String get _priceAlertKey => 'price_alert_target_${widget.product.id}';
+  String get _priceAlertKey =>
+      'price_alert_target_${widget.product.id}';
 
   Future<void> loadPriceAlert() async {
     final prefs = await SharedPreferences.getInstance();
@@ -2360,16 +2401,20 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 : double.tryParse(rawTarget?.toString() ?? '');
 
             final rawTriggered = alert['is_triggered'];
-            final serverTriggered = rawTriggered == true ||
+            final serverTriggered =
+                rawTriggered == true ||
                 rawTriggered == 1 ||
                 rawTriggered?.toString() == '1';
 
             final rawTriggeredPrice = alert['triggered_price'];
             final serverTriggeredPrice = rawTriggeredPrice is num
                 ? rawTriggeredPrice.toDouble()
-                : double.tryParse(rawTriggeredPrice?.toString() ?? '');
+                : double.tryParse(
+                    rawTriggeredPrice?.toString() ?? '',
+                  );
 
-            final serverTriggeredAt = alert['triggered_at']?.toString();
+            final serverTriggeredAt =
+                alert['triggered_at']?.toString();
 
             if (serverTarget != null && serverTarget > 0) {
               await prefs.setDouble(_priceAlertKey, serverTarget);
@@ -2378,8 +2423,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               setState(() {
                 priceAlertTarget = serverTarget;
                 priceAlertTriggered = serverTriggered;
-                priceAlertTriggeredPrice = serverTriggeredPrice;
-                priceAlertTriggeredAt = serverTriggeredAt;
+                priceAlertTriggeredPrice =
+                    serverTriggeredPrice;
+                priceAlertTriggeredAt =
+                    serverTriggeredAt;
                 priceAlertLoading = false;
               });
               return;
@@ -2399,7 +2446,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           }
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      // Keep the locally cached value when the API is temporarily unavailable.
+    }
 
     if (!mounted) return;
     setState(() {
@@ -2414,7 +2463,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://baltic-deals-api.noduys.workers.dev/price-alert'),
+        Uri.parse(
+          'https://baltic-deals-api.noduys.workers.dev/price-alert',
+        ),
         headers: const {
           'Content-Type': 'application/json',
         },
@@ -2429,7 +2480,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       }
 
       final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic> || decoded['success'] != true) {
+      if (decoded is! Map<String, dynamic> ||
+          decoded['success'] != true) {
         throw Exception('API rejected the alert');
       }
 
@@ -2448,7 +2500,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Цель сохранена на сервере: ${widget.priceFormatter(roundedTarget)} €',
+            'Ð¦ÐµÐ»ÑŒ ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð° Ð½Ð° ÑÐµÑ€Ð²ÐµÑ€Ðµ: ${widget.priceFormatter(roundedTarget)} â‚¬',
           ),
         ),
       );
@@ -2468,7 +2520,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Сервер временно недоступен. Цель сохранена только на этом устройстве.',
+            'Ð¡ÐµÑ€Ð²ÐµÑ€ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð½Ð¾ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½. Ð¦ÐµÐ»ÑŒ ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð° Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð½Ð° ÑÑ‚Ð¾Ð¼ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ðµ.',
           ),
         ),
       );
@@ -2494,7 +2546,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       }
 
       final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic> || decoded['success'] != true) {
+      if (decoded is! Map<String, dynamic> ||
+          decoded['success'] != true) {
         throw Exception('API rejected delete');
       }
 
@@ -2512,15 +2565,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Отслеживание цены отключено на сервере'),
+          content: Text('ÐžÑ‚ÑÐ»ÐµÐ¶Ð¸Ð²Ð°Ð½Ð¸Ðµ Ñ†ÐµÐ½Ñ‹ Ð¾Ñ‚ÐºÐ»ÑŽÑ‡ÐµÐ½Ð¾ Ð½Ð° ÑÐµÑ€Ð²ÐµÑ€Ðµ'),
         ),
       );
     } catch (_) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Не удалось отключить цель на сервере. Попробуйте ещё раз.',
+            'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¾Ñ‚ÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ Ñ†ÐµÐ»ÑŒ Ð½Ð° ÑÐµÑ€Ð²ÐµÑ€Ðµ. ÐŸÐ¾Ð¿Ñ€Ð¾Ð±ÑƒÐ¹Ñ‚Ðµ ÐµÑ‰Ñ‘ Ñ€Ð°Ð·.',
           ),
         ),
       );
@@ -2528,8 +2582,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }
 
   Future<void> showPriceAlertDialog() async {
-    final initialTarget =
-        priceAlertTarget ?? (widget.product.currentPrice * 0.9);
+    final initialTarget = priceAlertTarget ??
+        (widget.product.currentPrice * 0.9);
 
     final controller = TextEditingController(
       text: initialTarget.toStringAsFixed(2),
@@ -2543,7 +2597,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Отслеживать снижение цены'),
+              title: const Text('ÐžÑ‚ÑÐ»ÐµÐ¶Ð¸Ð²Ð°Ñ‚ÑŒ ÑÐ½Ð¸Ð¶ÐµÐ½Ð¸Ðµ Ñ†ÐµÐ½Ñ‹'),
               content: SizedBox(
                 width: 360,
                 child: Column(
@@ -2551,7 +2605,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Текущая цена: ${widget.priceFormatter(widget.product.currentPrice)} €',
+                      'Ð¢ÐµÐºÑƒÑ‰Ð°Ñ Ñ†ÐµÐ½Ð°: ${widget.priceFormatter(widget.product.currentPrice)} â‚¬',
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -2561,8 +2615,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         decimal: true,
                       ),
                       decoration: InputDecoration(
-                        labelText: 'Желаемая цена, €',
-                        hintText: 'Например 49.99',
+                        labelText: 'Ð–ÐµÐ»Ð°ÐµÐ¼Ð°Ñ Ñ†ÐµÐ½Ð°, â‚¬',
+                        hintText: 'ÐÐ°Ð¿Ñ€Ð¸Ð¼ÐµÑ€ 49.99',
                         errorText: validationError,
                         border: const OutlineInputBorder(),
                       ),
@@ -2573,7 +2627,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                         if (value == null || value <= 0) {
                           setDialogState(() {
-                            validationError = 'Введите корректную цену';
+                            validationError =
+                                'Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½ÑƒÑŽ Ñ†ÐµÐ½Ñƒ';
                           });
                           return;
                         }
@@ -2583,7 +2638,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Цель сохраняется на сервере Baltic Deals. Push-уведомления подключим позже через Firebase.',
+                      'Ð¦ÐµÐ»ÑŒ ÑÐ¾Ñ…Ñ€Ð°Ð½ÑÐµÑ‚ÑÑ Ð½Ð° ÑÐµÑ€Ð²ÐµÑ€Ðµ Baltic Deals. Push-ÑƒÐ²ÐµÐ´Ð¾Ð¼Ð»ÐµÐ½Ð¸Ñ Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡Ð¸Ð¼ Ð¿Ð¾Ð·Ð¶Ðµ Ñ‡ÐµÑ€ÐµÐ· Firebase.',
                       style: TextStyle(
                         color: Colors.grey.shade700,
                         fontSize: 12,
@@ -2596,12 +2651,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               actions: [
                 if (priceAlertTarget != null)
                   TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(-1),
-                    child: const Text('Отключить'),
+                    onPressed: () =>
+                        Navigator.of(dialogContext).pop(-1),
+                    child: const Text('ÐžÑ‚ÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ'),
                   ),
                 TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Отмена'),
+                  onPressed: () =>
+                      Navigator.of(dialogContext).pop(),
+                  child: const Text('ÐžÑ‚Ð¼ÐµÐ½Ð°'),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -2611,14 +2668,15 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                     if (value == null || value <= 0) {
                       setDialogState(() {
-                        validationError = 'Введите корректную цену';
+                        validationError =
+                            'Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½ÑƒÑŽ Ñ†ÐµÐ½Ñƒ';
                       });
                       return;
                     }
 
                     Navigator.of(dialogContext).pop(value);
                   },
-                  child: const Text('Сохранить'),
+                  child: const Text('Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ'),
                 ),
               ],
             );
@@ -2630,6 +2688,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     controller.dispose();
 
     if (result == null) return;
+
     if (result < 0) {
       await removePriceAlert();
       return;
@@ -2640,31 +2699,45 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   Future<void> loadOffers() async {
     try {
-      final uri = Uri.parse('$apiBase/offers').replace(
+      final uri = Uri.parse(
+        '$apiBase/offers',
+      ).replace(
         queryParameters: {
           'productId': '${widget.product.id}',
         },
       );
 
       final response = await http.get(uri);
+
       if (response.statusCode != 200) {
-        throw Exception('API returned ${response.statusCode}');
+        throw Exception(
+          'API returned ${response.statusCode}',
+        );
       }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      final items = decoded['offers'] as List<dynamic>? ?? [];
+      final decoded =
+          jsonDecode(response.body) as Map<String, dynamic>;
+
+      final items =
+          decoded['offers'] as List<dynamic>? ?? [];
 
       if (!mounted) return;
 
       setState(() {
         offers = items
-            .map((item) => StoreOffer.fromJson(item as Map<String, dynamic>))
+            .map(
+              (item) => StoreOffer.fromJson(
+                item as Map<String, dynamic>,
+              ),
+            )
             .toList();
+
         offersLoading = false;
         offersError = null;
       });
     } catch (e) {
       if (!mounted) return;
+
       setState(() {
         offersLoading = false;
         offersError = e.toString();
@@ -2674,20 +2747,30 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   Future<void> loadSizes() async {
     try {
-      final uri = Uri.parse('$apiBase/sizes').replace(
+      final uri = Uri.parse(
+        '$apiBase/sizes',
+      ).replace(
         queryParameters: {
           'productId': '${widget.product.id}',
         },
       );
 
       final response = await http.get(uri);
+
       if (response.statusCode != 200) {
-        throw Exception('API returned ${response.statusCode}');
+        throw Exception(
+          'API returned ${response.statusCode}',
+        );
       }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      final rawSizes = decoded['all_sizes'] as List<dynamic>? ?? [];
-      final rawStores = decoded['stores'] as List<dynamic>? ?? [];
+      final decoded =
+          jsonDecode(response.body) as Map<String, dynamic>;
+
+      final rawSizes =
+          decoded['all_sizes'] as List<dynamic>? ?? [];
+
+      final rawStores =
+          decoded['stores'] as List<dynamic>? ?? [];
 
       if (!mounted) return;
 
@@ -2698,18 +2781,26 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             .toList();
 
         sizeStores = rawStores
-            .map((item) => ProductSizeStore.fromJson(item as Map<String, dynamic>))
+            .map(
+              (item) => ProductSizeStore.fromJson(
+                item as Map<String, dynamic>,
+              ),
+            )
             .toList();
 
         sizesLoading = false;
         sizesError = null;
 
-        if (selectedSize != null && !allSizes.contains(selectedSize)) {
+        if (
+          selectedSize != null &&
+          !allSizes.contains(selectedSize)
+        ) {
           selectedSize = null;
         }
       });
     } catch (e) {
       if (!mounted) return;
+
       setState(() {
         sizesLoading = false;
         sizesError = e.toString();
@@ -2719,36 +2810,54 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   Future<void> loadPriceHistory() async {
     try {
-      final uri = Uri.parse('$apiBase/price-history').replace(
+      final uri = Uri.parse(
+        '$apiBase/price-history',
+      ).replace(
         queryParameters: {
           'productId': '${widget.product.id}',
         },
       );
 
       final response = await http.get(uri);
+
       if (response.statusCode != 200) {
-        throw Exception('API returned ${response.statusCode}');
+        throw Exception(
+          'API returned ${response.statusCode}',
+        );
       }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      final items = decoded['history'] as List<dynamic>? ?? [];
-      final stats = decoded['stats'] as Map<String, dynamic>?;
+      final decoded =
+          jsonDecode(response.body) as Map<String, dynamic>;
+
+      final items =
+          decoded['history'] as List<dynamic>? ?? [];
+
+      final stats =
+          decoded['stats'] as Map<String, dynamic>?;
 
       if (!mounted) return;
 
       setState(() {
         history = items
-            .map((item) => PriceHistoryPoint.fromJson(item as Map<String, dynamic>))
+            .map(
+              (item) => PriceHistoryPoint.fromJson(
+                item as Map<String, dynamic>,
+              ),
+            )
             .toList();
 
-        minHistoryPrice = (stats?['min_price'] as num?)?.toDouble();
-        maxHistoryPrice = (stats?['max_price'] as num?)?.toDouble();
+        minHistoryPrice =
+            (stats?['min_price'] as num?)?.toDouble();
+
+        maxHistoryPrice =
+            (stats?['max_price'] as num?)?.toDouble();
 
         historyLoading = false;
         historyError = null;
       });
     } catch (e) {
       if (!mounted) return;
+
       setState(() {
         historyLoading = false;
         historyError = e.toString();
@@ -2758,12 +2867,21 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   Future<void> openOffer(StoreOffer offer) async {
     final uri = Uri.tryParse(offer.productUrl);
-    if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.platformDefault);
+
+    if (uri == null) {
+      return;
+    }
+
+    await launchUrl(
+      uri,
+      mode: LaunchMode.platformDefault,
+    );
   }
 
   List<ProductSizeStore> storesForSize(String size) {
-    return sizeStores.where((store) => store.hasSize(size)).toList();
+    return sizeStores
+        .where((store) => store.hasSize(size))
+        .toList();
   }
 
   bool isSizeAvailable(String size) {
@@ -2783,37 +2901,54 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     return best;
   }
 
-  Future<void> openSizeStore(ProductSizeStore store) async {
-    final uri = Uri.tryParse(store.productUrl);
+  Future<void> openSizeStore(
+    ProductSizeStore store,
+  ) async {
+    final uri =
+        Uri.tryParse(store.productUrl);
+
     if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.platformDefault);
+
+    await launchUrl(
+      uri,
+      mode: LaunchMode.platformDefault,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
+
     final hasOldPrice =
-        product.oldPrice != null && product.oldPrice! > product.currentPrice;
+        product.oldPrice != null &&
+            product.oldPrice! > product.currentPrice;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          product.brand?.isNotEmpty == true ? product.brand! : 'Товар',
+          product.brand?.isNotEmpty == true
+              ? product.brand!
+              : 'Ð¢Ð¾Ð²Ð°Ñ€',
         ),
         actions: [
           IconButton(
             tooltip: isFavorite
-                ? 'Убрать из избранного'
-                : 'Добавить в избранное',
+                ? 'Ð£Ð±Ñ€Ð°Ñ‚ÑŒ Ð¸Ð· Ð¸Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ð³Ð¾'
+                : 'Ð”Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ Ð² Ð¸Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ðµ',
             onPressed: () {
               setState(() {
                 isFavorite = !isFavorite;
               });
+
               widget.onFavorite();
             },
             icon: Icon(
-              isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: isFavorite ? const Color(0xFFD93636) : null,
+              isFavorite
+                  ? Icons.favorite
+                  : Icons.favorite_border,
+              color: isFavorite
+                  ? const Color(0xFFD93636)
+                  : null,
             ),
           ),
           const SizedBox(width: 8),
@@ -2831,8 +2966,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 : Image.network(
                     widget.imageUrl,
                     fit: BoxFit.contain,
-                    webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                    errorBuilder: (context, error, stackTrace) {
+                    webHtmlElementStrategy:
+                        WebHtmlElementStrategy.prefer,
+                    errorBuilder:
+                        (
+                      context,
+                      error,
+                      stackTrace,
+                    ) {
                       return const AppProductImagePlaceholder();
                     },
                   ),
@@ -2841,13 +2982,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           final info = SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
-                if (product.brand != null && product.brand!.isNotEmpty)
+                if (product.brand != null &&
+                    product.brand!.isNotEmpty)
                   Text(
                     product.brand!.toUpperCase(),
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary,
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
                       letterSpacing: 0.5,
@@ -2864,7 +3009,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  '${product.storeName} • ${product.country}',
+                  '${product.storeName} â€¢ ${product.country}',
                   style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 14,
@@ -2872,12 +3017,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 ),
                 const SizedBox(height: 24),
                 Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.end,
+                  crossAxisAlignment:
+                      WrapCrossAlignment.end,
                   spacing: 12,
                   runSpacing: 8,
                   children: [
                     Text(
-                      '${widget.priceFormatter(product.currentPrice)} €',
+                      '${widget.priceFormatter(product.currentPrice)} â‚¬',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,
@@ -2885,23 +3031,26 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     ),
                     if (hasOldPrice)
                       Text(
-                        '${widget.priceFormatter(product.oldPrice!)} €',
+                        '${widget.priceFormatter(product.oldPrice!)} â‚¬',
                         style: TextStyle(
                           fontSize: 17,
                           color: Colors.grey.shade600,
-                          decoration: TextDecoration.lineThrough,
+                          decoration:
+                              TextDecoration.lineThrough,
                         ),
                       ),
                     if (product.discountPercent != null &&
                         product.discountPercent! > 0)
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding:
+                            const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFD93636),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius:
+                              BorderRadius.circular(20),
                         ),
                         child: Text(
                           '-${product.discountPercent}%',
@@ -2922,7 +3071,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       child: SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                        ),
                       ),
                     ),
                   )
@@ -2961,36 +3112,43 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                   ? Icons.notifications_none
                                   : Icons.notifications_active_outlined,
                           color: priceAlertTriggered
-                              ? Theme.of(context).colorScheme.tertiary
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .tertiary
                               : priceAlertTarget == null
                                   ? Colors.grey.shade700
-                                  : Theme.of(context).colorScheme.primary,
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .primary,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
                             children: [
                               Text(
-                                priceAlertTriggered && priceAlertTarget != null
-                                    ? 'Цена достигнута!'
+                                priceAlertTriggered &&
+                                        priceAlertTarget != null
+                                    ? 'Ð¦ÐµÐ½Ð° Ð´Ð¾ÑÑ‚Ð¸Ð³Ð½ÑƒÑ‚Ð°!'
                                     : priceAlertTarget == null
-                                        ? 'Отслеживать снижение цены'
-                                        : 'Цель: ${widget.priceFormatter(priceAlertTarget!)} €',
+                                        ? 'ÐžÑ‚ÑÐ»ÐµÐ¶Ð¸Ð²Ð°Ñ‚ÑŒ ÑÐ½Ð¸Ð¶ÐµÐ½Ð¸Ðµ Ñ†ÐµÐ½Ñ‹'
+                                        : 'Ð¦ÐµÐ»ÑŒ: ${widget.priceFormatter(priceAlertTarget!)} â‚¬',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                priceAlertTriggered && priceAlertTarget != null
-                                    ? 'Сработало при ${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} € • цель ${widget.priceFormatter(priceAlertTarget!)} €'
+                                priceAlertTriggered &&
+                                        priceAlertTarget != null
+                                    ? 'Ð¡Ñ€Ð°Ð±Ð¾Ñ‚Ð°Ð»Ð¾ Ð¿Ñ€Ð¸ ${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} â‚¬ â€¢ Ñ†ÐµÐ»ÑŒ ${widget.priceFormatter(priceAlertTarget!)} â‚¬'
                                     : priceAlertTarget == null
-                                        ? 'Сохраним желаемую цену для этого товара'
+                                        ? 'Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ð¼ Ð¶ÐµÐ»Ð°ÐµÐ¼ÑƒÑŽ Ñ†ÐµÐ½Ñƒ Ð´Ð»Ñ ÑÑ‚Ð¾Ð³Ð¾ Ñ‚Ð¾Ð²Ð°Ñ€Ð°'
                                         : widget.product.currentPrice <=
                                                 priceAlertTarget!
-                                            ? 'Цена уже достигла заданного уровня'
-                                            : 'Текущая цена выше цели на ${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} €',
+                                            ? 'Ð¦ÐµÐ½Ð° ÑƒÐ¶Ðµ Ð´Ð¾ÑÑ‚Ð¸Ð³Ð»Ð° Ð·Ð°Ð´Ð°Ð½Ð½Ð¾Ð³Ð¾ ÑƒÑ€Ð¾Ð²Ð½Ñ'
+                                            : 'Ð¢ÐµÐºÑƒÑ‰Ð°Ñ Ñ†ÐµÐ½Ð° Ð²Ñ‹ÑˆÐµ Ñ†ÐµÐ»Ð¸ Ð½Ð° ${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} â‚¬',
                                 style: TextStyle(
                                   color: Colors.grey.shade700,
                                   fontSize: 12,
@@ -3009,7 +3167,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             size: 18,
                           ),
                           label: Text(
-                            priceAlertTarget == null ? 'Задать' : 'Изменить',
+                            priceAlertTarget == null
+                                ? 'Ð—Ð°Ð´Ð°Ñ‚ÑŒ'
+                                : 'Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ',
                           ),
                         ),
                       ],
@@ -3018,26 +3178,30 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 const SizedBox(height: 24),
                 AppDetailRow(
                   icon: Icons.category_outlined,
-                  label: 'Категория',
-                  value: _categoryLabel(product.category),
+                  label: 'ÐšÐ°Ñ‚ÐµÐ³Ð¾Ñ€Ð¸Ñ',
+                  value: _categoryLabel(
+                    product.category,
+                  ),
                 ),
                 AppDetailRow(
                   icon: Icons.person_outline,
-                  label: 'Пол',
-                  value: product.gender?.isNotEmpty == true
-                      ? product.gender!
-                      : 'Не указано',
+                  label: 'ÐŸÐ¾Ð»',
+                  value:
+                      product.gender?.isNotEmpty == true
+                          ? product.gender!
+                          : 'ÐÐµ ÑƒÐºÐ°Ð·Ð°Ð½Ð¾',
                 ),
                 AppDetailRow(
                   icon: Icons.storefront_outlined,
-                  label: 'Магазин',
+                  label: 'ÐœÐ°Ð³Ð°Ð·Ð¸Ð½',
                   value: product.storeName,
                 ),
                 AppDetailRow(
                   icon: Icons.public,
-                  label: 'Страна',
+                  label: 'Ð¡Ñ‚Ñ€Ð°Ð½Ð°',
                   value: product.country,
                 ),
+
                 const SizedBox(height: 10),
                 const Divider(),
                 const SizedBox(height: 12),
@@ -3045,7 +3209,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   children: [
                     const Expanded(
                       child: Text(
-                        'Размеры',
+                        'Ð Ð°Ð·Ð¼ÐµÑ€Ñ‹',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
@@ -3067,7 +3231,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '${allSizes.where(isSizeAvailable).length} доступно',
+                          '${allSizes.where(isSizeAvailable).length} Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¾',
                           style: TextStyle(
                             color: Theme.of(context)
                                 .colorScheme
@@ -3082,18 +3246,24 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 const SizedBox(height: 12),
                 if (sizesLoading)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                    ),
                     child: Row(
                       children: [
                         const SizedBox(
                           width: 22,
                           height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Загружаем доступные размеры…',
-                          style: TextStyle(color: Colors.grey.shade700),
+                          'Ð—Ð°Ð³Ñ€ÑƒÐ¶Ð°ÐµÐ¼ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ñ‹Ðµ Ñ€Ð°Ð·Ð¼ÐµÑ€Ñ‹â€¦',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                          ),
                         ),
                       ],
                     ),
@@ -3114,8 +3284,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         const SizedBox(width: 10),
                         const Expanded(
                           child: Text(
-                            'Не удалось загрузить размеры',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                            'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€Ñ‹',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                         TextButton(
@@ -3126,7 +3298,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             });
                             loadSizes();
                           },
-                          child: const Text('Повторить'),
+                          child: const Text('ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ'),
                         ),
                       ],
                     ),
@@ -3149,7 +3321,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Данные о размерах для этого товара пока не загружены.',
+                            'Ð”Ð°Ð½Ð½Ñ‹Ðµ Ð¾ Ñ€Ð°Ð·Ð¼ÐµÑ€Ð°Ñ… Ð´Ð»Ñ ÑÑ‚Ð¾Ð³Ð¾ Ñ‚Ð¾Ð²Ð°Ñ€Ð° Ð¿Ð¾ÐºÐ° Ð½Ðµ Ð·Ð°Ð³Ñ€ÑƒÐ¶ÐµÐ½Ñ‹.',
                             style: TextStyle(
                               color: Colors.grey.shade700,
                               height: 1.35,
@@ -3162,9 +3334,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 else ...[
                   Text(
                     selectedSize == null
-                        ? 'Выбери размер, чтобы сравнить магазины'
-                        : 'Выбран размер: $selectedSize',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                        ? 'Ð’Ñ‹Ð±ÐµÑ€Ð¸ Ñ€Ð°Ð·Ð¼ÐµÑ€, Ñ‡Ñ‚Ð¾Ð±Ñ‹ ÑÑ€Ð°Ð²Ð½Ð¸Ñ‚ÑŒ Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½Ñ‹'
+                        : 'Ð’Ñ‹Ð±Ñ€Ð°Ð½ Ñ€Ð°Ð·Ð¼ÐµÑ€: $selectedSize',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Wrap(
@@ -3178,7 +3352,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           onSelected: isSizeAvailable(size)
                               ? (selected) {
                                   setState(() {
-                                    selectedSize = selected ? size : null;
+                                    selectedSize =
+                                        selected ? size : null;
                                   });
                                 }
                               : null,
@@ -3187,7 +3362,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Недоступные сейчас размеры показаны серым.',
+                    'ÐÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ñ‹Ðµ ÑÐµÐ¹Ñ‡Ð°Ñ Ñ€Ð°Ð·Ð¼ÐµÑ€Ñ‹ Ð¿Ð¾ÐºÐ°Ð·Ð°Ð½Ñ‹ ÑÐµÑ€Ñ‹Ð¼.',
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -3197,13 +3372,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     const SizedBox(height: 16),
                     Builder(
                       builder: (context) {
-                        final selectedStores = storesForSize(selectedSize!);
-                        final bestPrice = bestPriceForSize(selectedSize!);
+                        final selectedStores =
+                            storesForSize(selectedSize!);
+                        final bestPrice =
+                            bestPriceForSize(selectedSize!);
 
                         if (selectedStores.isEmpty) {
                           return Text(
-                            'Выбранный размер сейчас недоступен',
-                            style: TextStyle(color: Colors.grey.shade600),
+                            'Ð’Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ð¹ Ñ€Ð°Ð·Ð¼ÐµÑ€ ÑÐµÐ¹Ñ‡Ð°Ñ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                            ),
                           );
                         }
 
@@ -3222,7 +3401,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.check_circle_outline),
+                                  const Icon(
+                                    Icons.check_circle_outline,
+                                  ),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Column(
@@ -3230,7 +3411,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Размер $selectedSize · ${selectedStores.length} ${selectedStores.length == 1 ? 'магазин' : 'магазина'}',
+                                          'Ð Ð°Ð·Ð¼ÐµÑ€ $selectedSize Â· ${selectedStores.length} ${selectedStores.length == 1 ? 'Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½' : 'Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½Ð°'}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w800,
                                           ),
@@ -3238,7 +3419,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                         if (bestPrice != null) ...[
                                           const SizedBox(height: 3),
                                           Text(
-                                            'Лучшая цена: ${widget.priceFormatter(bestPrice)} €',
+                                            'Ð›ÑƒÑ‡ÑˆÐ°Ñ Ñ†ÐµÐ½Ð°: ${widget.priceFormatter(bestPrice)} â‚¬',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -3253,12 +3434,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             const SizedBox(height: 10),
                             for (final store in selectedStores)
                               Card(
-                                margin: const EdgeInsets.only(bottom: 8),
+                                margin: const EdgeInsets.only(
+                                  bottom: 8,
+                                ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.storefront_outlined),
+                                      const Icon(
+                                        Icons.storefront_outlined,
+                                      ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Column(
@@ -3278,14 +3463,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                                 ),
                                                 if (bestPrice != null &&
                                                     (store.currentPrice -
-                                                                bestPrice)
-                                                            .abs() <
+                                                            bestPrice)
+                                                        .abs() <
                                                         0.001) ...[
                                                   const SizedBox(width: 8),
                                                   Container(
-                                                    padding:
-                                                        const EdgeInsets
-                                                            .symmetric(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
                                                       horizontal: 8,
                                                       vertical: 4,
                                                     ),
@@ -3299,7 +3483,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                                       ),
                                                     ),
                                                     child: const Text(
-                                                      'Лучшая цена',
+                                                      'Ð›ÑƒÑ‡ÑˆÐ°Ñ Ñ†ÐµÐ½Ð°',
                                                       style: TextStyle(
                                                         fontSize: 11,
                                                         fontWeight:
@@ -3312,7 +3496,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              '${widget.priceFormatter(store.currentPrice)} €',
+                                              '${widget.priceFormatter(store.currentPrice)} â‚¬',
                                               style: const TextStyle(
                                                 fontSize: 17,
                                                 fontWeight: FontWeight.w900,
@@ -3320,7 +3504,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                             ),
                                             const SizedBox(height: 2),
                                             const Text(
-                                              'В наличии',
+                                              'Ð’ Ð½Ð°Ð»Ð¸Ñ‡Ð¸Ð¸',
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w700,
@@ -3331,8 +3515,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                       ),
                                       const SizedBox(width: 10),
                                       FilledButton(
-                                        onPressed: () => openSizeStore(store),
-                                        child: const Text('Открыть'),
+                                        onPressed: () =>
+                                            openSizeStore(store),
+                                        child: const Text('ÐžÑ‚ÐºÑ€Ñ‹Ñ‚ÑŒ'),
                                       ),
                                     ],
                                   ),
@@ -3348,7 +3533,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 const Divider(),
                 const SizedBox(height: 12),
                 const Text(
-                  'Цены в магазинах',
+                  'Ð¦ÐµÐ½Ñ‹ Ð² Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½Ð°Ñ…',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -3357,14 +3542,20 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 const SizedBox(height: 12),
                 if (offersLoading)
                   const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Center(child: CircularProgressIndicator()),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 16,
+                    ),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
                   )
                 else if (offersError != null)
                   Row(
                     children: [
                       const Expanded(
-                        child: Text('Не удалось загрузить предложения'),
+                        child: Text(
+                          'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ Ð¿Ñ€ÐµÐ´Ð»Ð¾Ð¶ÐµÐ½Ð¸Ñ',
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
@@ -3374,14 +3565,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           });
                           loadOffers();
                         },
-                        child: const Text('Повторить'),
+                        child: const Text('ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ'),
                       ),
                     ],
                   )
                 else if (offers.isEmpty)
                   Text(
-                    'Предложений пока нет',
-                    style: TextStyle(color: Colors.grey.shade600),
+                    'ÐŸÑ€ÐµÐ´Ð»Ð¾Ð¶ÐµÐ½Ð¸Ð¹ Ð¿Ð¾ÐºÐ° Ð½ÐµÑ‚',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                    ),
                   )
                 else
                   Column(
@@ -3389,8 +3582,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       for (final offer in offers)
                         _OfferCard(
                           offer: offer,
-                          priceFormatter: widget.priceFormatter,
-                          onOpen: () => openOffer(offer),
+                          priceFormatter:
+                              widget.priceFormatter,
+                          onOpen: () =>
+                              openOffer(offer),
                         ),
                     ],
                   ),
@@ -3398,7 +3593,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 const Divider(),
                 const SizedBox(height: 12),
                 const Text(
-                  'История цены',
+                  'Ð˜ÑÑ‚Ð¾Ñ€Ð¸Ñ Ñ†ÐµÐ½Ñ‹',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -3407,18 +3602,26 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 const SizedBox(height: 12),
                 if (historyLoading)
                   const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 24,
+                    ),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
                   )
                 else if (historyError != null)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
-                            'Не удалось загрузить историю цены',
-                            style: TextStyle(color: Colors.grey.shade700),
+                            'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ Ð¸ÑÑ‚Ð¾Ñ€Ð¸ÑŽ Ñ†ÐµÐ½Ñ‹',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                            ),
                           ),
                         ),
                         TextButton(
@@ -3429,7 +3632,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             });
                             loadPriceHistory();
                           },
-                          child: const Text('Повторить'),
+                          child: const Text('ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ'),
                         ),
                       ],
                     ),
@@ -3440,19 +3643,19 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     runSpacing: 8,
                     children: [
                       _PriceStat(
-                        label: 'Сейчас',
+                        label: 'Ð¡ÐµÐ¹Ñ‡Ð°Ñ',
                         value:
-                            '${widget.priceFormatter(product.currentPrice)} €',
+                            '${widget.priceFormatter(product.currentPrice)} â‚¬',
                       ),
                       _PriceStat(
-                        label: 'Минимум',
+                        label: 'ÐœÐ¸Ð½Ð¸Ð¼ÑƒÐ¼',
                         value:
-                            '${widget.priceFormatter(minHistoryPrice ?? product.currentPrice)} €',
+                            '${widget.priceFormatter(minHistoryPrice ?? product.currentPrice)} â‚¬',
                       ),
                       _PriceStat(
-                        label: 'Максимум',
+                        label: 'ÐœÐ°ÐºÑÐ¸Ð¼ÑƒÐ¼',
                         value:
-                            '${widget.priceFormatter(maxHistoryPrice ?? product.currentPrice)} €',
+                            '${widget.priceFormatter(maxHistoryPrice ?? product.currentPrice)} â‚¬',
                       ),
                     ],
                   ),
@@ -3462,14 +3665,15 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     width: double.infinity,
                     child: PriceHistoryChart(
                       history: history,
-                      fallbackPrice: product.currentPrice,
+                      fallbackPrice:
+                          product.currentPrice,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     history.length <= 1
-                        ? 'История только начала собираться. Новые точки появятся при изменении цены.'
-                        : 'Точек истории: ${history.length}',
+                        ? 'Ð˜ÑÑ‚Ð¾Ñ€Ð¸Ñ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð½Ð°Ñ‡Ð°Ð»Ð° ÑÐ¾Ð±Ð¸Ñ€Ð°Ñ‚ÑŒÑÑ. ÐÐ¾Ð²Ñ‹Ðµ Ñ‚Ð¾Ñ‡ÐºÐ¸ Ð¿Ð¾ÑÐ²ÑÑ‚ÑÑ Ð¿Ñ€Ð¸ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ð¸ Ñ†ÐµÐ½Ñ‹.'
+                        : 'Ð¢Ð¾Ñ‡ÐµÐº Ð¸ÑÑ‚Ð¾Ñ€Ð¸Ð¸: ${history.length}',
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -3482,11 +3686,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: widget.onOpenStore,
-                    icon: const Icon(Icons.open_in_new),
+                    icon: const Icon(
+                      Icons.open_in_new,
+                    ),
                     label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      padding:
+                          EdgeInsets.symmetric(
+                        vertical: 14,
+                      ),
                       child: Text(
-                        'Перейти в магазин',
+                        'ÐŸÐµÑ€ÐµÐ¹Ñ‚Ð¸ Ð² Ð¼Ð°Ð³Ð°Ð·Ð¸Ð½',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -3502,8 +3711,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           if (wide) {
             return Row(
               children: [
-                Expanded(flex: 6, child: image),
-                Expanded(flex: 5, child: info),
+                Expanded(
+                  flex: 6,
+                  child: image,
+                ),
+                Expanded(
+                  flex: 5,
+                  child: info,
+                ),
               ],
             );
           }
@@ -3519,7 +3734,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 ConstrainedBox(
                   constraints: BoxConstraints(
                     minHeight: 520,
-                    maxHeight: MediaQuery.sizeOf(context).height,
+                    maxHeight:
+                        MediaQuery.sizeOf(context).height,
                   ),
                   child: info,
                 ),
@@ -3534,16 +3750,20 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   String _categoryLabel(String? category) {
     switch (category) {
       case 'shoes':
-        return 'Обувь';
+        return 'ÐžÐ±ÑƒÐ²ÑŒ';
       case 'clothing':
-        return 'Одежда';
+        return 'ÐžÐ´ÐµÐ¶Ð´Ð°';
       case 'sports':
-        return 'Спорт';
+        return 'Ð¡Ð¿Ð¾Ñ€Ñ‚';
       default:
-        return category?.isNotEmpty == true ? category! : 'Не указано';
+        return category?.isNotEmpty == true
+            ? category!
+            : 'ÐÐµ ÑƒÐºÐ°Ð·Ð°Ð½Ð¾';
     }
   }
 }
+
+
 
 class _OfferCard extends StatelessWidget {
   final StoreOffer offer;
@@ -3559,23 +3779,31 @@ class _OfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasOldPrice =
-        offer.oldPrice != null && offer.oldPrice! > offer.currentPrice;
+        offer.oldPrice != null &&
+            offer.oldPrice! > offer.currentPrice;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(
+        bottom: 10,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            const Icon(Icons.storefront_outlined),
+            const Icon(
+              Icons.storefront_outlined,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     offer.storeName,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -3588,27 +3816,29 @@ class _OfferCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                    crossAxisAlignment:
+                        WrapCrossAlignment.center,
                     children: [
                       Text(
-                        '${priceFormatter(offer.currentPrice)} €',
+                        '${priceFormatter(offer.currentPrice)} â‚¬',
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 18,
                         ),
                       ),
                       if (offer.hasCoupon)
-                        _CardBadge(
-                          label: 'КУПОН',
-                          backgroundColor: Colors.blue.shade50,
-                          foregroundColor: Colors.blue.shade800,
-                        ),
+  _CardBadge(
+    label: 'ÐšÐ£ÐŸÐžÐ',
+    backgroundColor: Colors.blue.shade50,
+    foregroundColor: Colors.blue.shade800,
+  ),
                       if (hasOldPrice)
                         Text(
-                          '${priceFormatter(offer.oldPrice!)} €',
+                          '${priceFormatter(offer.oldPrice!)} â‚¬',
                           style: TextStyle(
                             color: Colors.grey.shade600,
-                            decoration: TextDecoration.lineThrough,
+                            decoration:
+                                TextDecoration.lineThrough,
                           ),
                         ),
                       if (offer.discountPercent != null &&
@@ -3628,7 +3858,7 @@ class _OfferCard extends StatelessWidget {
             const SizedBox(width: 12),
             FilledButton(
               onPressed: onOpen,
-              child: const Text('Открыть'),
+              child: const Text('ÐžÑ‚ÐºÑ€Ñ‹Ñ‚ÑŒ'),
             ),
           ],
         ),
@@ -3649,13 +3879,19 @@ class _PriceStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 10,
+      ),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: Colors.grey.shade300,
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Text(
             label,
@@ -3667,7 +3903,9 @@ class _PriceStat extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -3694,7 +3932,8 @@ class PriceHistoryChart extends StatelessWidget {
     return CustomPaint(
       painter: _PriceHistoryPainter(
         prices: prices,
-        lineColor: Theme.of(context).colorScheme.primary,
+        lineColor:
+            Theme.of(context).colorScheme.primary,
         gridColor: Colors.grey.shade300,
       ),
       child: const SizedBox.expand(),
@@ -3736,12 +3975,15 @@ class _PriceHistoryPainter extends CustomPainter {
       );
     }
 
-    final minPrice = prices.reduce((a, b) => a < b ? a : b);
-    final maxPrice = prices.reduce((a, b) => a > b ? a : b);
+    final minPrice =
+        prices.reduce((a, b) => a < b ? a : b);
+    final maxPrice =
+        prices.reduce((a, b) => a > b ? a : b);
 
-    final range = (maxPrice - minPrice).abs() < 0.001
-        ? 1.0
-        : maxPrice - minPrice;
+    final range =
+        (maxPrice - minPrice).abs() < 0.001
+            ? 1.0
+            : maxPrice - minPrice;
 
     final linePaint = Paint()
       ..color = lineColor
@@ -3759,10 +4001,14 @@ class _PriceHistoryPainter extends CustomPainter {
     for (var i = 0; i < prices.length; i++) {
       final x = prices.length == 1
           ? left + width / 2
-          : left + width * i / (prices.length - 1);
+          : left +
+              width * i / (prices.length - 1);
 
-      final normalized = (prices[i] - minPrice) / range;
-      final y = top + height * (1 - normalized);
+      final normalized =
+          (prices[i] - minPrice) / range;
+
+      final y =
+          top + height * (1 - normalized);
 
       if (i == 0) {
         path.moveTo(x, y);
@@ -3770,24 +4016,36 @@ class _PriceHistoryPainter extends CustomPainter {
         path.lineTo(x, y);
       }
 
-      canvas.drawCircle(Offset(x, y), 4, pointPaint);
+      canvas.drawCircle(
+        Offset(x, y),
+        4,
+        pointPaint,
+      );
     }
 
     if (prices.length > 1) {
-      canvas.drawPath(path, linePaint);
+      canvas.drawPath(
+        path,
+        linePaint,
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _PriceHistoryPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant _PriceHistoryPainter oldDelegate,
+  ) {
     return oldDelegate.prices != prices ||
         oldDelegate.lineColor != lineColor ||
         oldDelegate.gridColor != gridColor;
   }
 }
 
-class ProductImagePlaceholder extends StatelessWidget {
-  const ProductImagePlaceholder({super.key});
+class ProductImagePlaceholder
+    extends StatelessWidget {
+  const ProductImagePlaceholder({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -3815,32 +4073,48 @@ class ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding:
+            const EdgeInsets.all(24),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize:
+              MainAxisSize.min,
           children: [
             const Icon(
               Icons.error_outline,
               size: 54,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(
+              height: 16,
+            ),
             const Text(
-              'Не удалось загрузить товары',
+              'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ Ñ‚Ð¾Ð²Ð°Ñ€Ñ‹',
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w700,
+                fontWeight:
+                    FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
             Text(
               message,
-              textAlign: TextAlign.center,
+              textAlign:
+                  TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 20,
+            ),
             FilledButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Повторить'),
+              icon:
+                  const Icon(
+                Icons.refresh,
+              ),
+              label:
+                  const Text(
+                'ÐŸÐ¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ',
+              ),
             ),
           ],
         ),
@@ -3848,3 +4122,7 @@ class ErrorView extends StatelessWidget {
     );
   }
 }
+
+
+
+
