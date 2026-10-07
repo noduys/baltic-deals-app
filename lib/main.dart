@@ -304,7 +304,7 @@ class ProductsPage extends StatefulWidget {
     super.key,
     this.initialStore,
     this.storeTitle,
-  });
+  });Positioned(
 
   @override
   State<ProductsPage> createState() => _ProductsPageState();
@@ -1639,6 +1639,20 @@ class PaginationFooter extends StatelessWidget {
       );
     }
 
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: onLoadMore,
+          icon: const Icon(Icons.expand_more),
+          label: Text('Загрузить ещё $pageLabel'),
+        ),
+      ),
+    );
+  }
+
+  String get pageLabel => '40 товаров';
+}
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
       child: Center(
