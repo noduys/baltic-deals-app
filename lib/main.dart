@@ -2,11 +2,13 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'firebase_options.dart';
 import 'barcode_scanner_page.dart';
@@ -14,8 +16,22 @@ import 'barcode_scanner_page.dart';
 const String _webVapidKey =
     'BAeMMjHE9TkBtALMEoekwr0FlmgyjY6eeo03QFnlGFoqs8XNVY9mRYx4lqrLiCoRaoNT411Q7djVorhbuGLB6MI';
 
+final GlobalKey<NavigatorState> _globalNavigatorKey =
+    GlobalKey<NavigatorState>();
+
+Future<String> _getDeviceId() async {
+  final prefs = await SharedPreferences.getInstance();
+  final existing = prefs.getString('device_id');
+  if (existing != null && existing.isNotEmpty) return existing;
+
+  final created = 'bd-${DateTime.now().microsecondsSinceEpoch}-${Object().hashCode}';
+  await prefs.setString('device_id', created);
+  return created;
+}
+
 Future<void> _registerPushToken(String token) async {
   try {
+    final deviceId = await _getDeviceId();
     final response = await http.post(
       Uri.parse('https://baltic-deals-api.noduys.workers.dev/push-token'),
       headers: {
@@ -23,6 +39,7 @@ Future<void> _registerPushToken(String token) async {
       },
       body: jsonEncode({
         'token': token,
+        'deviceId': deviceId,
       }),
     );
 
@@ -31,6 +48,48 @@ Future<void> _registerPushToken(String token) async {
   } catch (error, stackTrace) {
     debugPrint('Push token register error: $error');
     debugPrintStack(stackTrace: stackTrace);
+  }
+}
+
+Future<void> _handlePushMessage(RemoteMessage message) async {
+  final data = message.data;
+  if (data['type'] != 'price_alert') return;
+
+  final productIdStr = data['productId']?.toString();
+  if (productIdStr == null || productIdStr.isEmpty) return;
+  final productId = int.tryParse(productIdStr);
+  if (productId == null || productId <= 0) return;
+
+  try {
+    final uri = Uri.parse(
+      'https://baltic-deals-api.noduys.workers.dev/offers?productId=$productId',
+    );
+    final res = await http.get(uri).timeout(const Duration(seconds: 10));
+    if (res.statusCode != 200) return;
+
+    final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+    final productJson = decoded['product'] as Map<String, dynamic>?;
+    if (productJson == null) return;
+
+    final product = Product.fromJson(productJson);
+
+    final navigator = _globalNavigatorKey.currentState;
+    if (navigator == null) return;
+
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => ProductDetailsPage(
+          product: product,
+          imageUrl: product.imageUrl ?? '',
+          isFavorite: false,
+          onFavorite: () {},
+          onOpenStore: () {},
+          priceFormatter: (v) => v.toStringAsFixed(2),
+        ),
+      ),
+    );
+  } catch (e) {
+    debugPrint('handlePushMessage error: $e');
   }
 }
 
@@ -65,6 +124,17 @@ Future<void> _setupFirebaseMessaging() async {
       debugPrint('FCM data: ${message.data}');
     });
 
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('FCM OPENED APP: ${message.data}');
+      _handlePushMessage(message);
+    });
+
+    final initialMessage = await messaging.getInitialMessage();
+    if (initialMessage != null) {
+      debugPrint('FCM INITIAL MESSAGE: ${initialMessage.data}');
+      _handlePushMessage(initialMessage);
+    }
+
     messaging.onTokenRefresh.listen(
       (newToken) async {
         debugPrint('FCM TOKEN REFRESHED: $newToken');
@@ -92,14 +162,98 @@ Future<void> main() async {
   await _setupFirebaseMessaging();
 }
 
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 1400), () {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const ProductsPage()),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final String splashImage = localeCode == 'ru'
+        ? 'assets/images/splash_ru.jpg'
+        : 'assets/images/splash_en.jpg';
+
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            splashImage,
+            fit: BoxFit.cover,
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 36.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 7,
+                          child: Container(
+                            height: 6,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Container(
+                            height: 6,
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class BalticDealsApp extends StatelessWidget {
   const BalticDealsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _globalNavigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Baltic Deals',
+      themeMode: ThemeMode.system,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -107,7 +261,14 @@ class BalticDealsApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF5F6F7),
       ),
-      home: const ProductsPage(),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF176B5B),
+          brightness: Brightness.dark,
+        ),
+      ),
+      home: const SplashScreen(),
     );
   }
 }
@@ -126,10 +287,24 @@ class AppProductImagePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Icon(
-        Icons.image_outlined,
-        size: 54,
-        color: Colors.grey.shade400,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.image_outlined,
+            size: 46,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Нет изображения',
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -159,7 +334,7 @@ class AppErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Не удалось загрузить товары',
+              'Не удалось загрузить данные',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -276,13 +451,13 @@ class Product {
       id: (json['id'] as num?)?.toInt() ??
           (json['product_id'] as num?)?.toInt() ??
           0,
-      name: json['name']?.toString() ?? 'Product',
+      name: json['name']?.toString() ?? 'Товар',
       brand: json['brand']?.toString(),
       category: json['category']?.toString(),
       gender: json['gender']?.toString(),
       imageUrl: json['image_url']?.toString(),
       productUrl: json['product_url']?.toString(),
-      storeName: json['store_name']?.toString() ?? 'Sportland',
+      storeName: json['store_name']?.toString() ?? 'Магазин',
       country: json['country']?.toString() ?? 'EE',
       currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
       oldPrice: (json['old_price'] as num?)?.toDouble(),
@@ -304,7 +479,7 @@ class ProductsPage extends StatefulWidget {
     super.key,
     this.initialStore,
     this.storeTitle,
-  });Positioned(
+  });
 
   @override
   State<ProductsPage> createState() => _ProductsPageState();
@@ -312,7 +487,7 @@ class ProductsPage extends StatefulWidget {
 
 class _ProductsPageState extends State<ProductsPage> {
   bool get isStoreCatalog => widget.initialStore != null;
-  static const String currentAppVersion = '1.3.0';
+  static const String currentAppVersion = '1.4.0';
   static const String apiBase = 'https://baltic-deals-api.noduys.workers.dev';
   static const int pageSize = 40;
 
@@ -363,13 +538,13 @@ class _ProductsPageState extends State<ProductsPage> {
                 children: [
                   Icon(Icons.system_update, color: Color(0xFF176B5B)),
                   SizedBox(width: 10),
-                  Text('Доступно обновление'),
+                  Text('Обновление приложения'),
                 ],
               ),
               content: Text(
-                'Вышла новая версия приложения: $latestVersion.\n'
+                'Доступна новая версия: $latestVersion.\n'
                 'Установленная версия: $currentAppVersion.\n\n'
-                'Хотите обновить сейчас?',
+                'Хотите загрузить обновление сейчас?',
               ),
               actions: [
                 TextButton(
@@ -577,7 +752,7 @@ class _ProductsPageState extends State<ProductsPage> {
       final response = await http.get(uri);
 
       if (response.statusCode != 200) {
-        throw Exception('API returned ${response.statusCode}');
+        throw Exception('API вернуло код ${response.statusCode}');
       }
 
       final decoded = jsonDecode(response.body) as Map<String, dynamic>;
@@ -733,7 +908,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
     final opened = await launchUrl(uri, mode: LaunchMode.platformDefault);
     if (!opened) {
-      showMessage('Не удалось открыть магазин');
+      showMessage('Не удалось открыть страницу');
     }
   }
 
@@ -799,22 +974,29 @@ class _ProductsPageState extends State<ProductsPage> {
           const SizedBox(height: 12),
           SizedBox(
             height: 510,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: items.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 14),
-              itemBuilder: (context, index) {
-                final product = items[index];
-                return SizedBox(
-                  width: 240,
-                  child: ProductCard(
-                    product: product,
-                    imageUrl: product.imageUrl ?? '',
-                    isFavorite: favoriteIds.contains(product.id),
-                    onFavorite: () => toggleFavorite(product),
-                    onDetails: () => openDetails(product),
-                    priceFormatter: price,
-                  ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final cardWidth = constraints.maxWidth < 600
+                    ? (constraints.maxWidth * 0.58).clamp(300.0, 410.0)
+                    : 300.0;
+                return ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 14),
+                  itemBuilder: (context, index) {
+                    final product = items[index];
+                    return SizedBox(
+                      width: cardWidth,
+                      child: ProductCard(
+                        product: product,
+                        imageUrl: product.imageUrl ?? '',
+                        isFavorite: favoriteIds.contains(product.id),
+                        onFavorite: () => toggleFavorite(product),
+                        onDetails: () => openDetails(product),
+                        priceFormatter: price,
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -845,10 +1027,21 @@ class _ProductsPageState extends State<ProductsPage> {
         initialValue: 'all',
         isExpanded: true,
         decoration: InputDecoration(
-          labelText: 'Открыть магазин',
+          labelText: 'Каталог магазина',
           prefixIcon: const Icon(Icons.storefront_outlined),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 18,
+          ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(22),
+            borderSide: BorderSide(color: Colors.grey.shade500),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(22),
+            borderSide: BorderSide(color: Colors.grey.shade500),
           ),
         ),
         items: const [
@@ -900,17 +1093,26 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
           ),
           IconButton(
-            tooltip: 'Обновить товары',
+            tooltip: 'Обновить список',
             onPressed: refreshProducts,
             icon: const Icon(Icons.refresh),
           ),
           IconButton(
-            tooltip: 'Проверить обновление',
+            tooltip: 'Отслеживание цены по ссылке',
+            icon: const Icon(Icons.notifications_active_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const UrlWatchPage()),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'Проверить обновления',
             icon: const Icon(Icons.system_update_alt),
             onPressed: () => checkForAppUpdate(manual: true),
           ),
           PopupMenuButton<String>(
-            tooltip: 'Смена языка',
+            tooltip: 'Выбор языка',
             icon: const Icon(Icons.language),
             onSelected: (langCode) {},
             itemBuilder: (context) => const [
@@ -922,7 +1124,7 @@ class _ProductsPageState extends State<ProductsPage> {
             ],
           ),
           IconButton(
-            tooltip: 'Сканер штрихкода',
+            tooltip: 'Сканер штрихкодов',
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () {
               Navigator.push(
@@ -950,7 +1152,7 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
           ),
           loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const ProductGridSkeleton()
               : error != null && products.isEmpty
                   ? AppErrorView(
                       message: error!,
@@ -1109,7 +1311,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                                       CrossAxisAlignment.start,
                                                   children: [
                                                     const Text(
-                                                      'Самые большие скидки сейчас',
+                                                      'Самые большие скидки недели',
                                                       style: TextStyle(
                                                         fontSize: 22,
                                                         fontWeight:
@@ -1118,7 +1320,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                                     ),
                                                     const SizedBox(height: 4),
                                                     Text(
-                                                      'Топ скидок на красоту, одежду, обувь и технику',
+                                                      'Топ скидок на одежду, обувь, косметику и технику',
                                                       style: TextStyle(
                                                         fontSize: 13,
                                                         color: Colors.grey.shade700,
@@ -1155,46 +1357,56 @@ class _ProductsPageState extends State<ProductsPage> {
                                                 ),
                                               ),
                                             ),
-                                          SliverPadding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                              20,
-                                              20,
-                                              20,
-                                              10,
-                                            ),
-                                            sliver: SliverGrid(
-                                              gridDelegate:
-                                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                                crossAxisCount: columns,
-                                                crossAxisSpacing: 16,
-                                                mainAxisSpacing: 16,
-                                                childAspectRatio: columns == 1
-                                                    ? 0.87
-                                                    : 0.58,
+                                          if (isStoreCatalog ||
+                                              searchController.text.trim().isNotEmpty ||
+                                              selectedCategory != 'all' ||
+                                              selectedGender != 'all' ||
+                                              selectedBrand != 'all' ||
+                                              selectedStore != 'all' ||
+                                              minPriceController.text.trim().isNotEmpty ||
+                                              maxPriceController.text.trim().isNotEmpty ||
+                                              selectedMinDiscount > 0 ||
+                                              showFavoritesOnly)
+                                            SliverPadding(
+                                              padding: const EdgeInsets.fromLTRB(
+                                                20,
+                                                20,
+                                                20,
+                                                10,
                                               ),
-                                              delegate:
-                                                  SliverChildBuilderDelegate(
-                                                (context, index) {
-                                                  final product =
-                                                      filteredProducts[index];
-                                                  return ProductCard(
-                                                    product: product,
-                                                    imageUrl:
-                                                        product.imageUrl ?? '',
-                                                    isFavorite: favoriteIds
-                                                        .contains(product.id),
-                                                    onFavorite: () =>
-                                                        toggleFavorite(product),
-                                                    onDetails: () =>
-                                                        openDetails(product),
-                                                    priceFormatter: price,
-                                                  );
-                                                },
-                                                childCount:
-                                                    filteredProducts.length,
+                                              sliver: SliverGrid(
+                                                gridDelegate:
+                                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: columns,
+                                                  crossAxisSpacing: 16,
+                                                  mainAxisSpacing: 16,
+                                                  childAspectRatio: columns == 1
+                                                      ? 0.87
+                                                      : 0.58,
+                                                ),
+                                                delegate:
+                                                    SliverChildBuilderDelegate(
+                                                  (context, index) {
+                                                    final product =
+                                                        filteredProducts[index];
+                                                    return ProductCard(
+                                                      product: product,
+                                                      imageUrl:
+                                                          product.imageUrl ?? '',
+                                                      isFavorite: favoriteIds
+                                                          .contains(product.id),
+                                                      onFavorite: () =>
+                                                          toggleFavorite(product),
+                                                      onDetails: () =>
+                                                          openDetails(product),
+                                                      priceFormatter: price,
+                                                    );
+                                                  },
+                                                  childCount:
+                                                      filteredProducts.length,
+                                                ),
                                               ),
                                             ),
-                                          ),
                                           SliverToBoxAdapter(
                                             child: PaginationFooter(
                                               loadingMore: loadingMore,
@@ -1302,7 +1514,7 @@ class _FiltersBarState extends State<FiltersBar> {
       controller: widget.searchController,
       onChanged: widget.onSearchChanged,
       decoration: InputDecoration(
-        hintText: 'Поиск по товару или бренду',
+        hintText: 'Поиск по бренду или товару',
         prefixIcon: const Icon(Icons.search),
         suffixIcon: widget.searchController.text.isNotEmpty
             ? IconButton(
@@ -1348,7 +1560,7 @@ class _FiltersBarState extends State<FiltersBar> {
         DropdownMenuItem(value: 'all', child: Text('Все')),
         DropdownMenuItem(value: 'men', child: Text('Мужское')),
         DropdownMenuItem(value: 'women', child: Text('Женское')),
-        DropdownMenuItem(value: 'kids', child: Text('Детское / Унисекс')),
+        DropdownMenuItem(value: 'kids', child: Text('Детское / Подростки')),
       ],
       onChanged: widget.onGenderChanged,
     );
@@ -1444,7 +1656,7 @@ class _FiltersBarState extends State<FiltersBar> {
         ),
         DropdownMenuItem(
           value: SortMode.savingsHigh,
-          child: Text('Максимальная экономия', overflow: TextOverflow.ellipsis),
+          child: Text('Максимальная выгода', overflow: TextOverflow.ellipsis),
         ),
         DropdownMenuItem(
           value: SortMode.priceLow,
@@ -1487,82 +1699,161 @@ class _FiltersBarState extends State<FiltersBar> {
     );
 
     if (isMobile) {
+      final activeFilters = [
+        widget.selectedCategory != 'all',
+        widget.selectedGender != 'all',
+        widget.selectedBrand != 'all',
+        widget.selectedStore != 'all' && widget.showStoreFilter,
+        widget.minPriceController.text.trim().isNotEmpty,
+        widget.maxPriceController.text.trim().isNotEmpty,
+        widget.selectedMinDiscount > 0,
+        widget.selectedSort != SortMode.discountHigh,
+        widget.multiStoreOnly,
+      ].where((value) => value).length;
+
+      Future<void> openFiltersSheet() async {
+        await showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          showDragHandle: true,
+          builder: (sheetContext) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                4,
+                16,
+                16 + MediaQuery.viewInsetsOf(sheetContext).bottom,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Фильтры',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            widget.onReset();
+                            Navigator.of(sheetContext).pop();
+                          },
+                          child: const Text('Сбросить'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    categoryField,
+                    if (widget.selectedStore == 'Notino') ...[
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Notino',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Все'),
+                            selected: widget.selectedCategory == 'all',
+                            onSelected: (_) => widget.onCategoryChanged('all'),
+                          ),
+                          ChoiceChip(
+                            label: const Text('Косметика'),
+                            selected: widget.selectedCategory == 'beauty',
+                            onSelected: (_) =>
+                                widget.onCategoryChanged('beauty'),
+                          ),
+                          ChoiceChip(
+                            label: const Text('Парфюмерия'),
+                            selected: widget.selectedCategory == 'perfume',
+                            onSelected: (_) =>
+                                widget.onCategoryChanged('perfume'),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    genderField,
+                    const SizedBox(height: 12),
+                    brandField,
+                    const SizedBox(height: 12),
+                    if (widget.showStoreFilter) ...[
+                      storeField,
+                      const SizedBox(height: 12),
+                    ],
+                    Row(
+                      children: [
+                        Expanded(child: minPriceField),
+                        const SizedBox(width: 12),
+                        Expanded(child: maxPriceField),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    discountField,
+                    const SizedBox(height: 12),
+                    sortField,
+                    const SizedBox(height: 8),
+                    multiStoreField,
+                    const SizedBox(height: 8),
+                    resetButton,
+                    const SizedBox(height: 10),
+                    FilledButton(
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text('Показать товары'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      }
+
       return Container(
         width: double.infinity,
         color: Colors.white,
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             searchField,
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        expanded = !expanded;
-                      });
-                    },
-                    icon: Icon(
-                      expanded ? Icons.expand_less : Icons.tune,
-                    ),
+                    onPressed: openFiltersSheet,
+                    icon: const Icon(Icons.tune),
                     label: Text(
-                      expanded ? 'Скрыть фильтры' : 'Фильтры',
+                      activeFilters == 0
+                          ? 'Фильтры'
+                          : 'Фильтры • $activeFilters',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Flexible(child: countText),
               ],
             ),
-            if (expanded) ...[
-              const SizedBox(height: 12),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.45,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      categoryField,
-                      const SizedBox(height: 12),
-                      genderField,
-                      const SizedBox(height: 12),
-                      brandField,
-                      const SizedBox(height: 12),
-                      if (widget.showStoreFilter) ...[
-                        storeField,
-                        const SizedBox(height: 12),
-                      ],
-                      Row(
-                        children: [
-                          Expanded(child: minPriceField),
-                          const SizedBox(width: 12),
-                          Expanded(child: maxPriceField),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      discountField,
-                      const SizedBox(height: 12),
-                      sortField,
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: multiStoreField,
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: resetButton,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       );
@@ -1629,7 +1920,7 @@ class PaginationFooter extends StatelessWidget {
         padding: const EdgeInsets.all(28),
         child: Center(
           child: Text(
-            'Все загруженные товары показаны',
+            'Все подходящие товары загружены',
             style: TextStyle(
               color: Colors.grey.shade600,
               fontWeight: FontWeight.w600,
@@ -1645,7 +1936,7 @@ class PaginationFooter extends StatelessWidget {
         child: OutlinedButton.icon(
           onPressed: onLoadMore,
           icon: const Icon(Icons.expand_more),
-          label: Text('Загрузить ещё $pageLabel'),
+          label: Text('Загрузить еще $pageLabel'),
         ),
       ),
     );
@@ -1653,19 +1944,270 @@ class PaginationFooter extends StatelessWidget {
 
   String get pageLabel => '40 товаров';
 }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-      child: Center(
-        child: OutlinedButton.icon(
-          onPressed: onLoadMore,
-          icon: const Icon(Icons.expand_more),
-          label: Text('Загрузить ещё $pageLabel'),
-        ),
+
+class UrlWatchPage extends StatefulWidget {
+  const UrlWatchPage({super.key});
+
+  @override
+  State<UrlWatchPage> createState() => _UrlWatchPageState();
+}
+
+class _UrlWatchPageState extends State<UrlWatchPage> {
+  static const String apiBase = 'https://baltic-deals-api.noduys.workers.dev';
+
+  final urlController = TextEditingController();
+  final targetController = TextEditingController();
+  bool loading = false;
+  bool checking = false;
+  Map<String, dynamic>? watch;
+  String? error;
+
+  @override
+  void dispose() {
+    urlController.dispose();
+    targetController.dispose();
+    super.dispose();
+  }
+
+  Future<String> _deviceId() => _getDeviceId();
+
+  Future<void> checkWatch() async {
+    final productUrl = urlController.text.trim();
+    if (productUrl.isEmpty) return;
+
+    setState(() {
+      checking = true;
+      error = null;
+    });
+
+    try {
+      final deviceId = await _deviceId();
+      final uri = Uri.parse('$apiBase/url-price-watch').replace(
+        queryParameters: {
+          'productUrl': productUrl,
+          'deviceId': deviceId,
+        },
+      );
+      final response = await http.get(uri);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200 || data['success'] != true) {
+        throw Exception(data['error']?.toString() ?? 'Не удалось загрузить отслеживание');
+      }
+
+      final row = data['watch'];
+      setState(() {
+        watch = row is Map ? Map<String, dynamic>.from(row) : null;
+        targetController.text = watch?['target_price']?.toString() ?? '';
+      });
+    } catch (e) {
+      setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => checking = false);
+    }
+  }
+
+  Future<void> saveWatch() async {
+    final productUrl = urlController.text.trim();
+    final targetText = targetController.text.trim();
+    final target = targetText.isEmpty ? null : double.tryParse(targetText.replaceAll(',', '.'));
+
+    if (productUrl.isEmpty) {
+      setState(() => error = 'Введите ссылку на товар');
+      return;
+    }
+    final parsed = Uri.tryParse(productUrl);
+    if (parsed == null || (parsed.scheme != 'http' && parsed.scheme != 'https')) {
+      setState(() => error = 'Нужна корректная http/https ссылка');
+      return;
+    }
+    if (targetText.isNotEmpty && (target == null || target <= 0)) {
+      setState(() => error = 'Цена должна быть больше 0');
+      return;
+    }
+
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
+    try {
+      final deviceId = await _deviceId();
+      final response = await http.post(
+        Uri.parse('$apiBase/url-price-watch'),
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'productUrl': productUrl,
+          'deviceId': deviceId,
+          'targetPrice': target,
+        }),
+      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200 || data['success'] != true) {
+        throw Exception(data['error']?.toString() ?? 'Не удалось сохранить отслеживание');
+      }
+      await checkWatch();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Отслеживание цены сохранено')),
+        );
+      }
+    } catch (e) {
+      setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> deleteWatch() async {
+    final productUrl = urlController.text.trim();
+    if (productUrl.isEmpty) return;
+
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
+    try {
+      final deviceId = await _deviceId();
+      final uri = Uri.parse('$apiBase/url-price-watch').replace(
+        queryParameters: {
+          'productUrl': productUrl,
+          'deviceId': deviceId,
+        },
+      );
+      final response = await http.delete(uri);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200 || data['success'] != true) {
+        throw Exception(data['error']?.toString() ?? 'Не удалось удалить отслеживание');
+      }
+      setState(() {
+        watch = null;
+        targetController.clear();
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Отслеживание отключено')),
+        );
+      }
+    } catch (e) {
+      setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = watch != null && watch?['is_active']?.toString() != '0';
+    final currentPrice = watch?['current_price']?.toString();
+    final targetPrice = watch?['target_price']?.toString();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Отслеживание цены', style: TextStyle(fontWeight: FontWeight.w800)),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Text(
+            'Вставьте ссылку на товар',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Приложение регулярно проверяет цену и сразу пришлет уведомление при достижении нужной цены.',
+            style: TextStyle(color: Colors.grey.shade700),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: urlController,
+            keyboardType: TextInputType.url,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => checkWatch(),
+            decoration: InputDecoration(
+              labelText: 'Ссылка на товар',
+              hintText: 'https://...',
+              prefixIcon: const Icon(Icons.link),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: targetController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: 'Желаемая цена, € (необязательно)',
+              prefixIcon: const Icon(Icons.euro),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: checking ? null : checkWatch,
+                  icon: checking
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.search),
+                  label: const Text('Проверить'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: loading ? null : saveWatch,
+                  icon: const Icon(Icons.notifications_active_outlined),
+                  label: const Text('Отслеживать'),
+                ),
+              ),
+            ],
+          ),
+          if (active) ...[
+            const SizedBox(height: 18),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(children: [
+                      Icon(Icons.check_circle),
+                      SizedBox(width: 8),
+                      Text('Цена отслеживается',
+                          style: TextStyle(fontWeight: FontWeight.w800))
+                    ]),
+                    if (currentPrice != null) ...[
+                      const SizedBox(height: 10),
+                      Text('Текущая цена: €$currentPrice'),
+                    ],
+                    if (targetPrice != null) ...[
+                      const SizedBox(height: 4),
+                      Text('Целевая цена: €$targetPrice'),
+                    ],
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: loading ? null : deleteWatch,
+                      icon: const Icon(Icons.notifications_off_outlined),
+                      label: const Text('Отключить'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (error != null) ...[
+            const SizedBox(height: 14),
+            Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          ],
+        ],
       ),
     );
   }
-
-  String get pageLabel => '40 товаров';
 }
 
 class EmptyView extends StatelessWidget {
@@ -1704,7 +2246,7 @@ class EmptyView extends StatelessWidget {
             if (hasMore) ...[
               const SizedBox(height: 10),
               Text(
-                'Попробуй изменить поиск или фильтры.',
+                'Попробуйте изменить поиск или фильтры.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey.shade600),
               ),
@@ -1715,7 +2257,7 @@ class EmptyView extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onLoadMore,
                   icon: const Icon(Icons.expand_more),
-                  label: const Text('Загрузить ещё'),
+                  label: const Text('Загрузить еще'),
                 ),
             ],
           ],
@@ -1774,14 +2316,15 @@ class ProductCard extends StatelessWidget {
                     padding: const EdgeInsets.all(14),
                     child: imageUrl.isEmpty
                         ? const AppProductImagePlaceholder()
-                        : Image.network(
-                            imageUrl,
+                        : CachedNetworkImage(
+                            imageUrl: imageUrl,
                             fit: BoxFit.contain,
-                            webHtmlElementStrategy:
-                                WebHtmlElementStrategy.prefer,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const AppProductImagePlaceholder();
-                            },
+                            alignment: Alignment.center,
+                            filterQuality: FilterQuality.medium,
+                            placeholder: (context, url) =>
+                                const AppProductImagePlaceholder(),
+                            errorWidget: (context, url, error) =>
+                                const AppProductImagePlaceholder(),
                           ),
                   ),
                   Positioned(
@@ -1800,7 +2343,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         if (isMultiStore)
                           _CardBadge(
-                            label: 'Сравнение цен',
+                            label: 'Сравнить цены',
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,
                             foregroundColor: Colors.white,
@@ -1816,7 +2359,7 @@ class ProductCard extends StatelessWidget {
                       shape: const CircleBorder(),
                       child: IconButton(
                         tooltip: isFavorite
-                            ? 'Убрать из избранного'
+                            ? 'Удалить из избранного'
                             : 'Добавить в избранное',
                         onPressed: onFavorite,
                         icon: Icon(
@@ -1957,7 +2500,7 @@ class ProductCard extends StatelessWidget {
                                     ),
                                   ),
                                   child: Text(
-                                    'КУПОН',
+                                    'Купон',
                                     style: TextStyle(
                                       color: Colors.blue.shade800,
                                       fontSize: 11,
@@ -2462,7 +3005,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Цель сохранена на сервере: ${widget.priceFormatter(roundedTarget)} €',
+            'Цена сохранена на сервере: ${widget.priceFormatter(roundedTarget)} €',
           ),
         ),
       );
@@ -2482,7 +3025,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Сервер временно недоступен. Цель сохранена только на этом устройстве.',
+            'Сервер временно недоступен. Цена сохранена только на этом устройстве.',
           ),
         ),
       );
@@ -2534,7 +3077,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Не удалось отключить цель на сервере. Попробуйте ещё раз.',
+            'Не удалось отключить алерты на сервере. Попробуйте еще раз.',
           ),
         ),
       );
@@ -2597,7 +3140,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Цель сохраняется на сервере Baltic Deals. Push-уведомления подключим позже через Firebase.',
+                      'Цена отслеживается на сервере Baltic Deals. Push-уведомление поступит через сервис Firebase.',
                       style: TextStyle(
                         color: Colors.grey.shade700,
                         fontSize: 12,
@@ -2803,6 +3346,23 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 
+  Future<void> shareProductLink() async {
+    final url = widget.product.productUrl?.trim();
+    if (url == null || url.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ссылка на товар отсутствует')),
+      );
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Ссылка скопирована для отправки')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
@@ -2816,8 +3376,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Поделиться',
+            onPressed: shareProductLink,
+            icon: const Icon(Icons.share_outlined),
+          ),
+          IconButton(
             tooltip: isFavorite
-                ? 'Убрать из избранного'
+                ? 'Удалить из избранного'
                 : 'Добавить в избранное',
             onPressed: () {
               setState(() {
@@ -2842,13 +3407,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             padding: const EdgeInsets.all(24),
             child: widget.imageUrl.isEmpty
                 ? const AppProductImagePlaceholder()
-                : Image.network(
-                    widget.imageUrl,
+                : CachedNetworkImage(
+                    imageUrl: widget.imageUrl,
                     fit: BoxFit.contain,
-                    webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const AppProductImagePlaceholder();
-                    },
+                    placeholder: (context, url) =>
+                        const AppProductImagePlaceholder(),
+                    errorWidget: (context, url, error) =>
+                        const AppProductImagePlaceholder(),
                   ),
           );
 
@@ -2987,7 +3552,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             children: [
                               Text(
                                 priceAlertTriggered && priceAlertTarget != null
-                                    ? 'Цена достигнута!'
+                                    ? 'Цена снизилась!'
                                     : priceAlertTarget == null
                                         ? 'Отслеживать снижение цены'
                                         : 'Цель: ${widget.priceFormatter(priceAlertTarget!)} €',
@@ -2998,13 +3563,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               const SizedBox(height: 2),
                               Text(
                                 priceAlertTriggered && priceAlertTarget != null
-                                    ? 'Сработало при ${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} € • цель ${widget.priceFormatter(priceAlertTarget!)} €'
+                                    ? 'Снизилась уже до ${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} € • цель ${widget.priceFormatter(priceAlertTarget!)} €'
                                     : priceAlertTarget == null
-                                        ? 'Сохраним желаемую цену для этого товара'
+                                        ? 'Получайте уведомления при падении цен'
                                         : widget.product.currentPrice <=
                                                 priceAlertTarget!
-                                            ? 'Цена уже достигла заданного уровня'
-                                            : 'Текущая цена выше цели на ${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} €',
+                                            ? 'Цена уже достигла указанной планки'
+                                            : 'Осталось подождать снижения на ${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} €',
                                 style: TextStyle(
                                   color: Colors.grey.shade700,
                                   fontSize: 12,
@@ -3040,7 +3605,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   label: 'Пол',
                   value: product.gender?.isNotEmpty == true
                       ? product.gender!
-                      : 'Не указано',
+                      : 'Не указан',
                 ),
                 AppDetailRow(
                   icon: Icons.storefront_outlined,
@@ -3106,7 +3671,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Загружаем доступные размеры…',
+                          'Проверяем наличие размеров…',
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                       ],
@@ -3114,21 +3679,22 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   )
                 else if (sizesError != null)
                   Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .errorContainer
-                          .withValues(alpha: 0.35),
+                      color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline),
+                        Icon(
+                          Icons.straighten_outlined,
+                          color: Colors.grey.shade700,
+                        ),
                         const SizedBox(width: 10),
                         const Expanded(
                           child: Text(
-                            'Не удалось загрузить размеры',
+                            'Размеры временно недоступны',
                             style: TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -3176,8 +3742,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 else ...[
                   Text(
                     selectedSize == null
-                        ? 'Выбери размер, чтобы сравнить магазины'
-                        : 'Выбран размер: $selectedSize',
+                        ? 'Выберите размер, чтобы сравнить магазины'
+                        : 'Выбранный размер: $selectedSize',
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 10),
@@ -3201,7 +3767,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Недоступные сейчас размеры показаны серым.',
+                    'Недоступные размеры выделены серым цветом.',
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -3216,7 +3782,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                         if (selectedStores.isEmpty) {
                           return Text(
-                            'Выбранный размер сейчас недоступен',
+                            'Выбранного размера сейчас нет в наличии',
                             style: TextStyle(color: Colors.grey.shade600),
                           );
                         }
@@ -3244,7 +3810,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Размер $selectedSize · ${selectedStores.length} ${selectedStores.length == 1 ? 'магазин' : 'магазина'}',
+                                          'Размер $selectedSize • ${selectedStores.length} ${selectedStores.length == 1 ? 'магазин' : 'магазина'}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w800,
                                           ),
@@ -3346,7 +3912,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                                       const SizedBox(width: 10),
                                       FilledButton(
                                         onPressed: () => openSizeStore(store),
-                                        child: const Text('Открыть'),
+                                        child: const Text('Купить'),
                                       ),
                                     ],
                                   ),
@@ -3431,7 +3997,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Не удалось загрузить историю цены',
+                            'Не удалось загрузить историю цен',
                             style: TextStyle(color: Colors.grey.shade700),
                           ),
                         ),
@@ -3482,7 +4048,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   const SizedBox(height: 6),
                   Text(
                     history.length <= 1
-                        ? 'История только начала собираться. Новые точки появятся при изменении цены.'
+                        ? 'История только начала формироваться. График станет нагляднее при изменении цены.'
                         : 'Точек истории: ${history.length}',
                     style: TextStyle(
                       color: Colors.grey.shade600,
@@ -3491,23 +4057,37 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   ),
                 ],
                 const SizedBox(height: 20),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: widget.onOpenStore,
-                    icon: const Icon(Icons.open_in_new),
-                    label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      child: Text(
-                        'Перейти в магазин',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: FilledButton.icon(
+                        onPressed: widget.onOpenStore,
+                        icon: const Icon(Icons.open_in_new),
+                        label: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text(
+                            'В магазин',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: shareProductLink,
+                        icon: const Icon(Icons.share_outlined),
+                        label: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text('Поделиться'),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -3554,7 +4134,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       case 'sports':
         return 'Спорт';
       default:
-        return category?.isNotEmpty == true ? category! : 'Не указано';
+        return category?.isNotEmpty == true ? category! : 'Не указана';
     }
   }
 }
@@ -3613,7 +4193,7 @@ class _OfferCard extends StatelessWidget {
                       ),
                       if (offer.hasCoupon)
                         _CardBadge(
-                          label: 'КУПОН',
+                          label: 'Купон',
                           backgroundColor: Colors.blue.shade50,
                           foregroundColor: Colors.blue.shade800,
                         ),
@@ -3642,7 +4222,7 @@ class _OfferCard extends StatelessWidget {
             const SizedBox(width: 12),
             FilledButton(
               onPressed: onOpen,
-              child: const Text('Открыть'),
+              child: const Text('Купить'),
             ),
           ],
         ),
@@ -3839,7 +4419,7 @@ class ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Не удалось загрузить товары',
+              'Не удалось загрузить данные',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -3859,6 +4439,96 @@ class ErrorView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class ProductCardSkeleton extends StatelessWidget {
+  const ProductCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey.shade800
+        : Colors.grey.shade300;
+    final highlightColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey.shade700
+        : Colors.grey.shade200;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 5,
+            child: Container(color: highlightColor),
+          ),
+          Expanded(
+            flex: 6,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 11, 16, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(width: 80, height: 12, color: baseColor),
+                  const SizedBox(height: 8),
+                  Container(width: double.infinity, height: 14, color: baseColor),
+                  const SizedBox(height: 6),
+                  Container(width: 140, height: 14, color: baseColor),
+                  const Spacer(),
+                  Container(width: 90, height: 22, color: baseColor),
+                  const SizedBox(height: 10),
+                  Container(width: double.infinity, height: 36, color: baseColor),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ProductGridSkeleton extends StatelessWidget {
+  const ProductGridSkeleton({super.key, this.itemCount = 6});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        int columns;
+        if (width >= 1400) {
+          columns = 5;
+        } else if (width >= 1100) {
+          columns = 4;
+        } else if (width >= 800) {
+          columns = 3;
+        } else if (width >= 520) {
+          columns = 2;
+        } else {
+          columns = 1;
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: columns == 1 ? 0.87 : 0.58,
+          ),
+          itemCount: itemCount,
+          itemBuilder: (_, _) => const ProductCardSkeleton(),
+        );
+      },
     );
   }
 }

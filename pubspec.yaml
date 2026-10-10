@@ -2,7 +2,7 @@ name: baltic_deals_app
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.3.0+6
+version: 1.4.0+7
 
 environment:
   sdk: ^3.13.2
@@ -21,6 +21,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   share_plus: ^13.3.1
+  cached_network_image: ^4.0.4
 
 dev_dependencies:
   flutter_test:
@@ -38,6 +39,8 @@ flutter:
     - assets/icon/baltic_deals_full_2048.png
     - assets/icon/baltic_deals_icon_1024.png
     - assets/background/baltic-deals-bg-new.png
+    - assets/background/baltic-deals-bg.png
+    - assets/images/
 
 flutter_launcher_icons:
   android: true
