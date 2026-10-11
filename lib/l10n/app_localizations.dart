@@ -119,6 +119,12 @@ abstract class AppLocalizations {
   /// **'Stores'**
   String get stores;
 
+  /// No description provided for @brand.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand'**
+  String get brand;
+
   /// No description provided for @favorites.
   ///
   /// In en, this message translates to:
@@ -136,6 +142,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Top deals'**
   String get topDeals;
+
+  /// No description provided for @weeklyTopDeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Biggest discounts of the week'**
+  String get weeklyTopDeals;
+
+  /// No description provided for @homeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top deals on clothes, shoes, cosmetics and electronics'**
+  String get homeSubtitle;
 
   /// No description provided for @clothing.
   ///
@@ -190,6 +208,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All'**
   String get all;
+
+  /// No description provided for @men.
+  ///
+  /// In en, this message translates to:
+  /// **'Men'**
+  String get men;
+
+  /// No description provided for @women.
+  ///
+  /// In en, this message translates to:
+  /// **'Women'**
+  String get women;
+
+  /// No description provided for @kids.
+  ///
+  /// In en, this message translates to:
+  /// **'Kids / Teens'**
+  String get kids;
 
   /// No description provided for @allBrands.
   ///
@@ -406,6 +442,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'English'**
   String get english;
+
+  /// No description provided for @checkUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkUpdates;
+
+  /// No description provided for @latvian.
+  ///
+  /// In en, this message translates to:
+  /// **'Latviešu'**
+  String get latvian;
+
+  /// No description provided for @lithuanian.
+  ///
+  /// In en, this message translates to:
+  /// **'Lietuvių'**
+  String get lithuanian;
+
+  /// No description provided for @scanBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode scanner'**
+  String get scanBarcode;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
 
   /// No description provided for @russian.
   ///

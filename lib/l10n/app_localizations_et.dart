@@ -18,6 +18,9 @@ class AppLocalizationsEt extends AppLocalizations {
   String get stores => 'Poed';
 
   @override
+  String get brand => 'Bränd';
+
+  @override
   String get favorites => 'Lemmikud';
 
   @override
@@ -25,6 +28,12 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get topDeals => 'Parimad pakkumised';
+
+  @override
+  String get weeklyTopDeals => 'Nädala suurimad allahindlused';
+
+  @override
+  String get homeSubtitle => 'Parimad allahindlused riietele, jalanõudele, kosmeetikale ja elektroonikale';
 
   @override
   String get clothing => 'Riided';
@@ -52,6 +61,15 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get all => 'Kõik';
+
+  @override
+  String get men => 'Meeste';
+
+  @override
+  String get women => 'Naiste';
+
+  @override
+  String get kids => 'Laste / Teismed';
 
   @override
   String get allBrands => 'Kõik brändid';
@@ -160,6 +178,21 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get english => 'Inglise';
+
+  @override
+  String get checkUpdates => 'Kontrolli värskendusi';
+
+  @override
+  String get latvian => 'Latviešu';
+
+  @override
+  String get lithuanian => 'Lietuvių';
+
+  @override
+  String get scanBarcode => 'Vöötkoodi skanner';
+
+  @override
+  String get share => 'Jaga';
 
   @override
   String get russian => 'Vene';

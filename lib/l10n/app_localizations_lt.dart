@@ -18,6 +18,9 @@ class AppLocalizationsLt extends AppLocalizations {
   String get stores => 'Parduotuvės';
 
   @override
+  String get brand => 'Prekės ženklas';
+
+  @override
   String get favorites => 'Mėgstamiausi';
 
   @override
@@ -25,6 +28,12 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get topDeals => 'Geriausi pasiūlymai';
+
+  @override
+  String get weeklyTopDeals => 'Didžiausios savaitės nuolaidos';
+
+  @override
+  String get homeSubtitle => 'Geriausi pasiūlymai drabužiams, avalynei, kosmetikai ir elektronikai';
 
   @override
   String get clothing => 'Drabužiai';
@@ -52,6 +61,15 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get all => 'Visi';
+
+  @override
+  String get men => 'Vyrų';
+
+  @override
+  String get women => 'Moterų';
+
+  @override
+  String get kids => 'Vaikų / Paauglių';
 
   @override
   String get allBrands => 'Visi prekių ženklai';
@@ -160,6 +178,21 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get english => 'Anglų';
+
+  @override
+  String get checkUpdates => 'Tikrinti naujinimus';
+
+  @override
+  String get latvian => 'Latvių';
+
+  @override
+  String get lithuanian => 'Lietuvių';
+
+  @override
+  String get scanBarcode => 'Brūkšninių kodų skaitytuvas';
+
+  @override
+  String get share => 'Bendrinti';
 
   @override
   String get russian => 'Rusų';

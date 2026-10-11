@@ -12,7 +12,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import 'firebase_options.dart';
 import 'barcode_scanner_page.dart';
+import 'l10n/app_localizations.dart';
 
+final ValueNotifier<Locale?> _appLocaleNotifier =
+    ValueNotifier<Locale?>(null);
 const String _webVapidKey =
     'BAeMMjHE9TkBtALMEoekwr0FlmgyjY6eeo03QFnlGFoqs8XNVY9mRYx4lqrLiCoRaoNT411Q7djVorhbuGLB6MI';
 
@@ -244,31 +247,72 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-class BalticDealsApp extends StatelessWidget {
+class BalticDealsApp extends StatefulWidget {
   const BalticDealsApp({super.key});
 
   @override
+  State<BalticDealsApp> createState() => _BalticDealsAppState();
+}
+
+class _BalticDealsAppState extends State<BalticDealsApp> {
+  @override
+  void initState() {
+    super.initState();
+    _loadLocale();
+    _appLocaleNotifier.addListener(_onLocaleChanged);
+  }
+
+  @override
+  void dispose() {
+    _appLocaleNotifier.removeListener(_onLocaleChanged);
+    super.dispose();
+  }
+
+  void _onLocaleChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString('app_locale');
+    if (code != null && code.isNotEmpty) {
+      _appLocaleNotifier.value = Locale(code);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: _globalNavigatorKey,
-      debugShowCheckedModeBanner: false,
-      title: 'Baltic Deals',
-      themeMode: ThemeMode.system,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF176B5B),
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF5F6F7),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF176B5B),
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: const SplashScreen(),
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: _appLocaleNotifier,
+      builder: (context, locale, _) {
+  // debugPrint('===== APP LOCALE: $locale =====');
+  return MaterialApp(
+          navigatorKey: _globalNavigatorKey,
+          debugShowCheckedModeBanner: false,
+          title: 'Baltic Deals',
+          locale: locale,
+          onGenerateTitle: (context) =>
+              AppLocalizations.of(context)?.appTitle ?? 'Baltic Deals',
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          themeMode: ThemeMode.system,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF176B5B),
+            ),
+            scaffoldBackgroundColor: const Color(0xFFF5F6F7),
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF176B5B),
+              brightness: Brightness.dark,
+            ),
+          ),
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }
@@ -1017,7 +1061,7 @@ class _ProductsPageState extends State<ProductsPage> {
       ),
     );
   }
-
+// ignore: unused_element
   Widget _buildHomeStorePicker() {
     return Container(
       width: double.infinity,
@@ -1027,7 +1071,7 @@ class _ProductsPageState extends State<ProductsPage> {
         initialValue: 'all',
         isExpanded: true,
         decoration: InputDecoration(
-          labelText: 'Каталог магазина',
+          labelText: AppLocalizations.of(context)!.stores,
           prefixIcon: const Icon(Icons.storefront_outlined),
           filled: true,
           fillColor: Colors.white,
@@ -1044,8 +1088,8 @@ class _ProductsPageState extends State<ProductsPage> {
             borderSide: BorderSide(color: Colors.grey.shade500),
           ),
         ),
-        items: const [
-          DropdownMenuItem(value: 'all', child: Text('Все магазины')),
+        items: [
+          DropdownMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.allStores)),
           DropdownMenuItem(value: 'Sportland Estonia', child: Text('Sportland')),
           DropdownMenuItem(value: 'Rademar Estonia', child: Text('Rademar')),
           DropdownMenuItem(value: 'Weekend Estonia', child: Text('Weekend')),
@@ -1081,8 +1125,8 @@ class _ProductsPageState extends State<ProductsPage> {
         actions: [
           IconButton(
             tooltip: showFavoritesOnly
-                ? 'Показать все товары'
-                : 'Показать избранное',
+                ? AppLocalizations.of(context)!.showAll
+                : AppLocalizations.of(context)!.favorites,
             onPressed: () {
               setState(() {
                 showFavoritesOnly = !showFavoritesOnly;
@@ -1093,12 +1137,12 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
           ),
           IconButton(
-            tooltip: 'Обновить список',
+            tooltip: AppLocalizations.of(context)!.refresh,
             onPressed: refreshProducts,
             icon: const Icon(Icons.refresh),
           ),
           IconButton(
-            tooltip: 'Отслеживание цены по ссылке',
+            tooltip: AppLocalizations.of(context)!.trackPrice,
             icon: const Icon(Icons.notifications_active_outlined),
             onPressed: () {
               Navigator.of(context).push(
@@ -1107,24 +1151,52 @@ class _ProductsPageState extends State<ProductsPage> {
             },
           ),
           IconButton(
-            tooltip: 'Проверить обновления',
+            tooltip: AppLocalizations.of(context)!.checkUpdates,
             icon: const Icon(Icons.system_update_alt),
             onPressed: () => checkForAppUpdate(manual: true),
           ),
-          PopupMenuButton<String>(
-            tooltip: 'Выбор языка',
+          PopupMenuButton<String?>(
+            tooltip: AppLocalizations.of(context)!.language,
             icon: const Icon(Icons.language),
-            onSelected: (langCode) {},
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'ru', child: Text('Русский')),
-              PopupMenuItem(value: 'et', child: Text('Eesti')),
-              PopupMenuItem(value: 'lv', child: Text('Latviešu')),
-              PopupMenuItem(value: 'lt', child: Text('Lietuvių')),
-              PopupMenuItem(value: 'en', child: Text('English')),
-            ],
+            onSelected: (langCode) async {
+              final prefs = await SharedPreferences.getInstance();
+              if (langCode == null || langCode.isEmpty) {
+                await prefs.remove('app_locale');
+                _appLocaleNotifier.value = null;
+              } else {
+                await prefs.setString('app_locale', langCode);
+                _appLocaleNotifier.value = Locale(langCode);
+              }
+            },
+            itemBuilder: (context) => [
+  PopupMenuItem(
+    value: null,
+    child: Text(AppLocalizations.of(context)!.systemLanguage),
+  ),
+  PopupMenuItem(
+    value: 'ru',
+    child: Text(AppLocalizations.of(context)!.russian),
+  ),
+  PopupMenuItem(
+    value: 'et',
+    child: Text(AppLocalizations.of(context)!.estonian),
+  ),
+  PopupMenuItem(
+    value: 'lv',
+    child: Text(AppLocalizations.of(context)!.latvian),
+  ),
+  PopupMenuItem(
+    value: 'lt',
+    child: Text(AppLocalizations.of(context)!.lithuanian),
+  ),
+  PopupMenuItem(
+    value: 'en',
+    child: Text(AppLocalizations.of(context)!.english),
+  ),
+],
           ),
           IconButton(
-            tooltip: 'Сканер штрихкодов',
+            tooltip: AppLocalizations.of(context)!.scanBarcode,
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () {
               Navigator.push(
@@ -1160,7 +1232,7 @@ class _ProductsPageState extends State<ProductsPage> {
                     )
                   : Column(
                       children: [
-                        if (!isStoreCatalog) _buildHomeStorePicker(),
+                        // if (!isStoreCatalog) _buildHomeStorePicker(),   // отключено — магазин в фильтрах
                         if (showFavoritesOnly)
                           Container(
                             width: double.infinity,
@@ -1263,7 +1335,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           onReset: resetFilters,
                           resultCount: filteredProducts.length,
                           loadedCount: products.length,
-                          showStoreFilter: false,
+                          showStoreFilter: true,
                         ),
                         Expanded(
                           child: filteredProducts.isEmpty
@@ -1310,48 +1382,42 @@ class _ProductsPageState extends State<ProductsPage> {
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    const Text(
-                                                      'Самые большие скидки недели',
-                                                      style: TextStyle(
-                                                        fontSize: 22,
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                      ),
-                                                    ),
+                                                    Text(
+  AppLocalizations.of(context)!.weeklyTopDeals,
+  style: const TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
+  ),
+),
                                                     const SizedBox(height: 4),
                                                     Text(
-                                                      'Топ скидок на одежду, обувь, косметику и технику',
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                        color: Colors.grey.shade700,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
+  AppLocalizations.of(context)!.homeSubtitle,
+  style: TextStyle(
+    fontSize: 13,
+    color: Colors.grey.shade700,
+    fontWeight: FontWeight.w500,
+  ),
+),
                                                     const SizedBox(height: 18),
                                                     _buildHomeSection(
-                                                      section: 'beauty',
-                                                      title: 'Красота',
-                                                      icon:
-                                                          Icons.spa_outlined,
-                                                    ),
-                                                    _buildHomeSection(
-                                                      section: 'fashion',
-                                                      title: 'Одежда',
-                                                      icon: Icons
-                                                          .checkroom_outlined,
-                                                    ),
-                                                    _buildHomeSection(
-                                                      section: 'shoes',
-                                                      title: 'Обувь',
-                                                      icon: Icons
-                                                          .shopping_bag_outlined,
-                                                    ),
-                                                    _buildHomeSection(
-                                                      section: 'tech',
-                                                      title: 'Техника',
-                                                      icon: Icons
-                                                          .devices_outlined,
+  section: 'beauty',
+  title: AppLocalizations.of(context)!.beauty,
+  icon: Icons.spa_outlined,
+),
+_buildHomeSection(
+  section: 'fashion',
+  title: AppLocalizations.of(context)!.clothing,
+  icon: Icons.checkroom_outlined,
+),
+_buildHomeSection(
+  section: 'shoes',
+  title: AppLocalizations.of(context)!.shoes,
+  icon: Icons.shopping_bag_outlined,
+),
+_buildHomeSection(
+  section: 'tech',
+  title: AppLocalizations.of(context)!.technology,
+  icon: Icons.devices_outlined,
                                                     ),
                                                   ],
                                                 ),
@@ -1514,7 +1580,7 @@ class _FiltersBarState extends State<FiltersBar> {
       controller: widget.searchController,
       onChanged: widget.onSearchChanged,
       decoration: InputDecoration(
-        hintText: 'Поиск по бренду или товару',
+        hintText: AppLocalizations.of(context)!.searchHint,
         prefixIcon: const Icon(Icons.search),
         suffixIcon: widget.searchController.text.isNotEmpty
             ? IconButton(
@@ -1536,17 +1602,17 @@ class _FiltersBarState extends State<FiltersBar> {
       initialValue: widget.selectedCategory,
       isExpanded: true,
       isDense: true,
-      decoration: _fieldDecoration('Категория'),
-      items: const [
-        DropdownMenuItem(value: 'all', child: Text('Все')),
-        DropdownMenuItem(value: 'clothing', child: Text('Одежда')),
-        DropdownMenuItem(value: 'shoes', child: Text('Обувь')),
-        DropdownMenuItem(value: 'accessories', child: Text('Аксессуары')),
-        DropdownMenuItem(value: 'beauty', child: Text('Красота')),
-        DropdownMenuItem(value: 'perfume', child: Text('Парфюмерия')),
-        DropdownMenuItem(value: 'electronics', child: Text('Техника')),
-        DropdownMenuItem(value: 'home', child: Text('Дом')),
-        DropdownMenuItem(value: 'sports', child: Text('Спорт')),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.category),
+      items: [
+        DropdownMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.all)),
+DropdownMenuItem(value: 'clothing', child: Text(AppLocalizations.of(context)!.clothing)),
+DropdownMenuItem(value: 'shoes', child: Text(AppLocalizations.of(context)!.shoes)),
+DropdownMenuItem(value: 'accessories', child: Text(AppLocalizations.of(context)!.accessories)),
+DropdownMenuItem(value: 'beauty', child: Text(AppLocalizations.of(context)!.beauty)),
+DropdownMenuItem(value: 'perfume', child: Text(AppLocalizations.of(context)!.perfume)),
+DropdownMenuItem(value: 'electronics', child: Text(AppLocalizations.of(context)!.technology)),
+DropdownMenuItem(value: 'home', child: Text(AppLocalizations.of(context)!.home)),
+DropdownMenuItem(value: 'sports', child: Text(AppLocalizations.of(context)!.sport)),
       ],
       onChanged: widget.onCategoryChanged,
     );
@@ -1555,12 +1621,12 @@ class _FiltersBarState extends State<FiltersBar> {
       initialValue: widget.selectedGender,
       isExpanded: true,
       isDense: true,
-      decoration: _fieldDecoration('Пол'),
-      items: const [
-        DropdownMenuItem(value: 'all', child: Text('Все')),
-        DropdownMenuItem(value: 'men', child: Text('Мужское')),
-        DropdownMenuItem(value: 'women', child: Text('Женское')),
-        DropdownMenuItem(value: 'kids', child: Text('Детское / Подростки')),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.gender),
+      items: [
+        DropdownMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.all)),
+        DropdownMenuItem(value: 'men', child: Text(AppLocalizations.of(context)!.men)),
+        DropdownMenuItem(value: 'women', child: Text(AppLocalizations.of(context)!.women)),
+        DropdownMenuItem(value: 'kids', child: Text(AppLocalizations.of(context)!.kids)),
       ],
       onChanged: widget.onGenderChanged,
     );
@@ -1571,12 +1637,12 @@ class _FiltersBarState extends State<FiltersBar> {
           : 'all',
       isExpanded: true,
       isDense: true,
-      decoration: _fieldDecoration('Бренд'),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.brand),
       items: [
-        const DropdownMenuItem(
-          value: 'all',
-          child: Text('Все бренды'),
-        ),
+        DropdownMenuItem(
+  value: 'all',
+  child: Text(AppLocalizations.of(context)!.allBrands),
+),
         ...widget.availableBrands.map(
           (brand) => DropdownMenuItem(
             value: brand,
@@ -1594,8 +1660,8 @@ class _FiltersBarState extends State<FiltersBar> {
       initialValue: widget.selectedStore,
       isExpanded: true,
       isDense: true,
-      decoration: _fieldDecoration('Магазин'),
-      items: const [
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.store),
+      items: [
         DropdownMenuItem(value: 'all', child: Text('Все магазины')),
         DropdownMenuItem(value: 'Sportland Estonia', child: Text('Sportland')),
         DropdownMenuItem(value: 'Rademar Estonia', child: Text('Rademar')),
@@ -1618,22 +1684,22 @@ class _FiltersBarState extends State<FiltersBar> {
       controller: widget.minPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: widget.onMinPriceChanged,
-      decoration: _fieldDecoration('Цена от').copyWith(suffixText: '€'),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.minPrice).copyWith(suffixText: '€'),
     );
 
     final maxPriceField = TextField(
       controller: widget.maxPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: widget.onMaxPriceChanged,
-      decoration: _fieldDecoration('Цена до').copyWith(suffixText: '€'),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.maxPrice).copyWith(suffixText: '€'),
     );
 
     final discountField = DropdownButtonFormField<int>(
       initialValue: widget.selectedMinDiscount,
       isDense: true,
-      decoration: _fieldDecoration('Скидка от'),
-      items: const [
-        DropdownMenuItem(value: 0, child: Text('Любая')),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.minDiscount),
+      items: [
+        DropdownMenuItem(value: 0, child: Text(AppLocalizations.of(context)!.any)),
         DropdownMenuItem(value: 20, child: Text('20%')),
         DropdownMenuItem(value: 30, child: Text('30%')),
         DropdownMenuItem(value: 40, child: Text('40%')),
@@ -1648,28 +1714,28 @@ class _FiltersBarState extends State<FiltersBar> {
       initialValue: widget.selectedSort,
       isExpanded: true,
       isDense: true,
-      decoration: _fieldDecoration('Сортировка'),
-      items: const [
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.sort),
+      items: [
         DropdownMenuItem(
-          value: SortMode.discountHigh,
-          child: Text('Самая большая скидка', overflow: TextOverflow.ellipsis),
-        ),
-        DropdownMenuItem(
-          value: SortMode.savingsHigh,
-          child: Text('Максимальная выгода', overflow: TextOverflow.ellipsis),
-        ),
-        DropdownMenuItem(
-          value: SortMode.priceLow,
-          child: Text('Сначала дешевле', overflow: TextOverflow.ellipsis),
-        ),
-        DropdownMenuItem(
-          value: SortMode.priceHigh,
-          child: Text('Сначала дороже', overflow: TextOverflow.ellipsis),
-        ),
-        DropdownMenuItem(
-          value: SortMode.brand,
-          child: Text('По бренду', overflow: TextOverflow.ellipsis),
-        ),
+  value: SortMode.discountHigh,
+  child: Text(AppLocalizations.of(context)!.biggestDiscount, overflow: TextOverflow.ellipsis),
+),
+DropdownMenuItem(
+  value: SortMode.savingsHigh,
+  child: Text(AppLocalizations.of(context)!.maximumSavings, overflow: TextOverflow.ellipsis),
+),
+DropdownMenuItem(
+  value: SortMode.priceLow,
+  child: Text(AppLocalizations.of(context)!.priceLow, overflow: TextOverflow.ellipsis),
+),
+DropdownMenuItem(
+  value: SortMode.priceHigh,
+  child: Text(AppLocalizations.of(context)!.priceHigh, overflow: TextOverflow.ellipsis),
+),
+DropdownMenuItem(
+  value: SortMode.brand,
+  child: Text(AppLocalizations.of(context)!.byBrand, overflow: TextOverflow.ellipsis),
+),
       ],
       onChanged: widget.onSortChanged,
     );
@@ -1680,7 +1746,7 @@ class _FiltersBarState extends State<FiltersBar> {
         selected: widget.multiStoreOnly,
         onSelected: widget.onMultiStoreOnlyChanged,
         avatar: const Icon(Icons.compare_arrows, size: 18),
-        label: const Text('Есть в нескольких магазинах'),
+        label: Text(AppLocalizations.of(context)!.multiStoreOnly),
       ),
     );
 
@@ -1689,12 +1755,12 @@ class _FiltersBarState extends State<FiltersBar> {
       child: OutlinedButton.icon(
         onPressed: widget.onReset,
         icon: const Icon(Icons.filter_alt_off),
-        label: const Text('Сбросить'),
+        label: Text(AppLocalizations.of(context)!.reset),
       ),
     );
 
     final countText = Text(
-      'Найдено: ${widget.resultCount} • Загружено: ${widget.loadedCount}',
+      '${AppLocalizations.of(context)!.foundProducts} ${widget.resultCount} • ${AppLocalizations.of(context)!.loadedProducts} ${widget.loadedCount}',
       style: const TextStyle(fontWeight: FontWeight.w700),
     );
 
@@ -1731,21 +1797,21 @@ class _FiltersBarState extends State<FiltersBar> {
                   children: [
                     Row(
                       children: [
-                        const Expanded(
-                          child: Text(
-                            'Фильтры',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
+                        Expanded(
+  child: Text(
+    AppLocalizations.of(context)!.filters,
+    style: const TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.w800,
+    ),
+  ),
+),
                         TextButton(
                           onPressed: () {
                             widget.onReset();
                             Navigator.of(sheetContext).pop();
                           },
-                          child: const Text('Сбросить'),
+                          child: Text(AppLocalizations.of(context)!.reset),
                         ),
                       ],
                     ),
@@ -1763,18 +1829,18 @@ class _FiltersBarState extends State<FiltersBar> {
                         runSpacing: 8,
                         children: [
                           ChoiceChip(
-                            label: const Text('Все'),
+                            label: Text(AppLocalizations.of(context)!.all),
                             selected: widget.selectedCategory == 'all',
                             onSelected: (_) => widget.onCategoryChanged('all'),
                           ),
                           ChoiceChip(
-                            label: const Text('Косметика'),
+                            label: Text(AppLocalizations.of(context)!.beauty),
                             selected: widget.selectedCategory == 'beauty',
                             onSelected: (_) =>
                                 widget.onCategoryChanged('beauty'),
                           ),
                           ChoiceChip(
-                            label: const Text('Парфюмерия'),
+                            label: Text(AppLocalizations.of(context)!.perfume),
                             selected: widget.selectedCategory == 'perfume',
                             onSelected: (_) =>
                                 widget.onCategoryChanged('perfume'),
@@ -1809,9 +1875,9 @@ class _FiltersBarState extends State<FiltersBar> {
                     const SizedBox(height: 10),
                     FilledButton(
                       onPressed: () => Navigator.of(sheetContext).pop(),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text('Показать товары'),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(AppLocalizations.of(context)!.showAll),
                       ),
                     ),
                   ],
@@ -3597,24 +3663,24 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 const SizedBox(height: 24),
                 AppDetailRow(
                   icon: Icons.category_outlined,
-                  label: 'Категория',
-                  value: _categoryLabel(product.category),
+                  label: AppLocalizations.of(context)!.category,
+                  value: _categoryLabel(context, product.category),
                 ),
                 AppDetailRow(
                   icon: Icons.person_outline,
-                  label: 'Пол',
+                  label: AppLocalizations.of(context)!.gender,
                   value: product.gender?.isNotEmpty == true
                       ? product.gender!
-                      : 'Не указан',
+                      : AppLocalizations.of(context)!.notSpecified,
                 ),
                 AppDetailRow(
                   icon: Icons.storefront_outlined,
-                  label: 'Магазин',
+                  label: AppLocalizations.of(context)!.store,
                   value: product.storeName,
                 ),
                 AppDetailRow(
                   icon: Icons.public,
-                  label: 'Страна',
+                  label: AppLocalizations.of(context)!.country,
                   value: product.country,
                 ),
                 const SizedBox(height: 10),
@@ -3622,10 +3688,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Размеры',
-                        style: TextStyle(
+                        AppLocalizations.of(context)!.sizes,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                         ),
@@ -4125,16 +4191,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  String _categoryLabel(String? category) {
+    String _categoryLabel(BuildContext context, String? category) {
+    final l10n = AppLocalizations.of(context)!;
     switch (category) {
       case 'shoes':
-        return 'Обувь';
+        return l10n.shoes;
       case 'clothing':
-        return 'Одежда';
+        return l10n.clothing;
       case 'sports':
-        return 'Спорт';
+        return l10n.sport;
       default:
-        return category?.isNotEmpty == true ? category! : 'Не указана';
+        return category?.isNotEmpty == true ? category! : l10n.notSpecified;
     }
   }
 }
@@ -4526,9 +4593,10 @@ class ProductGridSkeleton extends StatelessWidget {
             childAspectRatio: columns == 1 ? 0.87 : 0.58,
           ),
           itemCount: itemCount,
-          itemBuilder: (_, _) => const ProductCardSkeleton(),
+          itemBuilder: (context, index) => const ProductCardSkeleton(),
         );
       },
     );
   }
 }
+

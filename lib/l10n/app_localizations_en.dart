@@ -18,6 +18,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stores => 'Stores';
 
   @override
+  String get brand => 'Brand';
+
+  @override
   String get favorites => 'Favorites';
 
   @override
@@ -25,6 +28,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topDeals => 'Top deals';
+
+  @override
+  String get weeklyTopDeals => 'Biggest discounts of the week';
+
+  @override
+  String get homeSubtitle => 'Top deals on clothes, shoes, cosmetics and electronics';
 
   @override
   String get clothing => 'Clothing';
@@ -52,6 +61,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get all => 'All';
+
+  @override
+  String get men => 'Men';
+
+  @override
+  String get women => 'Women';
+
+  @override
+  String get kids => 'Kids / Teens';
 
   @override
   String get allBrands => 'All brands';
@@ -160,6 +178,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get english => 'English';
+
+  @override
+  String get checkUpdates => 'Check for updates';
+
+  @override
+  String get latvian => 'Latviešu';
+
+  @override
+  String get lithuanian => 'Lietuvių';
+
+  @override
+  String get scanBarcode => 'Barcode scanner';
+
+  @override
+  String get share => 'Share';
 
   @override
   String get russian => 'Russian';

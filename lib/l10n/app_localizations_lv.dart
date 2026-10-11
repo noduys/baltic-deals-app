@@ -18,6 +18,9 @@ class AppLocalizationsLv extends AppLocalizations {
   String get stores => 'Veikali';
 
   @override
+  String get brand => 'Zīmols';
+
+  @override
   String get favorites => 'Izlase';
 
   @override
@@ -25,6 +28,12 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get topDeals => 'Labākie piedāvājumi';
+
+  @override
+  String get weeklyTopDeals => 'Nedēļas lielākās atlaides';
+
+  @override
+  String get homeSubtitle => 'Labākie piedāvājumi apģērbam, apaviem, kosmētikai un elektronikai';
 
   @override
   String get clothing => 'Apģērbs';
@@ -52,6 +61,15 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get all => 'Visi';
+
+  @override
+  String get men => 'Vīriešu';
+
+  @override
+  String get women => 'Sieviešu';
+
+  @override
+  String get kids => 'Bērnu / Pusaudžu';
 
   @override
   String get allBrands => 'Visi zīmoli';
@@ -160,6 +178,21 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get english => 'Angļu';
+
+  @override
+  String get checkUpdates => 'Pārbaudīt atjauninājumus';
+
+  @override
+  String get latvian => 'Latviešu';
+
+  @override
+  String get lithuanian => 'Lietuviešu';
+
+  @override
+  String get scanBarcode => 'Svītrkodu skeneris';
+
+  @override
+  String get share => 'Kopīgot';
 
   @override
   String get russian => 'Krievu';
