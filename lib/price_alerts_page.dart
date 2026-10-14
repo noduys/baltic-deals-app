@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'widgets/empty_state.dart';
 
 class AlertProductInfo {
   final int id;
@@ -152,28 +153,11 @@ class _PriceAlertsPageState extends State<PriceAlertsPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.notifications_none, size: 64, color: Colors.grey.shade400),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Нет активных отслеживаний',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Нажмите на колокольчик на странице любого товара, чтобы получать уведомления о снижении цены.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
+              ? EmptyState(
+        type: EmptyStateType.alerts,
+        title: 'Нет активных отслеживаний',
+        subtitle: 'Нажмите на колокольчик на странице любого товара, чтобы получать уведомления о снижении цены.',
+      )
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: _items.length,

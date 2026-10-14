@@ -12,6 +12,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import 'firebase_options.dart';
 import 'barcode_scanner_page.dart';
+import 'widgets/empty_state.dart';
+import 'price_alerts_page.dart';
 import 'l10n/app_localizations.dart';
 
 final ValueNotifier<Locale?> _appLocaleNotifier =
@@ -330,26 +332,9 @@ class AppProductImagePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.image_outlined,
-            size: 46,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Нет изображения',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+    return const EmptyState(
+      type: EmptyStateType.product,
+      size: EmptyStateSize.tiny,
     );
   }
 }
@@ -366,38 +351,11 @@ class AppErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 54,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Не удалось загрузить данные',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Повторить'),
-            ),
-          ],
-        ),
-      ),
+    return EmptyState(
+      type: EmptyStateType.offline,
+      subtitle: message,
+      actionLabel: 'Повторить',
+      onAction: onRetry,
     );
   }
 }
@@ -1146,7 +1104,7 @@ class _ProductsPageState extends State<ProductsPage> {
             icon: const Icon(Icons.notifications_active_outlined),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const UrlWatchPage()),
+                MaterialPageRoute(builder: (_) => const PriceAlertsPage()),
               );
             },
           ),
@@ -2290,45 +2248,11 @@ class EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.search_off,
-              size: 54,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Ничего не найдено',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            if (hasMore) ...[
-              const SizedBox(height: 10),
-              Text(
-                'Попробуйте изменить поиск или фильтры.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 16),
-              if (loadingMore)
-                const CircularProgressIndicator()
-              else
-                FilledButton.icon(
-                  onPressed: onLoadMore,
-                  icon: const Icon(Icons.expand_more),
-                  label: const Text('Загрузить еще'),
-                ),
-            ],
-          ],
-        ),
-      ),
+    return EmptyState(
+      type: EmptyStateType.search,
+      hasMore: hasMore,
+      loadingMore: loadingMore,
+      onLoadMore: onLoadMore,
     );
   }
 }
@@ -4452,12 +4376,9 @@ class ProductImagePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Icon(
-        Icons.image_outlined,
-        size: 54,
-        color: Colors.grey.shade400,
-      ),
+    return const EmptyState(
+      type: EmptyStateType.product,
+      size: EmptyStateSize.compact,
     );
   }
 }
@@ -4474,38 +4395,11 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 54,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Не удалось загрузить данные',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Повторить'),
-            ),
-          ],
-        ),
-      ),
+    return EmptyState(
+      type: EmptyStateType.offline,
+      subtitle: message,
+      actionLabel: 'Повторить',
+      onAction: onRetry,
     );
   }
 }

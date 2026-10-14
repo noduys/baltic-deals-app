@@ -41,6 +41,7 @@ flutter:
     - assets/background/baltic-deals-bg-new.png
     - assets/background/baltic-deals-bg.png
     - assets/images/
+    - assets/illustrations/
 
 flutter_launcher_icons:
   android: true
