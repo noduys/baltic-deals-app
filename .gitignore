@@ -49,3 +49,7 @@ app.*.map.json
 lib/main.dart.backup
 lib/main.dart.before-encoding-fix
 lib/main.dart.before-russian-fix
+# Local backups
+lib/*.bak-*
+lib/*.backup-*
+*.bak-*
