@@ -1,9 +1,10 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'widgets/empty_state.dart';
+import 'l10n/app_localizations.dart';
 
 class AlertProductInfo {
   final int id;
@@ -116,7 +117,7 @@ class _PriceAlertsPageState extends State<PriceAlertsPage> {
     if (mounted) {
       setState(() {
         item.loading = false;
-        item.error = 'Товар не найден или удален';
+        item.error = AppLocalizations.of(context)!.alertProductNotFound;
       });
     }
   }
@@ -132,7 +133,7 @@ class _PriceAlertsPageState extends State<PriceAlertsPage> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Отслеживание удалено')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.alertRemoved)),
     );
   }
 
@@ -148,15 +149,15 @@ class _PriceAlertsPageState extends State<PriceAlertsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Мои отслеживания цен'),
+        title: Text(AppLocalizations.of(context)!.myAlertsTitle),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty
               ? EmptyState(
         type: EmptyStateType.alerts,
-        title: 'Нет активных отслеживаний',
-        subtitle: 'Нажмите на колокольчик на странице любого товара, чтобы получать уведомления о снижении цены.',
+        title: AppLocalizations.of(context)!.emptyNoAlertsTitle,
+        subtitle: AppLocalizations.of(context)!.emptyNoAlertsSubtitle,
       )
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
@@ -282,12 +283,12 @@ class _PriceAlertsPageState extends State<PriceAlertsPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  tooltip: 'В магазин',
+                                  tooltip: AppLocalizations.of(context)!.goToStore,
                                   icon: const Icon(Icons.open_in_new, color: Color(0xFF0F766E)),
                                   onPressed: () => _openStore(product.productUrl),
                                 ),
                                 IconButton(
-                                  tooltip: 'Удалить отслеживание',
+                                  tooltip: AppLocalizations.of(context)!.alertDeleteTracking,
                                   icon: const Icon(Icons.notifications_off_outlined, color: Colors.grey),
                                   onPressed: () => _removeAlert(item),
                                 ),

@@ -408,4 +408,30 @@ class AppLocalizationsEt extends AppLocalizations {
 
   @override
   String get unavailableSizesGray => 'Praegu mittesaadavad suurused on hallid.';
+
+  @override
+  String get emptyNoImageTitle => 'Pilti pole';
+
+  @override
+  String get emptyNoAlertsTitle => 'Aktiivseid jälgimisi pole';
+
+  @override
+  String get emptyNoAlertsSubtitle => 'Vajutage kella mis tahes toote lehel, et saada teateid hinnalanguse kohta.';
+
+  @override
+  String get myAlertsTitle => 'Minu hinnajälgimised';
+
+  @override
+  String get alertRemoved => 'Jälgimine eemaldatud';
+
+  @override
+  String get alertProductNotFound => 'Toodet ei leitud või see on eemaldatud';
+
+  @override
+  String alertWaitingFor(String diff) {
+    return 'Ootan: -$diff €';
+  }
+
+  @override
+  String get alertDeleteTracking => 'Kustuta jälgimine';
 }

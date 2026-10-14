@@ -408,4 +408,30 @@ class AppLocalizationsLt extends AppLocalizations {
 
   @override
   String get unavailableSizesGray => 'Šiuo metu neprieinami dydžiai rodomi pilkai.';
+
+  @override
+  String get emptyNoImageTitle => 'Nėra paveikslėlio';
+
+  @override
+  String get emptyNoAlertsTitle => 'Nėra aktyvių stebėjimų';
+
+  @override
+  String get emptyNoAlertsSubtitle => 'Bakstelėkite varpelį bet kuriame produkto puslapyje, kad gautumėte pranešimus apie kainų kritimą.';
+
+  @override
+  String get myAlertsTitle => 'Mano kainų stebėjimai';
+
+  @override
+  String get alertRemoved => 'Stebėjimas pašalintas';
+
+  @override
+  String get alertProductNotFound => 'Produktas nerastas arba pašalintas';
+
+  @override
+  String alertWaitingFor(String diff) {
+    return 'Laukiama: -$diff €';
+  }
+
+  @override
+  String get alertDeleteTracking => 'Ištrinti stebėjimą';
 }

@@ -237,5 +237,20 @@
     }
   },
   "tryDifferentSearch": "Попробуй изменить поиск или фильтры.",
-  "unavailableSizesGray": "Недоступные сейчас размеры показаны серым."
+  "unavailableSizesGray": "Недоступные сейчас размеры показаны серым.",
+  "emptyNoImageTitle": "Нет изображения",
+  "emptyNoAlertsTitle": "Нет активных отслеживаний",
+  "emptyNoAlertsSubtitle": "Нажмите на колокольчик на странице любого товара, чтобы получать уведомления о снижении цены.",
+  "myAlertsTitle": "Мои отслеживания цен",
+  "alertRemoved": "Отслеживание удалено",
+  "alertProductNotFound": "Товар не найден или удален",
+  "alertWaitingFor": "Осталось подождать: -{diff} €",
+  "@alertWaitingFor": {
+    "placeholders": {
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "alertDeleteTracking": "Удалить отслеживание"
 }

@@ -408,4 +408,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unavailableSizesGray => 'Currently unavailable sizes are shown in gray.';
+
+  @override
+  String get emptyNoImageTitle => 'No image';
+
+  @override
+  String get emptyNoAlertsTitle => 'No active alerts';
+
+  @override
+  String get emptyNoAlertsSubtitle => 'Tap the bell on any product page to get notified about price drops.';
+
+  @override
+  String get myAlertsTitle => 'My price alerts';
+
+  @override
+  String get alertRemoved => 'Tracking removed';
+
+  @override
+  String get alertProductNotFound => 'Product not found or removed';
+
+  @override
+  String alertWaitingFor(String diff) {
+    return 'Waiting for: -$diff €';
+  }
+
+  @override
+  String get alertDeleteTracking => 'Delete tracking';
 }

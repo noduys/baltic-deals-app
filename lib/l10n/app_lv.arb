@@ -239,5 +239,20 @@
     }
   },
   "tryDifferentSearch": "Pamēģini mainīt meklēšanu vai filtrus.",
-  "unavailableSizesGray": "Pašlaik nepieejamie izmēri ir parādīti pelēki."
+  "unavailableSizesGray": "Pašlaik nepieejamie izmēri ir parādīti pelēki.",
+  "emptyNoImageTitle": "Nav attēla",
+  "emptyNoAlertsTitle": "Nav aktīvu brīdinājumu",
+  "emptyNoAlertsSubtitle": "Pieskarieties zvaniņam jebkurā produkta lapā, lai saņemtu paziņojumus par cenu kritumu.",
+  "myAlertsTitle": "Mani cenu brīdinājumi",
+  "alertRemoved": "Izsekošana noņemta",
+  "alertProductNotFound": "Prece nav atrasta vai ir noņemta",
+  "alertWaitingFor": "Gaidu: -{diff} €",
+  "@alertWaitingFor": {
+    "placeholders": {
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "alertDeleteTracking": "Dzēst izsekošanu"
 }

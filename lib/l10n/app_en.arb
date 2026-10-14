@@ -237,5 +237,20 @@
     }
   },
   "tryDifferentSearch": "Try changing the search or filters.",
-  "unavailableSizesGray": "Currently unavailable sizes are shown in gray."
+  "unavailableSizesGray": "Currently unavailable sizes are shown in gray.",
+  "emptyNoImageTitle": "No image",
+  "emptyNoAlertsTitle": "No active alerts",
+  "emptyNoAlertsSubtitle": "Tap the bell on any product page to get notified about price drops.",
+  "myAlertsTitle": "My price alerts",
+  "alertRemoved": "Tracking removed",
+  "alertProductNotFound": "Product not found or removed",
+  "alertWaitingFor": "Waiting for: -{diff} €",
+  "@alertWaitingFor": {
+    "placeholders": {
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "alertDeleteTracking": "Delete tracking"
 }

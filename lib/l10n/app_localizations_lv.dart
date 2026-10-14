@@ -408,4 +408,30 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get unavailableSizesGray => 'Pašlaik nepieejamie izmēri ir parādīti pelēki.';
+
+  @override
+  String get emptyNoImageTitle => 'Nav attēla';
+
+  @override
+  String get emptyNoAlertsTitle => 'Nav aktīvu brīdinājumu';
+
+  @override
+  String get emptyNoAlertsSubtitle => 'Pieskarieties zvaniņam jebkurā produkta lapā, lai saņemtu paziņojumus par cenu kritumu.';
+
+  @override
+  String get myAlertsTitle => 'Mani cenu brīdinājumi';
+
+  @override
+  String get alertRemoved => 'Izsekošana noņemta';
+
+  @override
+  String get alertProductNotFound => 'Prece nav atrasta vai ir noņemta';
+
+  @override
+  String alertWaitingFor(String diff) {
+    return 'Gaidu: -$diff €';
+  }
+
+  @override
+  String get alertDeleteTracking => 'Dzēst izsekošanu';
 }

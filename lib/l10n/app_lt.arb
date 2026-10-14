@@ -239,5 +239,20 @@
     }
   },
   "tryDifferentSearch": "Pabandyk pakeisti paiešką arba filtrus.",
-  "unavailableSizesGray": "Šiuo metu neprieinami dydžiai rodomi pilkai."
+  "unavailableSizesGray": "Šiuo metu neprieinami dydžiai rodomi pilkai.",
+  "emptyNoImageTitle": "Nėra paveikslėlio",
+  "emptyNoAlertsTitle": "Nėra aktyvių stebėjimų",
+  "emptyNoAlertsSubtitle": "Bakstelėkite varpelį bet kuriame produkto puslapyje, kad gautumėte pranešimus apie kainų kritimą.",
+  "myAlertsTitle": "Mano kainų stebėjimai",
+  "alertRemoved": "Stebėjimas pašalintas",
+  "alertProductNotFound": "Produktas nerastas arba pašalintas",
+  "alertWaitingFor": "Laukiama: -{diff} €",
+  "@alertWaitingFor": {
+    "placeholders": {
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "alertDeleteTracking": "Ištrinti stebėjimą"
 }

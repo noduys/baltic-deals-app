@@ -410,4 +410,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get unavailableSizesGray => 'Недоступные сейчас размеры показаны серым.';
+
+  @override
+  String get emptyNoImageTitle => 'Нет изображения';
+
+  @override
+  String get emptyNoAlertsTitle => 'Нет активных отслеживаний';
+
+  @override
+  String get emptyNoAlertsSubtitle => 'Нажмите на колокольчик на странице любого товара, чтобы получать уведомления о снижении цены.';
+
+  @override
+  String get myAlertsTitle => 'Мои отслеживания цен';
+
+  @override
+  String get alertRemoved => 'Отслеживание удалено';
+
+  @override
+  String get alertProductNotFound => 'Товар не найден или удален';
+
+  @override
+  String alertWaitingFor(String diff) {
+    return 'Осталось подождать: -$diff €';
+  }
+
+  @override
+  String get alertDeleteTracking => 'Удалить отслеживание';
 }

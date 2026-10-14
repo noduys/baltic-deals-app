@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -354,7 +354,7 @@ class AppErrorView extends StatelessWidget {
     return EmptyState(
       type: EmptyStateType.offline,
       subtitle: message,
-      actionLabel: 'Повторить',
+      actionLabel: AppLocalizations.of(context)!.retry,
       onAction: onRetry,
     );
   }
@@ -1960,7 +1960,7 @@ class PaginationFooter extends StatelessWidget {
         child: OutlinedButton.icon(
           onPressed: onLoadMore,
           icon: const Icon(Icons.expand_more),
-          label: Text('Загрузить еще $pageLabel'),
+          label: Text('${AppLocalizations.of(context)!.loadMore} $pageLabel'),
         ),
       ),
     );
@@ -3090,7 +3090,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Отслеживать снижение цены'),
+              title: Text(AppLocalizations.of(context)!.trackPrice),
               content: SizedBox(
                 width: 360,
                 child: Column(
@@ -3542,10 +3542,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             children: [
                               Text(
                                 priceAlertTriggered && priceAlertTarget != null
-                                    ? 'Цена снизилась!'
+                                    ? AppLocalizations.of(context)!.targetReached
                                     : priceAlertTarget == null
-                                        ? 'Отслеживать снижение цены'
-                                        : 'Цель: ${widget.priceFormatter(priceAlertTarget!)} €',
+                                        ? AppLocalizations.of(context)!.trackPrice
+                                        : AppLocalizations.of(context)!.targetValue('${widget.priceFormatter(priceAlertTarget!)} €'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -3578,7 +3578,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                             size: 18,
                           ),
                           label: Text(
-                            priceAlertTarget == null ? 'Задать' : 'Изменить',
+                            priceAlertTarget == null ? AppLocalizations.of(context)!.setTarget : AppLocalizations.of(context)!.changeTarget,
                           ),
                         ),
                       ],
@@ -4398,7 +4398,7 @@ class ErrorView extends StatelessWidget {
     return EmptyState(
       type: EmptyStateType.offline,
       subtitle: message,
-      actionLabel: 'Повторить',
+      actionLabel: AppLocalizations.of(context)!.retry,
       onAction: onRetry,
     );
   }

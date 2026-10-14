@@ -826,6 +826,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Currently unavailable sizes are shown in gray.'**
   String get unavailableSizesGray;
+
+  /// No description provided for @emptyNoImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No image'**
+  String get emptyNoImageTitle;
+
+  /// No description provided for @emptyNoAlertsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No active alerts'**
+  String get emptyNoAlertsTitle;
+
+  /// No description provided for @emptyNoAlertsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the bell on any product page to get notified about price drops.'**
+  String get emptyNoAlertsSubtitle;
+
+  /// No description provided for @myAlertsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My price alerts'**
+  String get myAlertsTitle;
+
+  /// No description provided for @alertRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking removed'**
+  String get alertRemoved;
+
+  /// No description provided for @alertProductNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Product not found or removed'**
+  String get alertProductNotFound;
+
+  /// No description provided for @alertWaitingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for: -{diff} €'**
+  String alertWaitingFor(String diff);
+
+  /// No description provided for @alertDeleteTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete tracking'**
+  String get alertDeleteTracking;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

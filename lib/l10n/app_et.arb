@@ -237,5 +237,20 @@
     }
   },
   "tryDifferentSearch": "Proovi muuta otsingut või filtreid.",
-  "unavailableSizesGray": "Praegu mittesaadavad suurused on hallid."
+  "unavailableSizesGray": "Praegu mittesaadavad suurused on hallid.",
+  "emptyNoImageTitle": "Pilti pole",
+  "emptyNoAlertsTitle": "Aktiivseid jälgimisi pole",
+  "emptyNoAlertsSubtitle": "Vajutage kella mis tahes toote lehel, et saada teateid hinnalanguse kohta.",
+  "myAlertsTitle": "Minu hinnajälgimised",
+  "alertRemoved": "Jälgimine eemaldatud",
+  "alertProductNotFound": "Toodet ei leitud või see on eemaldatud",
+  "alertWaitingFor": "Ootan: -{diff} €",
+  "@alertWaitingFor": {
+    "placeholders": {
+      "diff": {
+        "type": "String"
+      }
+    }
+  },
+  "alertDeleteTracking": "Kustuta jälgimine"
 }
