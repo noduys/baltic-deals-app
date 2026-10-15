@@ -489,7 +489,7 @@ class ProductsPage extends StatefulWidget {
 
 class _ProductsPageState extends State<ProductsPage> {
   bool get isStoreCatalog => widget.initialStore != null;
-  static const String currentAppVersion = '1.4.0';
+  static const String currentAppVersion = '1.4.1';
   static const String apiBase = 'https://baltic-deals-api.noduys.workers.dev';
   static const int pageSize = 40;
 
