@@ -1,8 +1,8 @@
-﻿name: baltic_deals_app
+name: baltic_deals_app
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.4.2+9
+version: 1.4.3+10
 
 environment:
   sdk: ^3.13.2
