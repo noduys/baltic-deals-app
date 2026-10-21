@@ -92,9 +92,7 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final resolvedTitle = title ?? _defaultTitle;
+        final resolvedTitle = title ?? _defaultTitle;
     final showTitle = size != EmptyStateSize.tiny;
 
     return Center(
@@ -108,8 +106,7 @@ class EmptyState extends StatelessWidget {
               width: _imageSize,
               height: _imageSize,
               fit: BoxFit.contain,
-              color: isDark ? Colors.white.withValues(alpha: 0.9) : null,
-              colorBlendMode: isDark ? BlendMode.modulate : null,
+              // color и colorBlendMode убраны (белый квадрат в тёмной теме)
               errorBuilder: (context, error, stackTrace) => Icon(
                 Icons.image_not_supported_outlined,
                 size: _imageSize * 0.6,
@@ -181,3 +178,5 @@ class EmptyState extends StatelessWidget {
     return null;
   }
 }
+
+
