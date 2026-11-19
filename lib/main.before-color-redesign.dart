@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -243,7 +243,7 @@ class AppProductImagePlaceholder extends StatelessWidget {
       child: Icon(
         Icons.image_outlined,
         size: 54,
-        color: Colors.grey.shade400,
+        color: Colors.grey.shade800,
       ),
     );
   }
@@ -327,7 +327,7 @@ class AppDetailRow extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: Colors.grey.shade800,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -613,9 +613,9 @@ void dispose() {
         error = null;
         hasMore = true;
 
-        // ÃÅ¸ÃÂ¾ÃÂºÃÂ°ÃÂ·Ã‘â€¹ÃÂ²ÃÂ°ÃÂµÃÂ¼ ÃÂ±ÃÂ¾ÃÂ»Ã‘Å’Ã‘Ë†ÃÂ¾ÃÂ¹ loader Ã‘â€šÃÂ¾ÃÂ»Ã‘Å’ÃÂºÃÂ¾ ÃÂ¿Ã‘â‚¬ÃÂ¸ Ã‘ÂÃÂ°ÃÂ¼ÃÂ¾ÃÂ¹ ÃÂ¿ÃÂµÃ‘â‚¬ÃÂ²ÃÂ¾ÃÂ¹ ÃÂ·ÃÂ°ÃÂ³Ã‘â‚¬Ã‘Æ’ÃÂ·ÃÂºÃÂµ.
-        // ÃÅ¸Ã‘â‚¬ÃÂ¸ ÃÂ¿ÃÂ¾ÃÂ¸Ã‘ÂÃÂºÃÂµ ÃÂ¸ Ã‘â€žÃÂ¸ÃÂ»Ã‘Å’Ã‘â€šÃ‘â‚¬ÃÂ°Ã‘â€¦ ÃÂ¾Ã‘ÂÃ‘â€šÃÂ°ÃÂ²ÃÂ»Ã‘ÂÃÂµÃÂ¼ Ã‘ÂÃÂºÃ‘â‚¬ÃÂ°ÃÂ½ ÃÂ½ÃÂ° ÃÂ¼ÃÂµÃ‘ÂÃ‘â€šÃÂµ,
-        // Ã‘â€¡Ã‘â€šÃÂ¾ÃÂ±Ã‘â€¹ TextField ÃÂ½ÃÂµ Ã‘â€šÃÂµÃ‘â‚¬Ã‘ÂÃÂ» Ã‘â€žÃÂ¾ÃÂºÃ‘Æ’Ã‘Â ÃÂ¿ÃÂ¾Ã‘ÂÃÂ»ÃÂµ ÃÂ¿ÃÂµÃ‘â‚¬ÃÂ²ÃÂ¾ÃÂ¹ ÃÂ±Ã‘Æ’ÃÂºÃÂ²Ã‘â€¹.
+        // ÐŸÐ¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÐ¼ Ð±Ð¾Ð»ÑŒÑˆÐ¾Ð¹ loader Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð¿Ñ€Ð¸ ÑÐ°Ð¼Ð¾Ð¹ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐµ.
+        // ÐŸÑ€Ð¸ Ð¿Ð¾Ð¸ÑÐºÐµ Ð¸ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð°Ñ… Ð¾ÑÑ‚Ð°Ð²Ð»ÑÐµÐ¼ ÑÐºÑ€Ð°Ð½ Ð½Ð° Ð¼ÐµÑÑ‚Ðµ,
+        // Ñ‡Ñ‚Ð¾Ð±Ñ‹ TextField Ð½Ðµ Ñ‚ÐµÑ€ÑÐ» Ñ„Ð¾ÐºÑƒÑ Ð¿Ð¾ÑÐ»Ðµ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð±ÑƒÐºÐ²Ñ‹.
         loading = products.isEmpty;
       });
     }
@@ -1162,15 +1162,15 @@ if (selectedStore != 'all') {
                 ),
                 PopupMenuItem(
                   value: 'ru',
-                  child: languageLabel('ru', 'Русский'),
+                  child: languageLabel('ru', '???????'),
                 ),
                 PopupMenuItem(
                   value: 'lv',
-                  child: languageLabel('lv', 'Latviešu'),
+                  child: languageLabel('lv', 'Latvie�u'),
                 ),
                 PopupMenuItem(
                   value: 'lt',
-                  child: languageLabel('lt', 'Lietuvių'),
+                  child: languageLabel('lt', 'Lietuviu'),
                 ),
               ];
             },
@@ -1568,11 +1568,11 @@ class _FiltersBarState extends State<FiltersBar> {
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(color: Colors.grey.shade700),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(color: Colors.grey.shade700),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -1619,7 +1619,7 @@ class _FiltersBarState extends State<FiltersBar> {
       decoration: _fieldDecoration(
         _localizedFieldLabel(
           context,
-          ru: 'Категория',
+          ru: '?????????',
           en: 'Category',
           et: 'Kategooria',
           lv: 'Kategorija',
@@ -1676,11 +1676,11 @@ class _FiltersBarState extends State<FiltersBar> {
       decoration: _fieldDecoration(
         _localizedFieldLabel(
           context,
-          ru: 'Бренд',
+          ru: '?????',
           en: 'Brand',
-          et: 'Bränd',
-          lv: 'Zīmols',
-          lt: 'Prekės ženklas',
+          et: 'Br�nd',
+          lv: 'Zimols',
+          lt: 'Prekes �enklas',
         ),
       ),
       items: [
@@ -1732,14 +1732,14 @@ final storeField = DropdownButtonFormField<String>(
       controller: widget.minPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: widget.onMinPriceChanged,
-      decoration: _fieldDecoration(AppLocalizations.of(context)!.minPrice).copyWith(suffixText: '€'),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.minPrice).copyWith(suffixText: '�'),
     );
 
     final maxPriceField = TextField(
       controller: widget.maxPriceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: widget.onMaxPriceChanged,
-      decoration: _fieldDecoration(AppLocalizations.of(context)!.maxPrice).copyWith(suffixText: '€'),
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.maxPrice).copyWith(suffixText: '�'),
     );
 
     final discountField = DropdownButtonFormField<int>(
@@ -1965,7 +1965,7 @@ class PaginationFooter extends StatelessWidget {
           child: Text(
             AppLocalizations.of(context)!.loadedProducts(loadedCount),
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: Colors.grey.shade800,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2035,7 +2035,7 @@ class EmptyView extends StatelessWidget {
                 AppLocalizations.of(context)!.tryDifferentSearch,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.grey.shade600,
+                  color: Colors.grey.shade800,
                 ),
               ),
               const SizedBox(height: 16),
@@ -2209,13 +2209,13 @@ class ProductCard extends StatelessWidget {
                         Icon(
                           Icons.storefront_outlined,
                           size: 15,
-                          color: Colors.grey.shade600,
+                          color: Colors.grey.shade800,
                         ),
                         const SizedBox(width: 5),
                         Expanded(
                           child: Text(
                             isMultiStore
-                                ? '${AppLocalizations.of(context)!.bestPrice} · ${product.storeName}'
+                                ? '${AppLocalizations.of(context)!.bestPrice} � ${product.storeName}'
                                 : product.storeName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -2280,7 +2280,7 @@ class ProductCard extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         Text(
-                          '${priceFormatter(product.currentPrice)} €',
+                          '${priceFormatter(product.currentPrice)} �',
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
@@ -2289,9 +2289,9 @@ class ProductCard extends StatelessWidget {
                         ),
                         if (hasOldPrice)
                           Text(
-                            '${priceFormatter(product.oldPrice!)} €',
+                            '${priceFormatter(product.oldPrice!)} �',
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: Colors.grey.shade800,
                               fontSize: 12,
                               decoration: TextDecoration.lineThrough,
                             ),
@@ -2443,7 +2443,7 @@ class ProductCardSizePreview extends StatelessWidget {
         final label = [
           ...visible,
           if (remaining > 0) '+$remaining',
-        ].join(' • ');
+        ].join(' � ');
 
         return Padding(
           padding: const EdgeInsets.only(top: 8),
@@ -2457,7 +2457,7 @@ class ProductCardSizePreview extends StatelessWidget {
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: Colors.grey.shade300,
+                color: Colors.grey.shade700,
               ),
             ),
             child: Row(
@@ -2876,7 +2876,7 @@ class _ProductDetailsPageState
         SnackBar(
           content: Text(
             AppLocalizations.of(context)!.targetSavedServer(
-              '${widget.priceFormatter(roundedTarget)} €',
+              '${widget.priceFormatter(roundedTarget)} �',
             ),
           ),
         ),
@@ -2987,7 +2987,7 @@ class _ProductDetailsPageState
                   children: [
                     Text(
                       AppLocalizations.of(context)!.currentPriceLabel(
-                        '${widget.priceFormatter(widget.product.currentPrice)} €',
+                        '${widget.priceFormatter(widget.product.currentPrice)} �',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -3392,7 +3392,7 @@ class _ProductDetailsPageState
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  '${product.storeName} • ${product.country}',
+                  '${product.storeName} � ${product.country}',
                   style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 14,
@@ -3406,7 +3406,7 @@ class _ProductDetailsPageState
                   runSpacing: 8,
                   children: [
                     Text(
-                      '${widget.priceFormatter(product.currentPrice)} €',
+                      '${widget.priceFormatter(product.currentPrice)} �',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,
@@ -3414,10 +3414,10 @@ class _ProductDetailsPageState
                     ),
                     if (hasOldPrice)
                       Text(
-                        '${widget.priceFormatter(product.oldPrice!)} €',
+                        '${widget.priceFormatter(product.oldPrice!)} �',
                         style: TextStyle(
                           fontSize: 17,
-                          color: Colors.grey.shade600,
+                          color: Colors.grey.shade800,
                           decoration:
                               TextDecoration.lineThrough,
                         ),
@@ -3479,7 +3479,7 @@ class _ProductDetailsPageState
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: priceAlertTarget == null
-                            ? Colors.grey.shade300
+                            ? Colors.grey.shade700
                             : Theme.of(context)
                                 .colorScheme
                                 .primary
@@ -3517,7 +3517,7 @@ class _ProductDetailsPageState
                                     : priceAlertTarget == null
                                         ? AppLocalizations.of(context)!.trackPrice
                                         : AppLocalizations.of(context)!.targetValue(
-                                            '${widget.priceFormatter(priceAlertTarget!)} €',
+                                            '${widget.priceFormatter(priceAlertTarget!)} �',
                                           ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
@@ -3528,8 +3528,8 @@ class _ProductDetailsPageState
                                 priceAlertTriggered &&
                                         priceAlertTarget != null
                                     ? AppLocalizations.of(context)!.triggeredAtTarget(
-                                        '${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} €',
-                                        '${widget.priceFormatter(priceAlertTarget!)} €',
+                                        '${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} �',
+                                        '${widget.priceFormatter(priceAlertTarget!)} �',
                                       )
                                     : priceAlertTarget == null
                                         ? AppLocalizations.of(context)!.priceAlertPrompt
@@ -3537,7 +3537,7 @@ class _ProductDetailsPageState
                                                 priceAlertTarget!
                                             ? AppLocalizations.of(context)!.priceAlreadyReached
                                             : AppLocalizations.of(context)!.priceAboveTarget(
-                                                '${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} €',
+                                                '${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} �',
                                               ),
                                 style: TextStyle(
                                   color: Colors.grey.shade700,
@@ -3708,7 +3708,7 @@ class _ProductDetailsPageState
                       children: [
                         Icon(
                           Icons.inventory_2_outlined,
-                          color: Colors.grey.shade600,
+                          color: Colors.grey.shade800,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -3756,7 +3756,7 @@ class _ProductDetailsPageState
                   Text(
                     AppLocalizations.of(context)!.unavailableSizesGray,
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade800,
                       fontSize: 12,
                     ),
                   ),
@@ -3773,7 +3773,7 @@ class _ProductDetailsPageState
                           return Text(
                             AppLocalizations.of(context)!.selectedSizeUnavailable,
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: Colors.grey.shade800,
                             ),
                           );
                         }
@@ -3815,7 +3815,7 @@ class _ProductDetailsPageState
                                           const SizedBox(height: 3),
                                           Text(
                                             AppLocalizations.of(context)!.bestPriceValue(
-                                              '${widget.priceFormatter(bestPrice)} €',
+                                              '${widget.priceFormatter(bestPrice)} �',
                                             ),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w700,
@@ -3893,7 +3893,7 @@ class _ProductDetailsPageState
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              '${widget.priceFormatter(store.currentPrice)} €',
+                                              '${widget.priceFormatter(store.currentPrice)} �',
                                               style: const TextStyle(
                                                 fontSize: 17,
                                                 fontWeight: FontWeight.w900,
@@ -3970,7 +3970,7 @@ class _ProductDetailsPageState
                   Text(
                     AppLocalizations.of(context)!.noOffers,
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade800,
                     ),
                   )
                 else
@@ -4042,17 +4042,17 @@ class _ProductDetailsPageState
                       _PriceStat(
                         label: AppLocalizations.of(context)!.now,
                         value:
-                            '${widget.priceFormatter(product.currentPrice)} €',
+                            '${widget.priceFormatter(product.currentPrice)} �',
                       ),
                       _PriceStat(
                         label: AppLocalizations.of(context)!.minimum,
                         value:
-                            '${widget.priceFormatter(minHistoryPrice ?? product.currentPrice)} €',
+                            '${widget.priceFormatter(minHistoryPrice ?? product.currentPrice)} �',
                       ),
                       _PriceStat(
                         label: AppLocalizations.of(context)!.maximum,
                         value:
-                            '${widget.priceFormatter(maxHistoryPrice ?? product.currentPrice)} €',
+                            '${widget.priceFormatter(maxHistoryPrice ?? product.currentPrice)} �',
                       ),
                     ],
                   ),
@@ -4072,7 +4072,7 @@ class _ProductDetailsPageState
                         ? AppLocalizations.of(context)!.historyStarted
                         : AppLocalizations.of(context)!.historyPoints(history.length),
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade800,
                       fontSize: 12,
                     ),
                   ),
@@ -4206,7 +4206,7 @@ class _OfferCard extends StatelessWidget {
                   Text(
                     offer.country,
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade800,
                       fontSize: 12,
                     ),
                   ),
@@ -4217,7 +4217,7 @@ class _OfferCard extends StatelessWidget {
                         WrapCrossAlignment.center,
                     children: [
                       Text(
-                        '${priceFormatter(offer.currentPrice)} €',
+                        '${priceFormatter(offer.currentPrice)} �',
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 18,
@@ -4231,9 +4231,9 @@ class _OfferCard extends StatelessWidget {
   ),
                       if (hasOldPrice)
                         Text(
-                          '${priceFormatter(offer.oldPrice!)} €',
+                          '${priceFormatter(offer.oldPrice!)} �',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Colors.grey.shade800,
                             decoration:
                                 TextDecoration.lineThrough,
                           ),
@@ -4282,7 +4282,7 @@ class _PriceStat extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.grey.shade300,
+          color: Colors.grey.shade700,
         ),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -4293,7 +4293,7 @@ class _PriceStat extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: Colors.grey.shade800,
               fontSize: 12,
             ),
           ),
@@ -4331,7 +4331,7 @@ class PriceHistoryChart extends StatelessWidget {
         prices: prices,
         lineColor:
             Theme.of(context).colorScheme.primary,
-        gridColor: Colors.grey.shade300,
+        gridColor: Colors.grey.shade700,
       ),
       child: const SizedBox.expand(),
     );
@@ -4450,7 +4450,7 @@ class ProductImagePlaceholder
       child: Icon(
         Icons.image_outlined,
         size: 54,
-        color: Colors.grey.shade400,
+        color: Colors.grey.shade800,
       ),
     );
   }

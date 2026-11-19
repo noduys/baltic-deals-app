@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class BarcodeScannerPage extends StatefulWidget {
@@ -39,7 +39,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Сканировать штрихкод'),
+        title: const Text('??????????? ????????'),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         actions: [
@@ -82,7 +82,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
-                'Наведите камеру на штрихкод коробки или бирки',
+                '???????? ?????? ?? ???????? ??????? ??? ?????',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 13,

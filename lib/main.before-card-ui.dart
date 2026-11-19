@@ -136,7 +136,7 @@ class AppProductImagePlaceholder extends StatelessWidget {
       child: Icon(
         Icons.image_outlined,
         size: 54,
-        color: Colors.grey.shade400,
+        color: Colors.grey.shade800,
       ),
     );
   }
@@ -220,7 +220,7 @@ class AppDetailRow extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: Colors.grey.shade800,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1715,7 +1715,7 @@ class PaginationFooter extends StatelessWidget {
           child: Text(
             'Все загруженные товары показаны',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: Colors.grey.shade800,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1786,7 +1786,7 @@ class EmptyView extends StatelessWidget {
                 'Попробуй изменить поиск или фильтры.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.grey.shade600,
+                  color: Colors.grey.shade800,
                 ),
               ),
               const SizedBox(height: 16),
@@ -1966,7 +1966,7 @@ class ProductCard extends StatelessWidget {
                       style: TextStyle(
                         color: isMultiStore
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.grey.shade600,
+                            : Colors.grey.shade800,
                         fontSize: 12,
                         fontWeight:
                             isMultiStore ? FontWeight.w700 : FontWeight.w400,
@@ -2054,7 +2054,7 @@ class ProductCard extends StatelessWidget {
                                   child: Text(
                                     '${priceFormatter(product.oldPrice!)} €',
                                     style: TextStyle(
-                                      color: Colors.grey.shade600,
+                                      color: Colors.grey.shade800,
                                       fontSize: 12,
                                       decoration: TextDecoration.lineThrough,
                                     ),
@@ -2200,7 +2200,7 @@ class ProductCardSizePreview extends StatelessWidget {
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: Colors.grey.shade300,
+                color: Colors.grey.shade700,
               ),
             ),
             child: Row(
@@ -3148,7 +3148,7 @@ class _ProductDetailsPageState
                         '${widget.priceFormatter(product.oldPrice!)} €',
                         style: TextStyle(
                           fontSize: 17,
-                          color: Colors.grey.shade600,
+                          color: Colors.grey.shade800,
                           decoration:
                               TextDecoration.lineThrough,
                         ),
@@ -3210,7 +3210,7 @@ class _ProductDetailsPageState
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: priceAlertTarget == null
-                            ? Colors.grey.shade300
+                            ? Colors.grey.shade700
                             : Theme.of(context)
                                 .colorScheme
                                 .primary
@@ -3430,7 +3430,7 @@ class _ProductDetailsPageState
                       children: [
                         Icon(
                           Icons.inventory_2_outlined,
-                          color: Colors.grey.shade600,
+                          color: Colors.grey.shade800,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -3478,7 +3478,7 @@ class _ProductDetailsPageState
                   Text(
                     'Недоступные сейчас размеры показаны серым.',
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade800,
                       fontSize: 12,
                     ),
                   ),
@@ -3495,7 +3495,7 @@ class _ProductDetailsPageState
                           return Text(
                             'Выбранный размер сейчас недоступен',
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: Colors.grey.shade800,
                             ),
                           );
                         }
@@ -3687,7 +3687,7 @@ class _ProductDetailsPageState
                   Text(
                     'Предложений пока нет',
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade800,
                     ),
                   )
                 else
@@ -3789,7 +3789,7 @@ class _ProductDetailsPageState
                         ? 'История только начала собираться. Новые точки появятся при изменении цены.'
                         : 'Точек истории: ${history.length}',
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade800,
                       fontSize: 12,
                     ),
                   ),
@@ -3923,7 +3923,7 @@ class _OfferCard extends StatelessWidget {
                   Text(
                     offer.country,
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Colors.grey.shade800,
                       fontSize: 12,
                     ),
                   ),
@@ -3950,7 +3950,7 @@ class _OfferCard extends StatelessWidget {
                         Text(
                           '${priceFormatter(offer.oldPrice!)} €',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Colors.grey.shade800,
                             decoration:
                                 TextDecoration.lineThrough,
                           ),
@@ -3999,7 +3999,7 @@ class _PriceStat extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.grey.shade300,
+          color: Colors.grey.shade700,
         ),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -4010,7 +4010,7 @@ class _PriceStat extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: Colors.grey.shade800,
               fontSize: 12,
             ),
           ),
@@ -4048,7 +4048,7 @@ class PriceHistoryChart extends StatelessWidget {
         prices: prices,
         lineColor:
             Theme.of(context).colorScheme.primary,
-        gridColor: Colors.grey.shade300,
+        gridColor: Colors.grey.shade700,
       ),
       child: const SizedBox.expand(),
     );
@@ -4167,7 +4167,7 @@ class ProductImagePlaceholder
       child: Icon(
         Icons.image_outlined,
         size: 54,
-        color: Colors.grey.shade400,
+        color: Colors.grey.shade800,
       ),
     );
   }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Тип иллюстрации для пустого состояния.
 enum EmptyStateType { search, alerts, offline, product }
@@ -81,18 +81,18 @@ class EmptyState extends StatelessWidget {
       case EmptyStateType.search:
         return 'Ничего не найдено';
       case EmptyStateType.alerts:
-        return 'Нет алертов';
+        return 'Нет оповещений';
       case EmptyStateType.offline:
         return 'Нет подключения';
       case EmptyStateType.product:
-        return 'Нет изображения';
+        return 'Нет предложений';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-        final resolvedTitle = title ?? _defaultTitle;
+    final resolvedTitle = title ?? _defaultTitle;
     final showTitle = size != EmptyStateSize.tiny;
 
     return Center(
@@ -106,7 +106,7 @@ class EmptyState extends StatelessWidget {
               width: _imageSize,
               height: _imageSize,
               fit: BoxFit.contain,
-              // color и colorBlendMode убраны (белый квадрат в тёмной теме)
+              // color и colorBlendMode убраны (могут влиять на дизайн темы)
               errorBuilder: (context, error, stackTrace) => Icon(
                 Icons.image_not_supported_outlined,
                 size: _imageSize * 0.6,
@@ -156,7 +156,7 @@ class EmptyState extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onLoadMore,
                   icon: const Icon(Icons.expand_more),
-                  label: const Text('Загрузить еще'),
+                  label: const Text('Загрузить ещё'),
                 ),
             ],
           ],
@@ -168,7 +168,7 @@ class EmptyState extends StatelessWidget {
   String? get _resolvedSubtitle {
     if (subtitle != null) return subtitle;
     if (type == EmptyStateType.search && hasMore) {
-      return 'Попробуйте изменить поиск или фильтры.';
+      return 'Попробуйте изменить запрос для поиска.';
     }
     return null;
   }
@@ -178,5 +178,3 @@ class EmptyState extends StatelessWidget {
     return null;
   }
 }
-
-

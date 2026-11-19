@@ -234,7 +234,7 @@ class _PriceAlertsPageState extends State<PriceAlertsPage> {
                                   const SizedBox(height: 4),
                                   Text(
                                     product.storeName,
-                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                    style: TextStyle(color: Colors.grey.shade800, fontSize: 12),
                                   ),
                                   const SizedBox(height: 6),
                                   Row(
@@ -274,7 +274,7 @@ class _PriceAlertsPageState extends State<PriceAlertsPage> {
                                   else
                                     Text(
                                       'Осталось подождать: -${diff.toStringAsFixed(2)} €',
-                                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                      style: TextStyle(fontSize: 11, color: Colors.grey.shade800),
                                     ),
                                 ],
                               ),

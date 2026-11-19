@@ -1,6 +1,8 @@
 ﻿import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io' show Platform;
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +28,9 @@ const String _webVapidKey =
     'BAeMMjHE9TkBtALMEoekwr0FlmgyjY6eeo03QFnlGFoqs8XNVY9mRYx4lqrLiCoRaoNT411Q7djVorhbuGLB6MI';
 
 final GlobalKey<NavigatorState> _globalNavigatorKey = GlobalKey<NavigatorState>();
+
+// Кэш скидок главной страницы с временем жизни
+List<Product>? _cachedHomeDiscounts;
 
 Future<String> _getDeviceId() async {
   final prefs = await SharedPreferences.getInstance();
@@ -70,7 +75,7 @@ Future<void> _handlePushMessage(RemoteMessage message) async {
     final res = await http.get(uri).timeout(const Duration(seconds: 10));
     if (res.statusCode != 200) return;
 
-    final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+    final decoded = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
     final productJson = decoded['product'] as Map<String, dynamic>?;
     if (productJson == null) return;
 
@@ -174,7 +179,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 1400), () {
+    Future.delayed(const Duration(milliseconds: 3000), () {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const ProductsPage()),
@@ -291,6 +296,7 @@ class _BalticDealsAppState extends State<BalticDealsApp> {
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF176B5B),
+              brightness: Brightness.light,
             ),
             scaffoldBackgroundColor: const Color(0xFFF5F6F7),
           ),
@@ -300,6 +306,7 @@ class _BalticDealsAppState extends State<BalticDealsApp> {
               seedColor: const Color(0xFF176B5B),
               brightness: Brightness.dark,
             ),
+            scaffoldBackgroundColor: const Color(0xFF121415),
           ),
           home: const SplashScreen(),
         );
@@ -365,19 +372,26 @@ class AppDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.grey.shade700),
+          Icon(
+            icon,
+            size: 20,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+          ),
           const SizedBox(width: 10),
           SizedBox(
-            width: 95,
+            width: 100,
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: isDark ? Colors.grey.shade300 : Colors.grey.shade800,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -435,10 +449,10 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: (json['id'] as num?)?.toInt() ??
-          (json['product_id'] as num?)?.toInt() ??
+      id: int.tryParse(json['id']?.toString() ?? '') ??
+          int.tryParse(json['product_id']?.toString() ?? '') ??
           0,
-      name: json['name']?.toString() ?? 'Товар',
+      name: json['name']?.toString() ?? 'Без названия',
       brand: json['brand']?.toString(),
       category: json['category']?.toString(),
       gender: json['gender']?.toString(),
@@ -446,13 +460,13 @@ class Product {
       productUrl: json['product_url']?.toString(),
       storeName: json['store_name']?.toString() ?? 'Магазин',
       country: json['country']?.toString() ?? 'EE',
-      currentPrice: (json['current_price'] as num?)?.toDouble() ?? 0,
-      oldPrice: (json['old_price'] as num?)?.toDouble(),
+      currentPrice: double.tryParse(json['current_price']?.toString() ?? '') ?? 0,
+      oldPrice: double.tryParse(json['old_price']?.toString() ?? ''),
       currency: json['currency']?.toString() ?? 'EUR',
-      discountPercent: (json['discount_percent'] as num?)?.toInt(),
-      hasCoupon: (json['has_coupon'] as num?)?.toInt() == 1,
-      storesCount: (json['stores_count'] as num?)?.toInt() ?? 1,
-      savingsAmount: (json['savings_amount'] as num?)?.toDouble() ?? 0,
+      discountPercent: int.tryParse(json['discount_percent']?.toString() ?? ''),
+      hasCoupon: (json['has_coupon']?.toString() == '1') || (json['has_coupon'] == true),
+      storesCount: int.tryParse(json['stores_count']?.toString() ?? '') ?? 1,
+      savingsAmount: double.tryParse(json['savings_amount']?.toString() ?? '') ?? 0,
       homeSection: json['home_section']?.toString(),
     );
   }
@@ -474,8 +488,7 @@ class ProductsPage extends StatefulWidget {
 
 class _ProductsPageState extends State<ProductsPage> {
   bool get isStoreCatalog => widget.initialStore != null;
-  static const String currentAppVersion = '1.4.2';
-  static const String apiBase = 'https://baltic-deals-api.noduys.workers.dev';
+  static const String apiBase = 'https://br-divine-cherry-b9sd15fj-outletapi.compute.c-7.eu-central-1.aws.neon.tech';
   static const int pageSize = 40;
 
   final TextEditingController searchController = TextEditingController();
@@ -484,6 +497,8 @@ class _ProductsPageState extends State<ProductsPage> {
   final ScrollController scrollController = ScrollController();
   Timer? searchDebounce;
   Timer? priceDebounce;
+
+  String _lastSearchQuery = '';
 
   bool loading = true;
   bool loadingMore = false;
@@ -516,7 +531,7 @@ class _ProductsPageState extends State<ProductsPage> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Разрешите установку приложений из этого источника'),
+              content: Text('Требуется разрешение на установку приложений'),
             ),
           );
           return;
@@ -551,13 +566,17 @@ class _ProductsPageState extends State<ProductsPage> {
       await Dio().download(
         apkUrl,
         apkPath,
+        options: Options(
+          followRedirects: true,
+          receiveTimeout: const Duration(minutes: 2),
+        ),
         onReceiveProgress: (received, total) {
           if (total > 0) _updateProgress.value = received / total;
         },
       );
-
-      if (!mounted) return;
-      Navigator.pop(context);
+      
+        if (!context.mounted) return;
+        Navigator.pop(context);
 
       final result = await OpenFilex.open(
         apkPath,
@@ -581,6 +600,17 @@ class _ProductsPageState extends State<ProductsPage> {
 
   Future<void> checkForAppUpdate({bool manual = false}) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastCheck = prefs.getInt('last_update_check') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      
+      // Проверяем не чаще раза в 24 часа, если пользователь не нажал "вручную"
+      if (!manual && now - lastCheck < 24 * 60 * 60 * 1000) {
+        return;
+      }
+      await prefs.setInt('last_update_check', now);
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
       final uri = Uri.parse('$apiBase/app-version');
       final response = await http.get(uri).timeout(const Duration(seconds: 5));
 
@@ -590,7 +620,19 @@ class _ProductsPageState extends State<ProductsPage> {
         final downloadUrl =
             data['apk_url']?.toString() ?? data['url']?.toString() ?? '';
 
-        if (latestVersion.isNotEmpty && latestVersion != currentAppVersion) {
+        bool isNewer(String current, String latest) {
+          final c = current.split('.').map(int.tryParse).toList();
+          final l = latest.split('.').map(int.tryParse).toList();
+          for (var i = 0; i < 3; i++) {
+            final cPart = i < c.length ? (c[i] ?? 0) : 0;
+            final lPart = i < l.length ? (l[i] ?? 0) : 0;
+            if (lPart > cPart) return true;
+            if (lPart < cPart) return false;
+          }
+          return false;
+        }
+
+        if (latestVersion.isNotEmpty && isNewer(currentVersion, latestVersion)) {
           if (!mounted) return;
           showDialog(
             context: context,
@@ -604,7 +646,7 @@ class _ProductsPageState extends State<ProductsPage> {
               ),
               content: Text(
                 'Доступна новая версия: $latestVersion.\n'
-                'Установленная версия: $currentAppVersion.\n\n'
+                'Установленная версия: $currentVersion.\n\n'
                 'Хотите загрузить обновление сейчас?',
               ),
               actions: [
@@ -654,7 +696,72 @@ class _ProductsPageState extends State<ProductsPage> {
     checkForAppUpdate();
   }
 
-  Future<void> loadHomeCheapest() async {
+  Future<void> _saveHomeToCache(List<Product> items) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = items.map((p) => {
+      'id': p.id,
+      'name': p.name,
+      'brand': p.brand,
+      'category': p.category,
+      'gender': p.gender,
+      'image_url': p.imageUrl,
+      'product_url': p.productUrl,
+      'store_name': p.storeName,
+      'country': p.country,
+      'current_price': p.currentPrice,
+      'old_price': p.oldPrice,
+      'currency': p.currency,
+      'discount_percent': p.discountPercent,
+      'stores_count': p.storesCount,
+      'savings_amount': p.savingsAmount,
+      'home_section': p.homeSection,
+    }).toList();
+    await prefs.setString('home_cache', jsonEncode(jsonList));
+  }
+
+  Future<List<Product>> _loadHomeFromCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString('home_cache');
+    if (jsonStr == null) return [];
+    try {
+      final list = jsonDecode(jsonStr) as List<dynamic>;
+      return list.map((item) => Product.fromJson(Map<String, dynamic>.from(item))).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void _onScroll() {
+    if (!scrollController.hasClients) return;
+    final position = scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 500) {
+      loadMore();
+    }
+  }
+
+    Future<void> loadHomeCheapest({bool force = false}) async {
+    // 1. Если кэш в памяти есть — используем его
+    if (!force && _cachedHomeDiscounts != null) {
+      setState(() {
+        homeCheapest = _cachedHomeDiscounts!;
+        homeCheapestLoading = false;
+      });
+      return;
+    }
+
+    // 2. Если кэша в памяти нет — грузим из SharedPreferences (мгновенно)
+    if (!force) {
+      final localCache = await _loadHomeFromCache();
+      if (localCache.isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          homeCheapest = localCache;
+          homeCheapestLoading = false;
+        });
+      }
+    }
+
+    // 3. Идем в сеть за свежими данными
     try {
       const sections = <String, String>{
         'beauty': 'beauty',
@@ -663,40 +770,40 @@ class _ProductsPageState extends State<ProductsPage> {
         'tech': 'electronics',
       };
 
-      final loaded = <Product>[];
-
-      for (final entry in sections.entries) {
+      final futures = sections.entries.map((entry) async {
         final uri = Uri.parse('$apiBase/products').replace(
           queryParameters: {
             'category': entry.value,
-            'limit': '80',
+            'limit': '20',
             'offset': '0',
           },
         );
+        final response = await http.get(uri).timeout(const Duration(seconds: 30));
+        if (response.statusCode != 200) return <Product>[];
 
-        final response = await http.get(uri);
-        if (response.statusCode != 200) continue;
-
-        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
         final items = decoded['products'] as List<dynamic>? ?? const [];
 
-        for (final item in items) {
+        return items.map((item) {
           final json = Map<String, dynamic>.from(item as Map<String, dynamic>);
           json['home_section'] = entry.key;
-          loaded.add(Product.fromJson(json));
-        }
-      }
+          return Product.fromJson(json);
+        }).toList();
+      }).toList();
+
+      final results = await Future.wait(futures);
+      final loaded = results.expand((list) => list).toList();
 
       loaded.sort((a, b) {
-        final discountCompare =
-            (b.discountPercent ?? 0).compareTo(a.discountPercent ?? 0);
+        final discountCompare = (b.discountPercent ?? 0).compareTo(a.discountPercent ?? 0);
         if (discountCompare != 0) return discountCompare;
-
         final savingsCompare = b.savingsAmount.compareTo(a.savingsAmount);
         if (savingsCompare != 0) return savingsCompare;
-
         return a.currentPrice.compareTo(b.currentPrice);
       });
+
+      _cachedHomeDiscounts = loaded;
+      await _saveHomeToCache(loaded);
 
       if (!mounted) return;
 
@@ -713,26 +820,6 @@ class _ProductsPageState extends State<ProductsPage> {
     }
   }
 
-  @override
-  void dispose() {
-    searchDebounce?.cancel();
-    priceDebounce?.cancel();
-    searchController.dispose();
-    minPriceController.dispose();
-    maxPriceController.dispose();
-    scrollController.dispose();
-    _updateProgress.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!scrollController.hasClients) return;
-    final position = scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - 500) {
-      loadMore();
-    }
-  }
-
   Future<void> loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
     final values = prefs.getStringList('favorite_product_ids') ?? [];
@@ -746,6 +833,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
   Future<void> toggleFavorite(Product product) async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
 
     setState(() {
       if (favoriteIds.contains(product.id)) {
@@ -807,13 +895,13 @@ class _ProductsPageState extends State<ProductsPage> {
         queryParameters: queryParameters,
       );
 
-      final response = await http.get(uri);
+      final response = await http.get(uri).timeout(const Duration(seconds: 30));
 
       if (response.statusCode != 200) {
-        throw Exception('API вернуло код ${response.statusCode}');
+        throw Exception('API ответил с ошибкой: ${response.statusCode}');
       }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final items = decoded['products'] as List<dynamic>? ?? [];
 
       final loadedProducts = items
@@ -851,6 +939,9 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Future<void> refreshProducts() async {
+    if (!isStoreCatalog) {
+      loadHomeCheapest(force: true);
+    }
     await loadProducts(reset: true);
   }
 
@@ -893,9 +984,13 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   void onSearchChanged(String value) {
+    final trimmed = value.trim();
+    if (trimmed == _lastSearchQuery) return; // Пропускаем дублирующие вызовы
+
     searchDebounce?.cancel();
     searchDebounce = Timer(const Duration(milliseconds: 450), () {
       if (!mounted) return;
+      _lastSearchQuery = trimmed;
       loadProducts(reset: true);
     });
   }
@@ -921,6 +1016,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
   void resetFilters() {
     searchDebounce?.cancel();
+    _lastSearchQuery = '';
     setState(() {
       searchController.clear();
       minPriceController.clear();
@@ -959,14 +1055,14 @@ class _ProductsPageState extends State<ProductsPage> {
     }
 
     final uri = Uri.tryParse(value);
-    if (uri == null) {
+    if (uri == null || !{'http', 'https'}.contains(uri.scheme.toLowerCase()) || uri.host.isEmpty) {
       showMessage('Некорректная ссылка на товар');
       return;
     }
 
     final opened = await launchUrl(uri, mode: LaunchMode.platformDefault);
     if (!opened) {
-      showMessage('Не удалось открыть страницу');
+      showMessage('Не удалось открыть страницу магазина');
     }
   }
 
@@ -1027,11 +1123,11 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 300,
+            height: 310,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final cardWidth = constraints.maxWidth < 600
-                    ? (constraints.maxWidth * 0.42).clamp(220.0, 320.0)
+                    ? (constraints.maxWidth * 0.45).clamp(220.0, 320.0)
                     : 220.0;
                 return ListView.separated(
                   scrollDirection: Axis.horizontal,
@@ -1075,6 +1171,7 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     final filteredProducts = visibleProducts;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -1119,6 +1216,17 @@ class _ProductsPageState extends State<ProductsPage> {
             tooltip: AppLocalizations.of(context)!.language,
             icon: const Icon(Icons.language),
             onSelected: (langCode) async {
+              if (langCode == 'about') {
+                final info = await PackageInfo.fromPlatform();
+                if (!mounted) return;
+                showAboutDialog(
+                  context: context,
+                  applicationName: 'Baltic Deals',
+                  applicationVersion: '${info.version} (${info.buildNumber})',
+                  applicationIcon: const Icon(Icons.local_offer, color: Color(0xFF176B5B)),
+                );
+                return;
+              }
               final prefs = await SharedPreferences.getInstance();
               if (langCode == null || langCode.isEmpty) {
                 await prefs.remove('app_locale');
@@ -1128,7 +1236,7 @@ class _ProductsPageState extends State<ProductsPage> {
                 _appLocaleNotifier.value = Locale(langCode);
               }
             },
-            itemBuilder: (context) => [
+            itemBuilder: (menuContext) => [
               PopupMenuItem(
                 value: null,
                 child: Text(AppLocalizations.of(context)!.systemLanguage),
@@ -1152,6 +1260,17 @@ class _ProductsPageState extends State<ProductsPage> {
               PopupMenuItem(
                 value: 'en',
                 child: Text(AppLocalizations.of(context)!.english),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'about',
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20),
+                    SizedBox(width: 8),
+                    Text('О приложении'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1180,11 +1299,31 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
           Positioned.fill(
             child: Container(
-              color: Colors.white.withValues(alpha: 0.30),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.65)
+                  : Colors.white.withValues(alpha: 0.30),
             ),
           ),
           loading
-              ? const ProductGridSkeleton()
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(color: Color(0xFF176B5B)),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Загружаем товары...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               : error != null && products.isEmpty
                   ? AppErrorView(
                       message: error!,
@@ -1362,7 +1501,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                                       AppLocalizations.of(context)!.homeSubtitle,
                                                       style: TextStyle(
                                                         fontSize: 13,
-                                                        color: Colors.grey.shade700,
+                                                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
                                                         fontWeight: FontWeight.w500,
                                                       ),
                                                     ),
@@ -1524,8 +1663,6 @@ class FiltersBar extends StatefulWidget {
 }
 
 class _FiltersBarState extends State<FiltersBar> {
-  bool expanded = false;
-
   InputDecoration _fieldDecoration(String label) {
     return InputDecoration(
       labelText: label,
@@ -1535,90 +1672,8 @@ class _FiltersBarState extends State<FiltersBar> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = MediaQuery.sizeOf(context).width < 600;
-
-    final searchField = TextField(
-      controller: widget.searchController,
-      onChanged: widget.onSearchChanged,
-      decoration: InputDecoration(
-        hintText: AppLocalizations.of(context)!.searchHint,
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: widget.searchController.text.isNotEmpty
-            ? IconButton(
-                onPressed: () {
-                  widget.searchController.clear();
-                  widget.onSearchChanged('');
-                  setState(() {});
-                },
-                icon: const Icon(Icons.close),
-              )
-            : null,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-
-    final categoryField = DropdownButtonFormField<String>(
-      initialValue: widget.selectedCategory,
-      isExpanded: true,
-      isDense: true,
-      decoration: _fieldDecoration(AppLocalizations.of(context)!.category),
-      items: [
-        DropdownMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.all)),
-        DropdownMenuItem(value: 'clothing', child: Text(AppLocalizations.of(context)!.clothing)),
-        DropdownMenuItem(value: 'shoes', child: Text(AppLocalizations.of(context)!.shoes)),
-        DropdownMenuItem(value: 'accessories', child: Text(AppLocalizations.of(context)!.accessories)),
-        DropdownMenuItem(value: 'beauty', child: Text(AppLocalizations.of(context)!.beauty)),
-        DropdownMenuItem(value: 'perfume', child: Text(AppLocalizations.of(context)!.perfume)),
-        DropdownMenuItem(value: 'electronics', child: Text(AppLocalizations.of(context)!.technology)),
-        DropdownMenuItem(value: 'home', child: Text(AppLocalizations.of(context)!.home)),
-        DropdownMenuItem(value: 'sports', child: Text(AppLocalizations.of(context)!.sport)),
-      ],
-      onChanged: widget.onCategoryChanged,
-    );
-
-    final genderField = DropdownButtonFormField<String>(
-      initialValue: widget.selectedGender,
-      isExpanded: true,
-      isDense: true,
-      decoration: _fieldDecoration(AppLocalizations.of(context)!.gender),
-      items: [
-        DropdownMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.all)),
-        DropdownMenuItem(value: 'men', child: Text(AppLocalizations.of(context)!.men)),
-        DropdownMenuItem(value: 'women', child: Text(AppLocalizations.of(context)!.women)),
-        DropdownMenuItem(value: 'kids', child: Text(AppLocalizations.of(context)!.kids)),
-      ],
-      onChanged: widget.onGenderChanged,
-    );
-
-    final brandField = DropdownButtonFormField<String>(
-      initialValue: widget.availableBrands.contains(widget.selectedBrand)
-          ? widget.selectedBrand
-          : 'all',
-      isExpanded: true,
-      isDense: true,
-      decoration: _fieldDecoration(AppLocalizations.of(context)!.brand),
-      items: [
-        DropdownMenuItem(
-          value: 'all',
-          child: Text(AppLocalizations.of(context)!.allBrands),
-        ),
-        ...widget.availableBrands.map(
-          (brand) => DropdownMenuItem(
-            value: brand,
-            child: Text(brand, overflow: TextOverflow.ellipsis),
-          ),
-        ),
-      ],
-      style: TextStyle(
-        color: Theme.of(context).colorScheme.primary,
-        fontWeight: FontWeight.w600,
-      ),
-      onChanged: widget.onBrandChanged,
-    );
-
-    final storeField = InkWell(
+  Widget _buildStoreField({required bool inBottomSheet}) {
+    return InkWell(
       onTap: () async {
         final selected = await Navigator.push<String>(
           context,
@@ -1628,8 +1683,10 @@ class _FiltersBarState extends State<FiltersBar> {
             ),
           ),
         );
-        if (selected != null && context.mounted) {
-          Navigator.pop(context);
+        if (selected != null && mounted) {
+          if (inBottomSheet) {
+            Navigator.pop(context);
+          }
           if (selected == 'all') {
             widget.onStoreChanged(selected);
           } else {
@@ -1659,6 +1716,94 @@ class _FiltersBarState extends State<FiltersBar> {
         ),
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+
+    final searchField = TextField(
+      controller: widget.searchController,
+      onChanged: widget.onSearchChanged,
+      decoration: InputDecoration(
+        hintText: AppLocalizations.of(context)!.searchHint,
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: widget.searchController.text.isNotEmpty
+            ? IconButton(
+                onPressed: () {
+                  widget.searchController.clear();
+                  widget.onSearchChanged('');
+                  setState(() {});
+                },
+                icon: const Icon(Icons.close),
+              )
+            : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+
+    // Использование value вместо initialValue обеспечивает точный сброс формы
+    final categoryField = DropdownButtonFormField<String>(
+      initialValue: widget.selectedCategory,
+      isExpanded: true,
+      isDense: true,
+      dropdownColor: Theme.of(context).colorScheme.surface,
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.category),
+      items: [
+        DropdownMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.all)),
+        DropdownMenuItem(value: 'clothing', child: Text(AppLocalizations.of(context)!.clothing)),
+        DropdownMenuItem(value: 'shoes', child: Text(AppLocalizations.of(context)!.shoes)),
+        DropdownMenuItem(value: 'accessories', child: Text(AppLocalizations.of(context)!.accessories)),
+        DropdownMenuItem(value: 'beauty', child: Text(AppLocalizations.of(context)!.beauty)),
+        DropdownMenuItem(value: 'perfume', child: Text(AppLocalizations.of(context)!.perfume)),
+        DropdownMenuItem(value: 'electronics', child: Text(AppLocalizations.of(context)!.technology)),
+        DropdownMenuItem(value: 'home', child: Text(AppLocalizations.of(context)!.home)),
+        DropdownMenuItem(value: 'sports', child: Text(AppLocalizations.of(context)!.sport)),
+      ],
+      onChanged: widget.onCategoryChanged,
+    );
+
+    final genderField = DropdownButtonFormField<String>(
+      initialValue: widget.selectedGender,
+      isExpanded: true,
+      isDense: true,
+      dropdownColor: Theme.of(context).colorScheme.surface,
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.gender),
+      items: [
+        DropdownMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.all)),
+        DropdownMenuItem(value: 'men', child: Text(AppLocalizations.of(context)!.men)),
+        DropdownMenuItem(value: 'women', child: Text(AppLocalizations.of(context)!.women)),
+        DropdownMenuItem(value: 'kids', child: Text(AppLocalizations.of(context)!.kids)),
+      ],
+      onChanged: widget.onGenderChanged,
+    );
+
+    final brandField = DropdownButtonFormField<String>(
+      initialValue: widget.availableBrands.contains(widget.selectedBrand)
+          ? widget.selectedBrand
+          : 'all',
+      isExpanded: true,
+      isDense: true,
+      dropdownColor: Theme.of(context).colorScheme.surface,
+      decoration: _fieldDecoration(AppLocalizations.of(context)!.brand),
+      items: [
+        DropdownMenuItem(
+          value: 'all',
+          child: Text(AppLocalizations.of(context)!.allBrands),
+        ),
+        ...widget.availableBrands.map(
+          (brand) => DropdownMenuItem(
+            value: brand,
+            child: Text(brand, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+      ],
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.primary,
+        fontWeight: FontWeight.w600,
+      ),
+      onChanged: widget.onBrandChanged,
+    );
 
     final minPriceField = TextField(
       controller: widget.minPriceController,
@@ -1677,6 +1822,7 @@ class _FiltersBarState extends State<FiltersBar> {
     final discountField = DropdownButtonFormField<int>(
       initialValue: widget.selectedMinDiscount,
       isDense: true,
+      dropdownColor: Theme.of(context).colorScheme.surface,
       decoration: _fieldDecoration(AppLocalizations.of(context)!.minDiscount),
       items: const [
         DropdownMenuItem(value: 0, child: Text('Любая')),
@@ -1697,6 +1843,7 @@ class _FiltersBarState extends State<FiltersBar> {
       initialValue: widget.selectedSort,
       isExpanded: true,
       isDense: true,
+      dropdownColor: Theme.of(context).colorScheme.surface,
       decoration: _fieldDecoration(AppLocalizations.of(context)!.sort),
       items: [
         DropdownMenuItem(
@@ -1742,8 +1889,6 @@ class _FiltersBarState extends State<FiltersBar> {
       ),
     );
 
-    final countText = const SizedBox.shrink();
-
     if (isMobile) {
       final activeFilters = [
         widget.selectedCategory != 'all',
@@ -1762,20 +1907,30 @@ class _FiltersBarState extends State<FiltersBar> {
           context: context,
           isScrollControlled: true,
           useSafeArea: true,
-          showDragHandle: true,
+          showDragHandle: false,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.98,
+          ),
           builder: (sheetContext) {
             return Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                4,
-                16,
-                16 + MediaQuery.viewInsetsOf(sheetContext).bottom,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                    child: Row(
                       children: [
                         Expanded(
                           child: Text(
@@ -1795,71 +1950,91 @@ class _FiltersBarState extends State<FiltersBar> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    categoryField,
-                    if (widget.selectedStore == 'Notino') ...[
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Notino',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          ChoiceChip(
-                            label: Text(AppLocalizations.of(context)!.all),
-                            selected: widget.selectedCategory == 'all',
-                            onSelected: (_) => widget.onCategoryChanged('all'),
+                          categoryField,
+                          if (widget.selectedStore == 'Notino') ...[
+                            const SizedBox(height: 14),
+                            const Text(
+                              'Notino',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: Text(AppLocalizations.of(context)!.all),
+                                  selected: widget.selectedCategory == 'all',
+                                  onSelected: (_) => widget.onCategoryChanged('all'),
+                                ),
+                                ChoiceChip(
+                                  label: Text(AppLocalizations.of(context)!.beauty),
+                                  selected: widget.selectedCategory == 'beauty',
+                                  onSelected: (_) => widget.onCategoryChanged('beauty'),
+                                ),
+                                ChoiceChip(
+                                  label: Text(AppLocalizations.of(context)!.perfume),
+                                  selected: widget.selectedCategory == 'perfume',
+                                  onSelected: (_) => widget.onCategoryChanged('perfume'),
+                                ),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          genderField,
+                          const SizedBox(height: 12),
+                          brandField,
+                          const SizedBox(height: 12),
+                          if (widget.showStoreFilter) ...[
+                            _buildStoreField(inBottomSheet: true),
+                            const SizedBox(height: 12),
+                          ],
+                          Row(
+                            children: [
+                              Expanded(child: minPriceField),
+                              const SizedBox(width: 12),
+                              Expanded(child: maxPriceField),
+                            ],
                           ),
-                          ChoiceChip(
-                            label: Text(AppLocalizations.of(context)!.beauty),
-                            selected: widget.selectedCategory == 'beauty',
-                            onSelected: (_) => widget.onCategoryChanged('beauty'),
+                          const SizedBox(height: 12),
+                          discountField,
+                          const SizedBox(height: 12),
+                          sortField,
+                          const SizedBox(height: 8),
+                          multiStoreField,
+                          const SizedBox(height: 8),
+                          resetButton,
+                          const SizedBox(height: 10),
+                    FilledButton(
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            child: Text(
+                              AppLocalizations.of(context)!.showAll,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
-                          ChoiceChip(
-                            label: Text(AppLocalizations.of(context)!.perfume),
-                            selected: widget.selectedCategory == 'perfume',
-                            onSelected: (_) => widget.onCategoryChanged('perfume'),
-                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
-                    ],
-                    const SizedBox(height: 12),
-                    genderField,
-                    const SizedBox(height: 12),
-                    brandField,
-                    const SizedBox(height: 12),
-                    if (widget.showStoreFilter) ...[
-                      storeField,
-                      const SizedBox(height: 12),
-                    ],
-                    Row(
-                      children: [
-                        Expanded(child: minPriceField),
-                        const SizedBox(width: 12),
-                        Expanded(child: maxPriceField),
-                      ],
                     ),
-                    const SizedBox(height: 12),
-                    discountField,
-                    const SizedBox(height: 12),
-                    sortField,
-                    const SizedBox(height: 8),
-                    multiStoreField,
-                    const SizedBox(height: 8),
-                    resetButton,
-                    const SizedBox(height: 10),
-                    FilledButton(
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(AppLocalizations.of(context)!.showAll),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
@@ -1868,35 +2043,27 @@ class _FiltersBarState extends State<FiltersBar> {
 
       return Container(
         width: double.infinity,
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             searchField,
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: openFiltersSheet,
-                    icon: const Icon(Icons.tune),
-                    label: Text(
-                      activeFilters == 0
-                          ? 'Фильтры'
-                          : 'Фильтры • $activeFilters',
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                    ),
-                  ),
+            OutlinedButton.icon(
+              onPressed: openFiltersSheet,
+              icon: const Icon(Icons.tune),
+              label: Text(
+                activeFilters == 0
+                    ? 'Фильтры'
+                    : 'Фильтры • $activeFilters',
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
                 ),
-                const SizedBox(width: 16),
-                Flexible(child: countText),
-              ],
+              ),
             ),
           ],
         ),
@@ -1905,7 +2072,7 @@ class _FiltersBarState extends State<FiltersBar> {
 
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
       child: Wrap(
         spacing: 12,
@@ -1917,17 +2084,13 @@ class _FiltersBarState extends State<FiltersBar> {
           SizedBox(width: 160, child: genderField),
           SizedBox(width: 175, child: brandField),
           if (widget.showStoreFilter)
-            SizedBox(width: 185, child: storeField),
+            SizedBox(width: 185, child: _buildStoreField(inBottomSheet: false)),
           SizedBox(width: 115, child: minPriceField),
           SizedBox(width: 115, child: maxPriceField),
           SizedBox(width: 140, child: discountField),
           SizedBox(width: 225, child: sortField),
           multiStoreField,
           resetButton,
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 150),
-            child: countText,
-          ),
         ],
       ),
     );
@@ -1957,6 +2120,8 @@ class PaginationFooter extends StatelessWidget {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (!hasMore) {
       return Padding(
         padding: const EdgeInsets.all(28),
@@ -1964,7 +2129,7 @@ class PaginationFooter extends StatelessWidget {
           child: Text(
             'Все подходящие товары загружены',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2030,10 +2195,10 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
           'deviceId': deviceId,
         },
       );
-      final response = await http.get(uri);
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final response = await http.get(uri).timeout(const Duration(seconds: 30));
+      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       if (response.statusCode != 200 || data['success'] != true) {
-        throw Exception(data['error']?.toString() ?? 'Не удалось загрузить отслеживание');
+        throw Exception(data['error']?.toString() ?? 'Не удалось проверить отслеживание');
       }
 
       final row = data['watch'];
@@ -2054,12 +2219,12 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
     final target = targetText.isEmpty ? null : double.tryParse(targetText.replaceAll(',', '.'));
 
     if (productUrl.isEmpty) {
-      setState(() => error = 'Введите ссылку на товар');
+      setState(() => error = 'Укажите ссылку на товар');
       return;
     }
     final parsed = Uri.tryParse(productUrl);
     if (parsed == null || (parsed.scheme != 'http' && parsed.scheme != 'https')) {
-      setState(() => error = 'Нужна корректная http/https ссылка');
+      setState(() => error = 'Адрес должен начинаться с http:// или https://');
       return;
     }
     if (targetText.isNotEmpty && (target == null || target <= 0)) {
@@ -2083,7 +2248,7 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
           'targetPrice': target,
         }),
       );
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       if (response.statusCode != 200 || data['success'] != true) {
         throw Exception(data['error']?.toString() ?? 'Не удалось сохранить отслеживание');
       }
@@ -2118,7 +2283,7 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
         },
       );
       final response = await http.delete(uri);
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       if (response.statusCode != 200 || data['success'] != true) {
         throw Exception(data['error']?.toString() ?? 'Не удалось удалить отслеживание');
       }
@@ -2128,7 +2293,7 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Отслеживание отключено')),
+          const SnackBar(content: Text('Отслеживание удалено')),
         );
       }
     } catch (e) {
@@ -2143,6 +2308,7 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
     final active = watch != null && watch?['is_active']?.toString() != '0';
     final currentPrice = watch?['current_price']?.toString();
     final targetPrice = watch?['target_price']?.toString();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -2152,13 +2318,13 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
         padding: const EdgeInsets.all(20),
         children: [
           const Text(
-            'Вставьте ссылку на товар',
+            'Добавить ссылку на товар',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
-            'Приложение регулярно проверяет цену и сразу пришлет уведомление при достижении нужной цены.',
-            style: TextStyle(color: Colors.grey.shade700),
+            'Приложение регулярно проверяет цену и пришлет уведомление при снижении или достижении нужной цены.',
+            style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade700),
           ),
           const SizedBox(height: 20),
           TextField(
@@ -2218,9 +2384,9 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Row(children: [
-                      Icon(Icons.check_circle),
+                      Icon(Icons.check_circle, color: Colors.green),
                       SizedBox(width: 8),
-                      Text('Цена отслеживается',
+                      Text('Товар отслеживается',
                           style: TextStyle(fontWeight: FontWeight.w800))
                     ]),
                     if (currentPrice != null) ...[
@@ -2235,7 +2401,7 @@ class _UrlWatchPageState extends State<UrlWatchPage> {
                     OutlinedButton.icon(
                       onPressed: loading ? null : deleteWatch,
                       icon: const Icon(Icons.notifications_off_outlined),
-                      label: const Text('Отключить'),
+                      label: const Text('Удалить'),
                     ),
                   ],
                 ),
@@ -2295,15 +2461,18 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final hasOldPrice =
         product.oldPrice != null && product.oldPrice! > product.currentPrice;
     final isMultiStore = product.storesCount > 1;
     final hasSavings = isMultiStore && product.savingsAmount > 0;
-    final category = product.category?.trim().toLowerCase();
-    final showSizePreview = category != 'beauty' && category != 'perfume';
+
+    final cleanUrl = imageUrl.trim();
+    final hasValidUrl = cleanUrl.isNotEmpty && cleanUrl.startsWith('http');
 
     return Card(
-      color: const Color(0xFFF8F9FA),
+      color: isDark ? const Color(0xFF1E2022) : const Color(0xFFF8F9FA),
       clipBehavior: Clip.antiAlias,
       elevation: 1,
       shape: RoundedRectangleBorder(
@@ -2320,12 +2489,12 @@ class ProductCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   Container(
-                    color: Colors.transparent,
+                    color: isDark ? const Color(0xFF16181A) : Colors.transparent,
                     padding: const EdgeInsets.all(12),
-                    child: imageUrl.isEmpty
+                    child: !hasValidUrl
                         ? const AppProductImagePlaceholder()
                         : CachedNetworkImage(
-                            imageUrl: imageUrl,
+                            imageUrl: cleanUrl,
                             fit: BoxFit.contain,
                             alignment: Alignment.center,
                             filterQuality: FilterQuality.medium,
@@ -2351,7 +2520,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         if (isMultiStore)
                           _CardBadge(
-                            label: 'Сравнить цены',
+                            label: 'Лучшая цена',
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,
                             foregroundColor: Colors.white,
@@ -2363,7 +2532,7 @@ class ProductCard extends StatelessWidget {
                     top: 6,
                     right: 6,
                     child: Material(
-                      color: Colors.white.withValues(alpha: 0.94),
+                      color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.90),
                       shape: const CircleBorder(),
                       child: IconButton(
                         constraints: const BoxConstraints(
@@ -2414,7 +2583,7 @@ class ProductCard extends StatelessWidget {
                           Text(
                             '${product.storesCount} маг.',
                             style: TextStyle(
-                              color: Colors.grey.shade700,
+                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                             ),
@@ -2447,18 +2616,17 @@ class ProductCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (showSizePreview)
-                      ProductCardSizePreview(productId: product.id),
+                    // ProductCardSizePreview отключен для предотвращения 40 лишних сетевых запросов
                     const Spacer(),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           '${priceFormatter(product.currentPrice)} €',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w900,
-                            color: Colors.black87,
+                            color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
                         if (hasOldPrice) ...[
@@ -2468,7 +2636,7 @@ class ProductCard extends StatelessWidget {
                             child: Text(
                               '${priceFormatter(product.oldPrice!)} €',
                               style: TextStyle(
-                                color: Colors.grey.shade600,
+                                color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
                                 fontSize: 12,
                                 decoration: TextDecoration.lineThrough,
                               ),
@@ -2497,62 +2665,80 @@ class ProductCardSizePreview extends StatelessWidget {
   });
 
   static const String _apiBase = 'https://baltic-deals-api.noduys.workers.dev';
-  static final Map<int, Future<List<String>>> _cache = {};
+  // Ограничиваем размер кэша (LRU), чтобы исключить утечки оперативной памяти
+  static final LinkedHashMap<int, Future<List<String>>> _cache = LinkedHashMap();
+  static const int _maxCacheSize = 100;
 
   Future<List<String>> _loadSizes() {
-    return _cache.putIfAbsent(productId, () async {
-      try {
-        final uri = Uri.parse('$_apiBase/sizes').replace(
-          queryParameters: {
-            'productId': productId.toString(),
-          },
-        );
+    if (_cache.containsKey(productId)) {
+      final future = _cache.remove(productId)!;
+      _cache[productId] = future;
+      return future;
+    }
 
-        final response = await http.get(uri);
-        if (response.statusCode != 200) return <String>[];
+    if (_cache.length >= _maxCacheSize) {
+      _cache.remove(_cache.keys.first);
+    }
 
-        final decoded = jsonDecode(response.body);
-        if (decoded is! Map<String, dynamic>) return <String>[];
+    final future = _fetchSizesFromNetwork();
+    _cache[productId] = future;
+    return future;
+  }
 
-        final stores = decoded['stores'] as List<dynamic>? ?? const [];
-        final available = <String>{};
+  Future<List<String>> _fetchSizesFromNetwork() async {
+    try {
+      final uri = Uri.parse('$_apiBase/sizes').replace(
+        queryParameters: {
+          'productId': productId.toString(),
+        },
+      );
 
-        for (final storeValue in stores) {
-          if (storeValue is! Map) continue;
-          final sizes = storeValue['sizes'] as List<dynamic>? ?? const [];
+      final response = await http.get(uri).timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) return <String>[];
 
-          for (final sizeValue in sizes) {
-            if (sizeValue is! Map) continue;
-            final size = sizeValue['size']?.toString().trim() ?? '';
-            final availability =
-                sizeValue['availability']?.toString().toLowerCase() ?? '';
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      if (decoded is! Map<String, dynamic>) return <String>[];
 
-            if (size.isNotEmpty && availability == 'in_stock') {
-              available.add(size);
-            }
+      final stores = decoded['stores'] as List<dynamic>? ?? const [];
+      final available = <String>{};
+
+      for (final storeValue in stores) {
+        if (storeValue is! Map) continue;
+        final sizes = storeValue['sizes'] as List<dynamic>? ?? const [];
+
+        for (final sizeValue in sizes) {
+          if (sizeValue is! Map) continue;
+          final size = sizeValue['size']?.toString().trim() ?? '';
+          final availability =
+              sizeValue['availability']?.toString().toLowerCase() ?? '';
+
+          if (size.isNotEmpty && availability == 'in_stock') {
+            available.add(size);
           }
         }
-
-        final result = available.toList();
-        result.sort((a, b) {
-          final aNumber = double.tryParse(a.replaceAll(',', '.'));
-          final bNumber = double.tryParse(b.replaceAll(',', '.'));
-
-          if (aNumber != null && bNumber != null) {
-            return aNumber.compareTo(bNumber);
-          }
-          return a.compareTo(b);
-        });
-
-        return result;
-      } catch (_) {
-        return <String>[];
       }
-    });
+
+      final result = available.toList();
+      result.sort((a, b) {
+        final aNumber = double.tryParse(a.replaceAll(',', '.'));
+        final bNumber = double.tryParse(b.replaceAll(',', '.'));
+
+        if (aNumber != null && bNumber != null) {
+          return aNumber.compareTo(bNumber);
+        }
+        return a.compareTo(b);
+      });
+
+      return result;
+    } catch (_) {
+      return <String>[];
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return FutureBuilder<List<String>>(
       future: _loadSizes(),
       builder: (context, snapshot) {
@@ -2560,12 +2746,10 @@ class ProductCardSizePreview extends StatelessWidget {
         if (sizes == null || sizes.isEmpty) return const SizedBox.shrink();
 
         final visible = sizes.take(4).toList();
-        final remaining = sizes.length - visible.length;
-
-        final label = [
-          ...visible,
-          if (remaining > 0) '+$remaining',
-        ].join(' • ');
+        final extraCount = sizes.length - visible.length;
+        final label = extraCount > 0
+            ? '${visible.join(" • ")} • +$extraCount'
+            : visible.join(" • ");
 
         return Padding(
           padding: const EdgeInsets.only(top: 6),
@@ -2573,9 +2757,11 @@ class ProductCardSizePreview extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              ),
             ),
             child: Row(
               children: [
@@ -2835,10 +3021,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         },
       );
 
-      final response = await http.get(uri);
+      final response = await http.get(uri).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
 
         if (decoded is Map<String, dynamic>) {
           final alert = decoded['alert'];
@@ -2916,7 +3102,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         throw Exception('API ${response.statusCode}');
       }
 
-      final decoded = jsonDecode(response.body);
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
       if (decoded is! Map<String, dynamic> || decoded['success'] != true) {
         throw Exception('API rejected the alert');
       }
@@ -2956,7 +3142,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Сервер временно недоступен. Цена сохранена только на этом устройстве.',
+            'Сервер временно недоступен. Цена сохранена локально на этом устройстве.',
           ),
         ),
       );
@@ -2981,7 +3167,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         throw Exception('API ${response.statusCode}');
       }
 
-      final decoded = jsonDecode(response.body);
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
       if (decoded is! Map<String, dynamic> || decoded['success'] != true) {
         throw Exception('API rejected delete');
       }
@@ -3008,7 +3194,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Не удалось отключить алерты на сервере. Попробуйте еще раз.',
+            'Не удалось отключить запись на сервере. Попробуйте еще раз.',
           ),
         ),
       );
@@ -3060,7 +3246,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                         if (value == null || value <= 0) {
                           setDialogState(() {
-                            validationError = 'Введите корректную цену';
+                            validationError = 'Укажите корректную цену';
                           });
                           return;
                         }
@@ -3070,7 +3256,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Цена отслеживается на сервере Baltic Deals. Push-уведомление поступит через сервис Firebase.',
+                      'Цена отслеживается на сервере Baltic Deals. Push-уведомление придет через службу Firebase.',
                       style: TextStyle(
                         color: Colors.grey.shade700,
                         fontSize: 12,
@@ -3084,7 +3270,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 if (priceAlertTarget != null)
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(-1),
-                    child: const Text('Отключить'),
+                    child: const Text('Удалить'),
                   ),
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
@@ -3097,7 +3283,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
                     if (value == null || value <= 0) {
                       setDialogState(() {
-                        validationError = 'Введите корректную цену';
+                        validationError = 'Укажите корректную цену';
                       });
                       return;
                     }
@@ -3132,12 +3318,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         },
       );
 
-      final response = await http.get(uri);
+      final response = await http.get(uri).timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) {
         throw Exception('API returned ${response.statusCode}');
       }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final items = decoded['offers'] as List<dynamic>? ?? [];
 
       if (!mounted) return;
@@ -3150,10 +3336,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         offersError = null;
       });
     } catch (e) {
+      debugPrint('ОШИБКА ЗАГРУЗКИ ОФФЕРОВ: $e');
       if (!mounted) return;
       setState(() {
         offersLoading = false;
-        offersError = e.toString();
+        offersError = 'Не удалось загрузить цены';
       });
     }
   }
@@ -3166,12 +3353,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         },
       );
 
-      final response = await http.get(uri);
+      final response = await http.get(uri).timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) {
         throw Exception('API returned ${response.statusCode}');
       }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final rawSizes = decoded['all_sizes'] as List<dynamic>? ?? [];
       final rawStores = decoded['stores'] as List<dynamic>? ?? [];
 
@@ -3211,12 +3398,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         },
       );
 
-      final response = await http.get(uri);
+      final response = await http.get(uri).timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) {
         throw Exception('API returned ${response.statusCode}');
       }
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final items = decoded['history'] as List<dynamic>? ?? [];
       final stats = decoded['stats'] as Map<String, dynamic>?;
 
@@ -3292,11 +3479,688 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: widget.onOpenStore,
+            icon: const Icon(Icons.open_in_new),
+            label: const Text(
+              'В магазин',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            onPressed: shareProductLink,
+            icon: const Icon(Icons.share_outlined, size: 20),
+            label: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('Поделиться', style: TextStyle(fontSize: 14)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoContent({required bool wide}) {
+    final product = widget.product;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasOldPrice =
+        product.oldPrice != null && product.oldPrice! > product.currentPrice;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (product.brand != null && product.brand!.isNotEmpty)
+          Text(
+            product.brand!.toUpperCase(),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+              letterSpacing: 0.5,
+            ),
+          ),
+        const SizedBox(height: 10),
+        Text(
+          product.name,
+          style: const TextStyle(
+            fontSize: 26,
+            height: 1.2,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '${product.storeName} • ${product.country}',
+          style: TextStyle(
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.end,
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            Text(
+              '${widget.priceFormatter(product.currentPrice)} €',
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            if (hasOldPrice)
+              Text(
+                '${widget.priceFormatter(product.oldPrice!)} €',
+                style: TextStyle(
+                  fontSize: 17,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+            if (product.discountPercent != null && product.discountPercent! > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD93636),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '-${product.discountPercent}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        if (priceAlertLoading)
+          const SizedBox(
+            height: 42,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2.2),
+              ),
+            ),
+          )
+        else
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: priceAlertTriggered
+                  ? Theme.of(context)
+                      .colorScheme
+                      .tertiaryContainer
+                      .withValues(alpha: 0.55)
+                  : priceAlertTarget == null
+                      ? (isDark ? Colors.grey.shade900 : Colors.grey.shade100)
+                      : Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: priceAlertTarget == null
+                    ? (isDark ? Colors.grey.shade800 : Colors.grey.shade300)
+                    : Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  priceAlertTriggered
+                      ? Icons.celebration_outlined
+                      : priceAlertTarget == null
+                          ? Icons.notifications_none
+                          : Icons.notifications_active_outlined,
+                  color: priceAlertTriggered
+                      ? Theme.of(context).colorScheme.tertiary
+                      : priceAlertTarget == null
+                          ? (isDark ? Colors.grey.shade400 : Colors.grey.shade700)
+                          : Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        priceAlertTriggered && priceAlertTarget != null
+                            ? AppLocalizations.of(context)!.targetReached
+                            : priceAlertTarget == null
+                                ? AppLocalizations.of(context)!.trackPrice
+                                : AppLocalizations.of(context)!.targetValue(
+                                    '${widget.priceFormatter(priceAlertTarget!)} €',
+                                  ),
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        priceAlertTriggered && priceAlertTarget != null
+                            ? 'Снизилась уже до ${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} € • цель ${widget.priceFormatter(priceAlertTarget!)} €'
+                            : priceAlertTarget == null
+                                ? 'Отправим уведомление при падении цен'
+                                : widget.product.currentPrice <= priceAlertTarget!
+                                    ? 'Цена уже достигла желаемого уровня'
+                                    : 'Осталось подождать снижения на ${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} €',
+                        style: TextStyle(
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonalIcon(
+                  onPressed: showPriceAlertDialog,
+                  icon: Icon(
+                    priceAlertTarget == null
+                        ? Icons.add_alert_outlined
+                        : Icons.edit_notifications_outlined,
+                    size: 18,
+                  ),
+                  label: Text(
+                    priceAlertTarget == null
+                        ? AppLocalizations.of(context)!.setTarget
+                        : AppLocalizations.of(context)!.changeTarget,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 20),
+        AppDetailRow(
+          icon: Icons.category_outlined,
+          label: AppLocalizations.of(context)!.category,
+          value: _categoryLabel(context, product.category),
+        ),
+        AppDetailRow(
+          icon: Icons.person_outline,
+          label: AppLocalizations.of(context)!.gender,
+          value: product.gender?.isNotEmpty == true
+              ? product.gender!
+              : AppLocalizations.of(context)!.notSpecified,
+        ),
+        AppDetailRow(
+          icon: Icons.storefront_outlined,
+          label: AppLocalizations.of(context)!.store,
+          value: product.storeName,
+        ),
+        AppDetailRow(
+          icon: Icons.public,
+          label: AppLocalizations.of(context)!.country,
+          value: product.country,
+        ),
+        const SizedBox(height: 10),
+        const Divider(),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.sizes,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            if (!sizesLoading && sizesError == null && allSizes.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${allSizes.where(isSizeAvailable).length} в наличии',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (sizesLoading)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Проверяем наличие размеров...',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (sizesError != null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.straighten_outlined,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Размеры временно недоступны',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      sizesLoading = true;
+                      sizesError = null;
+                    });
+                    loadSizes();
+                  },
+                  child: const Text('Повторить'),
+                ),
+              ],
+            ),
+          )
+        else if (allSizes.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.inventory_2_outlined,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Данные о размерах для этой вещи пока не поступили.',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else ...[
+          Text(
+            selectedSize == null
+                ? 'Выберите размер, чтобы сравнить магазины'
+                : 'Выбранный размер: $selectedSize',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final size in allSizes)
+                ChoiceChip(
+                  label: Text(size),
+                  selected: selectedSize == size,
+                  onSelected: isSizeAvailable(size)
+                      ? (selected) {
+                          setState(() {
+                            selectedSize = selected ? size : null;
+                          });
+                        }
+                      : null,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Недоступные размеры выделены серым цветом.',
+            style: TextStyle(
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
+              fontSize: 12,
+            ),
+          ),
+          if (selectedSize != null) ...[
+            const SizedBox(height: 16),
+            Builder(
+              builder: (context) {
+                final selectedStores = storesForSize(selectedSize!);
+                final bestPrice = bestPriceForSize(selectedSize!);
+
+                if (selectedStores.isEmpty) {
+                  return Text(
+                    'Подходящих предложений именно для вас нет в наличии',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
+                    ),
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Размер $selectedSize • ${selectedStores.length} ${selectedStores.length == 1 ? 'магазин' : 'магазинов'}',
+                                  style: const TextStyle(fontWeight: FontWeight.w800),
+                                ),
+                                if (bestPrice != null) ...[
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    'Лучшая цена: ${widget.priceFormatter(bestPrice)} €',
+                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    for (final store in selectedStores)
+                      Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.storefront_outlined),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            store.storeName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ),
+                                        if (bestPrice != null &&
+                                            (store.currentPrice - bestPrice).abs() < 0.001) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).colorScheme.primaryContainer,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: const Text(
+                                              'Лучшая цена',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${widget.priceFormatter(store.currentPrice)} €',
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    const Text(
+                                      'В наличии',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              FilledButton(
+                                onPressed: () => openSizeStore(store),
+                                child: const Text('Купить'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ],
+        const SizedBox(height: 10),
+        const Divider(),
+        const SizedBox(height: 12),
+        const Text(
+          'Цены в магазинах',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (offersLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (offersError != null)
+          Row(
+            children: [
+              const Expanded(
+                child: Text('Не удалось загрузить предложения'),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    offersLoading = true;
+                    offersError = null;
+                  });
+                  loadOffers();
+                },
+                child: const Text('Повторить'),
+              ),
+            ],
+          )
+        else if (offers.isEmpty)
+          Text(
+            'Предложений пока нет',
+            style: TextStyle(
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
+            ),
+          )
+        else
+          Column(
+            children: [
+              for (final offer in offers)
+                _OfferCard(
+                  offer: offer,
+                  priceFormatter: widget.priceFormatter,
+                  onOpen: () => openOffer(offer),
+                ),
+            ],
+          ),
+        const SizedBox(height: 10),
+        const Divider(),
+        const SizedBox(height: 12),
+        const Text(
+          'История цен',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (historyLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (historyError != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Не удалось загрузить историю цен',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      historyLoading = true;
+                      historyError = null;
+                    });
+                    loadPriceHistory();
+                  },
+                  child: const Text('Повторить'),
+                ),
+              ],
+            ),
+          )
+        else ...[
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              _PriceStat(
+                label: 'Сейчас',
+                value: '${widget.priceFormatter(product.currentPrice)} €',
+              ),
+              _PriceStat(
+                label: 'Минимум',
+                value: '${widget.priceFormatter(minHistoryPrice ?? product.currentPrice)} €',
+              ),
+              _PriceStat(
+                label: 'Максимум',
+                value: '${widget.priceFormatter(maxHistoryPrice ?? product.currentPrice)} €',
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 170,
+            width: double.infinity,
+            child: PriceHistoryChart(
+              history: history,
+              fallbackPrice: product.currentPrice,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            history.length <= 1
+                ? 'История только начала отслеживаться. Данные будут обновляться при изменении цены.'
+                : 'Всего записей: ${history.length}',
+            style: TextStyle(
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
+              fontSize: 12,
+            ),
+          ),
+        ],
+        if (wide) ...[
+          const SizedBox(height: 28),
+          _buildActionButtons(),
+        ],
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
-    final hasOldPrice =
-        product.oldPrice != null && product.oldPrice! > product.currentPrice;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cleanUrl = widget.imageUrl.trim();
+    final hasValidUrl = cleanUrl.isNotEmpty && cleanUrl.startsWith('http');
 
     return Scaffold(
       appBar: AppBar(
@@ -3327,729 +4191,81 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 850;
-
-          final image = Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(24),
-            child: widget.imageUrl.isEmpty
-                ? const AppProductImagePlaceholder()
-                : CachedNetworkImage(
-                    imageUrl: widget.imageUrl,
-                    fit: BoxFit.contain,
-                    placeholder: (context, url) =>
-                        const AppProductImagePlaceholder(),
-                    errorWidget: (context, url, error) =>
-                        const AppProductImagePlaceholder(),
-                  ),
-          );
-
-          final info = SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (product.brand != null && product.brand!.isNotEmpty)
-                  Text(
-                    product.brand!.toUpperCase(),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                const SizedBox(height: 10),
-                Text(
-                  product.name,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    height: 1.2,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  '${product.storeName} • ${product.country}',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.end,
-                  spacing: 12,
-                  runSpacing: 8,
-                  children: [
-                    Text(
-                      '${widget.priceFormatter(product.currentPrice)} €',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    if (hasOldPrice)
-                      Text(
-                        '${widget.priceFormatter(product.oldPrice!)} €',
-                        style: TextStyle(
-                          fontSize: 17,
-                          color: Colors.grey.shade600,
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                      ),
-                    if (product.discountPercent != null &&
-                        product.discountPercent! > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD93636),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '-${product.discountPercent}%',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                if (priceAlertLoading)
-                  const SizedBox(
-                    height: 42,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.2),
-                      ),
-                    ),
-                  )
-                else
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: priceAlertTriggered
-                          ? Theme.of(context)
-                              .colorScheme
-                              .tertiaryContainer
-                              .withValues(alpha: 0.55)
-                          : priceAlertTarget == null
-                              ? Colors.grey.shade100
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer
-                                  .withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: priceAlertTarget == null
-                            ? Colors.grey.shade300
-                            : Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.25),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          priceAlertTriggered
-                              ? Icons.celebration_outlined
-                              : priceAlertTarget == null
-                                  ? Icons.notifications_none
-                                  : Icons.notifications_active_outlined,
-                          color: priceAlertTriggered
-                              ? Theme.of(context).colorScheme.tertiary
-                              : priceAlertTarget == null
-                                  ? Colors.grey.shade700
-                                  : Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                priceAlertTriggered && priceAlertTarget != null
-                                    ? AppLocalizations.of(context)!.targetReached
-                                    : priceAlertTarget == null
-                                        ? AppLocalizations.of(context)!.trackPrice
-                                        : AppLocalizations.of(context)!.targetValue('${widget.priceFormatter(priceAlertTarget!)} €'),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                priceAlertTriggered && priceAlertTarget != null
-                                    ? 'Снизилась уже до ${widget.priceFormatter(priceAlertTriggeredPrice ?? widget.product.currentPrice)} € • цель ${widget.priceFormatter(priceAlertTarget!)} €'
-                                    : priceAlertTarget == null
-                                        ? 'Получайте уведомления при падении цен'
-                                        : widget.product.currentPrice <=
-                                                priceAlertTarget!
-                                            ? 'Цена уже достигла указанной планки'
-                                            : 'Осталось подождать снижения на ${widget.priceFormatter(widget.product.currentPrice - priceAlertTarget!)} €',
-                                style: TextStyle(
-                                  color: Colors.grey.shade700,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        FilledButton.tonalIcon(
-                          onPressed: showPriceAlertDialog,
-                          icon: Icon(
-                            priceAlertTarget == null
-                                ? Icons.add_alert_outlined
-                                : Icons.edit_notifications_outlined,
-                            size: 18,
-                          ),
-                          label: Text(
-                            priceAlertTarget == null ? AppLocalizations.of(context)!.setTarget : AppLocalizations.of(context)!.changeTarget,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 24),
-                AppDetailRow(
-                  icon: Icons.category_outlined,
-                  label: AppLocalizations.of(context)!.category,
-                  value: _categoryLabel(context, product.category),
-                ),
-                AppDetailRow(
-                  icon: Icons.person_outline,
-                  label: AppLocalizations.of(context)!.gender,
-                  value: product.gender?.isNotEmpty == true
-                      ? product.gender!
-                      : AppLocalizations.of(context)!.notSpecified,
-                ),
-                AppDetailRow(
-                  icon: Icons.storefront_outlined,
-                  label: AppLocalizations.of(context)!.store,
-                  value: product.storeName,
-                ),
-                AppDetailRow(
-                  icon: Icons.public,
-                  label: AppLocalizations.of(context)!.country,
-                  value: product.country,
-                ),
-                const SizedBox(height: 10),
-                const Divider(),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.sizes,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    if (!sizesLoading &&
-                        sizesError == null &&
-                        allSizes.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${allSizes.where(isSizeAvailable).length} доступно',
-                          style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (sizesLoading)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2.5),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Проверяем наличие размеров…',
-                          style: TextStyle(color: Colors.grey.shade700),
-                        ),
-                      ],
-                    ),
-                  )
-                else if (sizesError != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.straighten_outlined,
-                          color: Colors.grey.shade700,
-                        ),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            'Размеры временно недоступны',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              sizesLoading = true;
-                              sizesError = null;
-                            });
-                            loadSizes();
-                          },
-                          child: const Text('Повторить'),
-                        ),
-                      ],
-                    ),
-                  )
-                else if (allSizes.isEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.inventory_2_outlined,
-                          color: Colors.grey.shade600,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Данные о размерах для этого товара пока не загружены.',
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              height: 1.35,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else ...[
-                  Text(
-                    selectedSize == null
-                        ? 'Выберите размер, чтобы сравнить магазины'
-                        : 'Выбранный размер: $selectedSize',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final size in allSizes)
-                        ChoiceChip(
-                          label: Text(size),
-                          selected: selectedSize == size,
-                          onSelected: isSizeAvailable(size)
-                              ? (selected) {
-                                  setState(() {
-                                    selectedSize = selected ? size : null;
-                                  });
-                                }
-                              : null,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Недоступные размеры выделены серым цветом.',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
-                  ),
-                  if (selectedSize != null) ...[
-                    const SizedBox(height: 16),
-                    Builder(
-                      builder: (context) {
-                        final selectedStores = storesForSize(selectedSize!);
-                        final bestPrice = bestPriceForSize(selectedSize!);
-
-                        if (selectedStores.isEmpty) {
-                          return Text(
-                            'Выбранного размера сейчас нет в наличии',
-                            style: TextStyle(color: Colors.grey.shade600),
-                          );
-                        }
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer
-                                    .withValues(alpha: 0.45),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.check_circle_outline),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Размер $selectedSize • ${selectedStores.length} ${selectedStores.length == 1 ? 'магазин' : 'магазина'}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                        if (bestPrice != null) ...[
-                                          const SizedBox(height: 3),
-                                          Text(
-                                            'Лучшая цена: ${widget.priceFormatter(bestPrice)} €',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            for (final store in selectedStores)
-                              Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.storefront_outlined),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Text(
-                                                    store.storeName,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                    ),
-                                                  ),
-                                                ),
-                                                if (bestPrice != null &&
-                                                    (store.currentPrice -
-                                                                bestPrice)
-                                                            .abs() <
-                                                        0.001) ...[
-                                                  const SizedBox(width: 8),
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets
-                                                            .symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primaryContainer,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                        12,
-                                                      ),
-                                                    ),
-                                                    child: const Text(
-                                                      'Лучшая цена',
-                                                      style: TextStyle(
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${widget.priceFormatter(store.currentPrice)} €',
-                                              style: const TextStyle(
-                                                fontSize: 17,
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            const Text(
-                                              'В наличии',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      FilledButton(
-                                        onPressed: () => openSizeStore(store),
-                                        child: const Text('Купить'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ],
-                const SizedBox(height: 10),
-                const Divider(),
-                const SizedBox(height: 12),
-                const Text(
-                  'Цены в магазинах',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (offersLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (offersError != null)
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text('Не удалось загрузить предложения'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            offersLoading = true;
-                            offersError = null;
-                          });
-                          loadOffers();
-                        },
-                        child: const Text('Повторить'),
-                      ),
-                    ],
-                  )
-                else if (offers.isEmpty)
-                  Text(
-                    'Предложений пока нет',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  )
-                else
-                  Column(
-                    children: [
-                      for (final offer in offers)
-                        _OfferCard(
-                          offer: offer,
-                          priceFormatter: widget.priceFormatter,
-                          onOpen: () => openOffer(offer),
-                        ),
-                    ],
-                  ),
-                const SizedBox(height: 10),
-                const Divider(),
-                const SizedBox(height: 12),
-                const Text(
-                  'История цены',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (historyLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (historyError != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Не удалось загрузить историю цен',
-                            style: TextStyle(color: Colors.grey.shade700),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              historyLoading = true;
-                              historyError = null;
-                            });
-                            loadPriceHistory();
-                          },
-                          child: const Text('Повторить'),
-                        ),
-                      ],
-                    ),
-                  )
-                else ...[
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      _PriceStat(
-                        label: 'Сейчас',
-                        value:
-                            '${widget.priceFormatter(product.currentPrice)} €',
-                      ),
-                      _PriceStat(
-                        label: 'Минимум',
-                        value:
-                            '${widget.priceFormatter(minHistoryPrice ?? product.currentPrice)} €',
-                      ),
-                      _PriceStat(
-                        label: 'Максимум',
-                        value:
-                            '${widget.priceFormatter(maxHistoryPrice ?? product.currentPrice)} €',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    height: 170,
-                    width: double.infinity,
-                    child: PriceHistoryChart(
-                      history: history,
-                      fallbackPrice: product.currentPrice,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    history.length <= 1
-                        ? 'История только начала формироваться. График станет нагляднее при изменении цены.'
-                        : 'Точек истории: ${history.length}',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
+      bottomNavigationBar: MediaQuery.sizeOf(context).width < 850
+          ? Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, -3),
                   ),
                 ],
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: FilledButton.icon(
-                        onPressed: widget.onOpenStore,
-                        icon: const Icon(Icons.open_in_new),
-                        label: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'В магазин',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: shareProductLink,
-                        icon: const Icon(Icons.share_outlined),
-                        label: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text('Поделиться'),
-                        ),
-                      ),
-                    ),
-                  ],
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: _buildActionButtons(),
                 ),
-              ],
-            ),
-          );
+              ),
+            )
+          : null,
+      body: SafeArea(
+        top: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 850;
 
-          if (wide) {
-            return Row(
-              children: [
-                Expanded(flex: 6, child: image),
-                Expanded(flex: 5, child: info),
-              ],
+            final image = Container(
+              color: isDark ? const Color(0xFF1E2022) : Colors.white,
+              padding: const EdgeInsets.all(24),
+              child: !hasValidUrl
+                  ? const AppProductImagePlaceholder()
+                  : CachedNetworkImage(
+                      imageUrl: cleanUrl,
+                      fit: BoxFit.contain,
+                      placeholder: (context, url) =>
+                          const AppProductImagePlaceholder(),
+                      errorWidget: (context, url, error) =>
+                          const AppProductImagePlaceholder(),
+                    ),
             );
-          }
 
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 420,
-                  width: double.infinity,
-                  child: image,
-                ),
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: 520,
-                    maxHeight: MediaQuery.sizeOf(context).height,
+            if (wide) {
+              return Row(
+                children: [
+                  Expanded(flex: 6, child: image),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: _buildInfoContent(wide: true),
+                    ),
                   ),
-                  child: info,
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              );
+            }
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 380,
+                    width: double.infinity,
+                    child: image,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: _buildInfoContent(wide: false),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -4082,6 +4298,7 @@ class _OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasOldPrice =
         offer.oldPrice != null && offer.oldPrice! > offer.currentPrice;
 
@@ -4105,7 +4322,7 @@ class _OfferCard extends StatelessWidget {
                   Text(
                     offer.country,
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
                       fontSize: 12,
                     ),
                   ),
@@ -4131,12 +4348,11 @@ class _OfferCard extends StatelessWidget {
                         Text(
                           '${priceFormatter(offer.oldPrice!)} €',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
                             decoration: TextDecoration.lineThrough,
                           ),
                         ),
-                      if (offer.discountPercent != null &&
-                          offer.discountPercent! > 0)
+                      if (offer.discountPercent != null && offer.discountPercent! > 0)
                         Text(
                           '-${offer.discountPercent}%',
                           style: const TextStyle(
@@ -4172,10 +4388,14 @@ class _PriceStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -4184,7 +4404,7 @@ class _PriceStat extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade800,
               fontSize: 12,
             ),
           ),
@@ -4211,6 +4431,7 @@ class PriceHistoryChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final prices = history.isEmpty
         ? <double>[fallbackPrice]
         : history.map((e) => e.price).toList();
@@ -4219,7 +4440,7 @@ class PriceHistoryChart extends StatelessWidget {
       painter: _PriceHistoryPainter(
         prices: prices,
         lineColor: Theme.of(context).colorScheme.primary,
-        gridColor: Colors.grey.shade300,
+        gridColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
       ),
       child: const SizedBox.expand(),
     );
@@ -4310,52 +4531,82 @@ class _PriceHistoryPainter extends CustomPainter {
   }
 }
 
-class ProductCardSkeleton extends StatelessWidget {
+class ProductCardSkeleton extends StatefulWidget {
   const ProductCardSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final baseColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey.shade800
-        : Colors.grey.shade300;
-    final highlightColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey.shade700
-        : Colors.grey.shade200;
+  State<ProductCardSkeleton> createState() => _ProductCardSkeletonState();
+}
 
-    return Card(
-      color: const Color(0xFFF8F9FA),
-      clipBehavior: Clip.antiAlias,
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 5,
-            child: Container(color: highlightColor),
+class _ProductCardSkeletonState extends State<ProductCardSkeleton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.35, end: 0.85).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseShimmer = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
+
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, _) {
+        final shimmerColor = baseShimmer.withValues(alpha: _animation.value);
+
+        return Card(
+          color: isDark ? const Color(0xFF1E2022) : const Color(0xFFF8F9FA),
+          clipBehavior: Clip.antiAlias,
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          Expanded(
-            flex: 5,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(width: 80, height: 11, color: baseColor),
-                  const SizedBox(height: 8),
-                  Container(width: double.infinity, height: 14, color: baseColor),
-                  const SizedBox(height: 6),
-                  Container(width: 140, height: 14, color: baseColor),
-                  const Spacer(),
-                  Container(width: 90, height: 20, color: baseColor),
-                ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 5,
+                child: Container(color: shimmerColor),
               ),
-            ),
+              Expanded(
+                flex: 5,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(width: 80, height: 11, decoration: BoxDecoration(color: shimmerColor, borderRadius: BorderRadius.circular(4))),
+                      const SizedBox(height: 8),
+                      Container(width: double.infinity, height: 14, decoration: BoxDecoration(color: shimmerColor, borderRadius: BorderRadius.circular(4))),
+                      const SizedBox(height: 6),
+                      Container(width: 140, height: 14, decoration: BoxDecoration(color: shimmerColor, borderRadius: BorderRadius.circular(4))),
+                      const Spacer(),
+                      Container(width: 90, height: 20, decoration: BoxDecoration(color: shimmerColor, borderRadius: BorderRadius.circular(4))),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -4394,7 +4645,6 @@ class ProductGridSkeleton extends StatelessWidget {
   }
 }
 
-// ─── ЭКРАН ВЫБОРА МАГАЗИНА ───
 String _storeDisplayName(String value) {
   final map = {
     'all': 'Все магазины',
@@ -4402,6 +4652,7 @@ String _storeDisplayName(String value) {
     'Rademar Estonia': 'Rademar',
     'Weekend Estonia': 'Weekend',
     'ABOUT YOU Estonia': 'ABOUT YOU',
+    'About You Outlet Estonia': 'ABOUT YOU Outlet',
     'Ballzy Estonia': 'Ballzy',
     'Sports Direct Estonia': 'Sports Direct',
     'BestSecret': 'BestSecret',
@@ -4411,11 +4662,14 @@ String _storeDisplayName(String value) {
     'Notino': 'Notino',
     'Stockmann Estonia': 'Stockmann',
     'Membershop Estonia': 'Membershop',
+    'Makeup.ee': 'Makeup.ee',
+    'Loverte': 'Loverte',
+    'Boozt': 'Boozt',
   };
   return map[value] ?? value;
 }
 
-class StoreSelectionScreen extends StatelessWidget {
+class StoreSelectionScreen extends StatefulWidget {
   final String currentStore;
 
   const StoreSelectionScreen({
@@ -4423,12 +4677,20 @@ class StoreSelectionScreen extends StatelessWidget {
     required this.currentStore,
   });
 
+  @override
+  State<StoreSelectionScreen> createState() => _StoreSelectionScreenState();
+}
+
+class _StoreSelectionScreenState extends State<StoreSelectionScreen> {
+  String _searchQuery = '';
+
   static const _stores = [
     'all',
     'Sportland Estonia',
     'Rademar Estonia',
     'Weekend Estonia',
     'ABOUT YOU Estonia',
+    'About You Outlet Estonia',
     'Ballzy Estonia',
     'Sports Direct Estonia',
     'BestSecret',
@@ -4438,10 +4700,21 @@ class StoreSelectionScreen extends StatelessWidget {
     'Notino',
     'Stockmann Estonia',
     'Membershop Estonia',
+    'Makeup.ee',
+    'Loverte',
+    'Boozt',
   ];
 
   @override
   Widget build(BuildContext context) {
+    final filtered = _stores
+        .where(
+          (s) => _storeDisplayName(s)
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()),
+        )
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Выбор магазина'),
@@ -4450,20 +4723,39 @@ class StoreSelectionScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: ListView.separated(
-        itemCount: _stores.length,
-        separatorBuilder: (_, _) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final store = _stores[index];
-          final isSelected = store == currentStore;
-          return ListTile(
-            title: Text(_storeDisplayName(store)),
-            trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-            onTap: () {
-              Navigator.pop(context, store);
-            },
-          );
-        },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Поиск магазина...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (val) => setState(() => _searchQuery = val),
+            ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              itemCount: filtered.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final store = filtered[index];
+                final isSelected = store == widget.currentStore;
+                return ListTile(
+                  title: Text(_storeDisplayName(store)),
+                  trailing: isSelected
+                      ? const Icon(Icons.check, color: Colors.green)
+                      : null,
+                  onTap: () => Navigator.pop(context, store),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

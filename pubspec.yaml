@@ -2,7 +2,7 @@ name: baltic_deals_app
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.4.3+10
+version: 1.4.7+14
 
 environment:
   sdk: ^3.13.2
@@ -26,6 +26,7 @@ dependencies:
   path_provider: ^2.1.4
   open_filex: ^4.5.0
   permission_handler: ^11.3.1
+  package_info_plus: ^10.2.2
 
 dev_dependencies:
   flutter_test:
